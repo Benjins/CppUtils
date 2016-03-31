@@ -5,9 +5,9 @@ if [ -z "$CXX" ]; then
 	CXX="g++"
 fi
 
-eval "$CXX -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DREF_TEST_MAIN ref.cpp -o ref_test"
+eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DREF_TEST_MAIN ref.cpp -o ref_test"
 ./ref_test
 valgrind --leak-check=full --error-exitcode=12 ./ref_test
 
-eval "$CXX -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test"
+eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test"
 yes b | head -n 20 | ./assert_test
