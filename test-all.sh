@@ -1,8 +1,8 @@
 set -e
 
-g++ -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DREF_TEST_MAIN ref.cpp -o ref_test
+$(CXX) -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DREF_TEST_MAIN ref.cpp -o ref_test
 ./ref_test
 valgrind --leak-check=full --error-exitcode=12 ./ref_test
 
-g++ -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test
+$(CXX) -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test
 yes b | head -n 20 | ./assert_test
