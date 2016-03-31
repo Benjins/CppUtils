@@ -12,6 +12,15 @@ struct Ref{
 	Ref(){
 		mem = nullptr;
 	}
+	
+	Ref(const T& init){
+		void* alloc = malloc(sizeof(T)+sizeof(int));
+		ref = (int*)alloc;
+		*ref = 0;
+		mem = new(ref+1) T(init);
+
+		Retain();
+	}
 
 	void Allocate(){
 		Release();
@@ -29,8 +38,21 @@ struct Ref{
 		ref = other.ref;
 		Retain();
 	}
+	
+	Ref& operator=(const Ref& other){
+		if(other.mem != nullptr){
+			other.Retain();
+		}
+		
+		Release();
+		
+		mem = other.mem;
+		ref = other.ref;
+		
+		return *this;
+	}
 
-	void EnsureValidity(){
+	void EnsureValidity() const{
 		ASSERT(ref != nullptr && mem != nullptr);
 	}
 
@@ -39,7 +61,7 @@ struct Ref{
 		return (T*)mem;
 	}
 
-	void Retain(){
+	void Retain() const{
 		EnsureValidity();
 		(*ref)++;
 	}
@@ -52,6 +74,7 @@ struct Ref{
 			(*ref)--;
 
 			if(*ref == 0){
+				ASSERT_MSG(&ref[1] == mem, "%s", "Ref taken from array is being destroyed on its own.");
 				((T*)mem)->~T();
 				free(ref);
 				mem = nullptr;
@@ -168,6 +191,17 @@ Ref<MyStruct> getVal(){
 	return val;
 }
 
+void func1(Ref<MyStruct> ms){
+	ms.Retain();
+	ms.Get()->thisIsMe = 21;
+	ms.Release();
+}
+
+void func2(Ref<MyStruct>& ms){
+	ms.Retain();
+	ms.Get()->thisIsMe = 23;
+	ms.Release();
+}
 
 int main(int argc, char** argv){
 	Ref<MyStruct> myStr;
@@ -199,7 +233,40 @@ int main(int argc, char** argv){
 	ASSERT(msArrElem2.Get()->thisIsYou == 1.0f);
 
 	ASSERT(myStr.Get()->thisIsYou == 1.0f);
+	
+	{
+		Ref<MyStruct> ms1;
+		ms1.Allocate();
+		ms1.Allocate();
+		ms1.Allocate();
+		ms1.Allocate();
+		
+		Ref<MyStruct> ms4;
+		{
+			Ref<MyStruct> ms2 = ms1;
+			Ref<MyStruct> ms3 = ms2;
+			ms4 = ms3;
+		}
+		
+		ms1.Allocate();
+	}
 
+	{
+		MyStruct msN;
+		msN.thisIsMe = 13;
+		Ref<MyStruct> ms1(msN);
+		
+		ASSERT(ms1.Get()->thisIsMe == 13);
+		
+		func1(ms1);
+		ASSERT(ms1.Get()->thisIsMe == 21);
+		
+		func2(ms1);
+		ASSERT(ms1.Get()->thisIsMe == 23);
+		
+		ms1.Allocate();
+	}
+	
 	return 0;
 }
 
