@@ -33,6 +33,7 @@ struct Vector{
 			free(data);
 			
 			data = newData;
+			capacity = newCapacity;
 		}
 	}
 	
