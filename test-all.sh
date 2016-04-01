@@ -11,3 +11,6 @@ valgrind --leak-check=full --error-exitcode=12 ./ref_test
 
 eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test"
 yes b | head -n 20 | ./assert_test
+
+eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DHASH_TEST_MAIN hash.cpp -o hash_test"
+./hash_test
