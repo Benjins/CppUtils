@@ -126,6 +126,7 @@ struct Resource{
 	
 	Resource(const Resource& orig){
 		fakeAllocCount++;
+		BNS_UNUSED(orig);
 	}
 	
 	~Resource(){
@@ -134,7 +135,9 @@ struct Resource{
 };
 
 int main(int argc, char** argv){
-	
+	BNS_UNUSED(argc);
+	BNS_UNUSED(argv);
+
 	Vector<int> iVec(20);
 	
 	Vector<int> iVec2;

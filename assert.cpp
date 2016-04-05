@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "macros.h"
 
 #define STRINGIFY(x) #x
 
@@ -57,7 +58,7 @@ void assertFrom(const char* cond, const char* function, const char* file, int li
 		printf("Message: %s\n", msg);
 	}
 
-	printf("File: %s\nLine: %d\nFunction: %s", file, line, function);
+	printf("File: %s\nLine: %d\nFunction: %s\n", file, line, function);
 
 #if defined(EXIT_ON_ASSERT)
 	exit(-1);
@@ -98,8 +99,8 @@ void CheckAssertCount(int expected){
 }
 
 void TrapHandler(int sigNum){
-	printf("Trap handler.\n");
 	assertCount++;
+	BNS_UNUSED(sigNum);
 }
 
 int main(){
@@ -112,9 +113,9 @@ int main(){
 	CheckAssertCount(1);
 	ASSERT_MSG(1 == 5, "Hi.%s\n", "Bye.");
 	CheckAssertCount(2);
-	ASSERT_WARN("%s", "This is a warning.\n");
+	ASSERT_WARN("%s", "This is a warning.");
 	CheckAssertCount(3);
-	ASSERT_MSG(1 == 1, "%s", "Should noy go off.\n");
+	ASSERT_MSG(1 == 1, "%s", "Should noy go off.");
 	CheckAssertCount(3);
 
 	return 0;

@@ -3,6 +3,7 @@
 #include <new>
 
 #include "assert.cpp"
+#include "macros.h"
 
 template<typename T>
 struct Ref{
@@ -204,6 +205,9 @@ void func2(Ref<MyStruct>& ms){
 }
 
 int main(int argc, char** argv){
+	BNS_UNUSED(argc);
+	BNS_UNUSED(argv);
+
 	Ref<MyStruct> myStr;
 	myStr.Allocate();
 	myStr.Retain();

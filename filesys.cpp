@@ -162,6 +162,8 @@ File* File::Find(const char* path){
 #if defined(FILESYS_TEST_MAIN)
 
 int main(int argc, char** argv){
+	BNS_UNUSED(argc);
+	BNS_UNUSED(argv);
 
 	File f;
 	f.Load("dir1");

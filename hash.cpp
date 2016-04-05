@@ -30,10 +30,12 @@ Hash hash(char* str){
 
 
 int main(int argc, char** argv){
+	BNS_UNUSED(argc);
+	BNS_UNUSED(argv);
 	
 	int* counts = new int[48238123];
 	
-	for(unsigned int i = 0; i < 50000000; i++){
+	for(unsigned int i = 0; i < 5000000; i++){
 		Hash intHash = hash(&i, sizeof(i));
 		
 		int idx = intHash % 48238123;
@@ -42,7 +44,7 @@ int main(int argc, char** argv){
 	}
 	
 	for(unsigned int i = 0; i < 48238123; i++){
-		ASSERT_MSG(counts[i] < 8, "Hash count for %d is %d, not within tolerance.", i, counts[i]);
+		ASSERT_MSG(counts[i] < 3, "Hash count for %d is %d, not within tolerance.", i, counts[i]);
 	}
 	
 	delete[] counts;	
