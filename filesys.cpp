@@ -185,6 +185,7 @@ int main(int argc, char** argv){
 	ASSERT(f.Find("dir1_c/file_c_1.txt") != nullptr);
 	ASSERT(f.Find("dir1_c/dir1_c2/test.html.txt") != nullptr);
 	ASSERT(strcmp(f.Find("dir1_c/dir1_c2/test.html.txt")->fileExt, "txt") == 0);
+	ASSERT(strcmp(f.Find("dir1_c")->Find("dir1_c2")->Find("test.html.txt")->fileExt, "txt") == 0);
 
 	return 0;
 }
