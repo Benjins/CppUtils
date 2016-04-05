@@ -45,6 +45,19 @@ struct Vector{
 		count = 0;
 	}
 	
+	void PopBack(){
+		ASSERT(count > 0);
+		count--;
+		data[count].~T();
+	}
+	
+	void Remove(int index){
+		ASSERT(index >= 0 && index < count);
+		data[index].~T();
+		memmove(&data[index], &data[index+1], sizeof(T)*(count - index - 1));
+		count--;
+	}
+	
 	void PushBack(const T& elem){
 		if(count >= capacity){
 			EnsureCapacity(capacity == 0 ? 2 : capacity * 2);
@@ -99,9 +112,26 @@ struct Vector{
 	}
 };
 
-
-
 #if defined(VECTOR_TEST_MAIN)
+
+//Used to track potential resource leaks in the vector test
+int fakeAllocCount = 0;
+
+struct Resource{
+	int pad;
+	
+	Resource(){
+		fakeAllocCount++;
+	}
+	
+	Resource(const Resource& orig){
+		fakeAllocCount++;
+	}
+	
+	~Resource(){
+		fakeAllocCount--;
+	}
+};
 
 int main(int argc, char** argv){
 	
@@ -146,6 +176,99 @@ int main(int argc, char** argv){
 	ASSERT(iVec3.count == 0);
 	
 	Vector<int>(39).Destroy();
+	
+	Vector<int> iVec4;
+	iVec4.PushBack(23);
+	iVec4.PushBack(24);
+	iVec4.PushBack(25);
+	ASSERT(iVec4.count == 3);
+	
+	for(int i = 0; i < 3; i++){
+		iVec4.PopBack();
+		ASSERT(iVec4.count == 2 - i);
+	}
+	
+	void* oldData = iVec4.data;
+	iVec4.PushBack(23);
+	iVec4.PushBack(24);
+	iVec4.PushBack(25);
+	ASSERT(iVec4.count == 3);
+	//No re-allocation should happen
+	ASSERT(iVec4.data == oldData);
+	
+	iVec4.Remove(1);
+	ASSERT(iVec4.count == 2);
+	ASSERT(iVec4.Get(0) == 23);
+	ASSERT(iVec4.Get(1) == 25);
+	
+	const int testCount = 5000;
+	Vector<int> iVec5;
+	for(int i = 0; i < testCount; i++){
+		iVec5.PushBack(i);
+	}
+	
+	ASSERT(iVec5.count == testCount);
+	
+	Vector<int> iVec6 = iVec5;
+	
+	for(int i = 0; i < testCount; i++){
+		iVec5.PopBack();
+	}
+
+	ASSERT(iVec5.count == 0);
+	
+	for(int i = 0; i < testCount; i++){
+		iVec6.Remove(0);
+	}
+	
+	ASSERT(iVec6.count == 0);
+	
+	ASSERT(fakeAllocCount == 0);
+	
+	{
+		Vector<Resource> rVec(5);
+	}
+	
+	ASSERT(fakeAllocCount == 0);
+	
+	{
+		Vector<Resource> rVec;
+		
+		for(int i = 0; i < 20; i++){
+			Resource r;
+			rVec.PushBack(r);
+		}
+	}
+	
+	ASSERT(fakeAllocCount == 0);
+	
+	{
+		Vector<Resource> rVec;
+		
+		for(int i = 0; i < 20; i++){
+			Resource r;
+			rVec.PushBack(r);
+		}
+		
+		rVec.Clear();
+		
+		ASSERT(fakeAllocCount == 0);
+	}
+	
+	{
+		Vector<Resource> rVec;
+		
+		for(int i = 0; i < 20; i++){
+			Resource r;
+			rVec.PushBack(r);
+		}
+		
+		rVec.Clear();
+		
+		Vector<Resource> rVecCpy = rVec;
+	}
+	
+	ASSERT(fakeAllocCount == 0);
 	
 	return 0;
 }

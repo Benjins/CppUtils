@@ -39,7 +39,7 @@
 
 #include <signal.h>
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 #define DEBUG_BREAK() __builtin_trap()
 #else
 #define DEBUG_BREAK() raise(SIGTRAP);
