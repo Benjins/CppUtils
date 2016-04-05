@@ -8,6 +8,11 @@ struct File{
 	File* children;
 	int childCount;
 
+	File() {
+		children = nullptr;
+		childCount = 0;
+	}
+
 	void Load(const char* name);
 };
 

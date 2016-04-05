@@ -24,6 +24,12 @@ if errorlevel 1 goto somethingbad
 vector_test.exe
 if errorlevel 1 goto somethingbad
 
+cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DFILESYS_TEST_MAIN filesys.cpp /Fefilesys_test
+if errorlevel 1 goto somethingbad
+
+filesys_test.exe
+if errorlevel 1 goto somethingbad
+
 echo Success!
 goto EOF
 :somethingbad

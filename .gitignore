@@ -26,3 +26,9 @@
 *.exe
 *.out
 *.app
+
+
+# MSVC files:
+.vs/
+*.ilk
+*.pdb

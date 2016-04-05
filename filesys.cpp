@@ -7,30 +7,30 @@
 #if defined(__GNUC__)
 #include <dirent.h>
 #elif defined(_WIN32)
+#include <windows.h>
 #endif
 
-
+#if defined(__GNUC__)
 void File::Load(const char* path){
 	struct dirent *entry;
-    DIR *dp;
+	DIR *dp;
 
 	snprintf(fullName, sizeof(fullName), "%s", path);
-	printf("%s\n", fullName);
 
-    dp = opendir(path);
-    if (dp == NULL) {
+	dp = opendir(path);
+	if (dp == NULL) {
 		return;
-    }
+	}
 
 	childCount = 0;
-    while ((entry = readdir(dp))){
+	while ((entry = readdir(dp))){
 		if(strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0){
 			childCount++;
 		}
 	}
 
-    closedir(dp);
-    dp = opendir(path);
+	closedir(dp);
+	dp = opendir(path);
 
 	if(childCount > 0){
 		children = new File[childCount];
@@ -52,7 +52,50 @@ void File::Load(const char* path){
 	}
 
 }
+#elif defined(_WIN32)
+void File::Load(const char* path){
+	HANDLE hFind = INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATA ffd;
 
+	snprintf(fullName, sizeof(fullName), "%s", path);
+
+	char searchPath[512] = { 0 };
+	snprintf(searchPath, 512, "%s/*", path);
+
+	hFind = FindFirstFile(searchPath, &ffd);
+	if (hFind == INVALID_HANDLE_VALUE)	{
+		return;
+	}
+
+	childCount = 0;
+	do {
+		if (strcmp(ffd.cFileName, ".") != 0 && strcmp(ffd.cFileName, "..") != 0) {
+			childCount++;
+		}
+	} while (FindNextFile(hFind, &ffd) != 0);
+
+	if(childCount > 0){
+		children = new File[childCount];
+	}
+	else{
+		children = nullptr;
+	}
+
+	hFind = FindFirstFile(searchPath, &ffd);
+	for(int i = 0; i < childCount; i++){
+		if (strcmp(ffd.cFileName, ".") != 0 && strcmp(ffd.cFileName, "..") != 0) {
+			char fullChildPath[512] = { 0 };
+			snprintf(fullChildPath, 512, "%s/%s", path, ffd.cFileName);
+			children[i].Load(fullChildPath);
+		}
+		else {
+			i--;
+		}
+
+		FindNextFile(hFind, &ffd);
+	}
+}
+#endif
 
 
 
@@ -79,13 +122,6 @@ int main(int argc, char** argv){
 
 
 #endif
-
-
-
-
-
-
-
 
 
 
