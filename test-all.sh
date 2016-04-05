@@ -17,3 +17,6 @@ eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DHASH_TEST_MAI
 
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DVECTOR_TEST_MAIN vector.cpp -o vector_test"
 valgrind --leak-check=full --error-exitcode=12 ./vector_test
+
+eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DFILESYS_TEST_MAIN filesys.cpp -o filesys_test"
+./filesys_test
