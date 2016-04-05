@@ -3,7 +3,7 @@
 
 #include "macros.h"
 
-#include "assert.cpp"
+#include "assert.h"
 
 
 typedef unsigned int Hash;

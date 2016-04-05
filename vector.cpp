@@ -3,7 +3,7 @@
 #include <new>
 
 #include "macros.h"
-#include "assert.cpp"
+#include "assert.h"
 
 template<typename T>
 struct Vector{

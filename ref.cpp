@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <new>
 
-#include "assert.cpp"
+#include "assert.h"
 #include "macros.h"
 
 template<typename T>
