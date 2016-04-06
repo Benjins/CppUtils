@@ -134,6 +134,15 @@ struct Resource{
 	}
 };
 
+Vector<Resource> func1(){
+	Vector<Resource> vals(3);
+	vals.PushBack(Resource());
+	vals.PushBack(Resource());
+	vals.PushBack(Resource());
+
+	return vals;
+}
+
 int main(int argc, char** argv){
 	BNS_UNUSED(argc);
 	BNS_UNUSED(argv);
@@ -273,6 +282,12 @@ int main(int argc, char** argv){
 	
 	ASSERT(fakeAllocCount == 0);
 	
+	{
+		Vector<Resource> vals = func1();
+	}
+
+	ASSERT(fakeAllocCount == 0);
+
 	return 0;
 }
 
