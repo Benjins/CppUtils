@@ -30,6 +30,12 @@ if errorlevel 1 goto somethingbad
 filesys_test.exe
 if errorlevel 1 goto somethingbad
 
+cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DIDBASE_TEST_MAIN assert.cpp idbase.cpp /Feidbase_test
+if errorlevel 1 goto somethingbad
+
+idbase_test.exe
+if errorlevel 1 goto somethingbad
+
 echo Success!
 goto EOF
 :somethingbad
