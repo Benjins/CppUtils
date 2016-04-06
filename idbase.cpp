@@ -29,6 +29,8 @@ struct TestEntity : IDBase{
 
 
 int main(int argc, char** argv){
+	BNS_UNUSED(argc);
+	BNS_UNUSED(argv);
 	
 	ASSERT(allocCount == 0);
 	
