@@ -40,6 +40,7 @@ void File::Load(const char* path){
 	
 	dp = opendir(path);
 	if (dp == NULL) {
+		childCount = NOT_A_DIRECTORY;
 		return;
 	}
 
@@ -66,6 +67,7 @@ void File::Load(const char* path){
 			char fullChildPath[512] = {0};
 			snprintf(fullChildPath, 512, "%s/%s", path, entry->d_name);
 			children[i].Load(fullChildPath);
+			children[i].parent = this;
 		}
 		else{
 			i--;
@@ -106,6 +108,7 @@ void File::Load(const char* path){
 
 	hFind = FindFirstFile(searchPath, &ffd);
 	if (hFind == INVALID_HANDLE_VALUE)	{
+		childCount = NOT_A_DIRECTORY;
 		return;
 	}
 
@@ -129,6 +132,7 @@ void File::Load(const char* path){
 			char fullChildPath[512] = { 0 };
 			snprintf(fullChildPath, 512, "%s/%s", path, ffd.cFileName);
 			children[i].Load(fullChildPath);
+			children[i].parent = this;
 		}
 		else {
 			i--;
@@ -181,7 +185,7 @@ int main(int argc, char** argv){
 	ASSERT(maxChildCount == 4);
 	
 	ASSERT(f.Find("file1.txt") != nullptr);
-	ASSERT(f.Find("file1.txt")->childCount == 0);
+	ASSERT(f.Find("file1.txt")->childCount == NOT_A_DIRECTORY);
 	ASSERT(strcmp(f.Find("file1.txt")->fileName, "file1.txt") == 0);
 	ASSERT(strcmp(f.Find("file1.txt")->fileExt, "txt") == 0);
 	ASSERT(f.Find("dir1_c/file_c_1.txt") != nullptr);
@@ -190,6 +194,9 @@ int main(int argc, char** argv){
 	ASSERT(strcmp(f.Find("dir1_c")->Find("dir1_c2")->Find("test.html.txt")->fileExt, "txt") == 0);
 
 	ASSERT(strcmp(f.Find("dir1_c/dir1_c2/test.html.txt")->fullName, "dir1/dir1_c/dir1_c2/test.html.txt") == 0);
+	
+	ASSERT(f.Find("dir1_c")->parent == &f);
+	ASSERT(f.Find("dir1_c/dir1_c2/test.html.txt")->parent == f.Find("dir1_c/dir1_c2"));
 	
 	return 0;
 }
