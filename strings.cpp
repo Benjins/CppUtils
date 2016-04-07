@@ -119,7 +119,7 @@ bool StrEqualN(const char* s1, const char* s2, unsigned int len){
 		return false;
 	}
 	
-	int counter = 0;
+	unsigned int counter = 0;
 	while(counter < len && *s1 == *s2 && *s1 != '\0' && *s2 != '\0'){
 		s1++;
 		s2++;
@@ -141,7 +141,10 @@ void MemCpy(void* dest, const void* src, int bytes){
 
 #if defined(STRINGS_TEST_MAIN)
 
-int main(int argc, char* argv){
+int main(int argc, char** argv){
+	
+	BNS_UNUSED(argc);
+	BNS_UNUSED(argv);
 	
 	ASSERT(StrLen("") == 0);
 	ASSERT(StrLen("abc") == 3);
