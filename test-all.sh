@@ -23,3 +23,6 @@ eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DFILESYS_TE
 
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DIDBASE_TEST_MAIN assert.cpp idbase.cpp -o idbase_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./idbase_test
+
+eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DSTRINGS_TEST_MAIN assert.cpp strings.cpp -o strings_test"
+valgrind --quiet --leak-check=full --error-exitcode=12 ./strings_test
