@@ -145,4 +145,6 @@ struct ConstSubString{
 bool StrEqual(const char* s1, const char* s2);
 bool StrEqualN(const char* s1, const char* s2, unsigned int len);
 
+int Atoi(const char* str);
+
 #endif

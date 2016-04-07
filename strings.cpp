@@ -138,6 +138,17 @@ void MemCpy(void* dest, const void* src, int bytes){
 	}
 }
 
+int Atoi(const char* str){
+	ASSERT(str != nullptr);
+	
+	int val = 0;
+	while(*str >= '0' && *str <= '9'){
+		val = (val * 10) + (*str - '0');
+		str++;
+	}
+	
+	return val;
+}
 
 #if defined(STRINGS_TEST_MAIN)
 
@@ -160,6 +171,28 @@ int main(int argc, char** argv){
 	ASSERT(StrEqualN("abcccA", "abccca", 5));
 	ASSERT(!StrEqualN("abccc", "abccca", 6));
 	ASSERT(!StrEqual("abc", "ABC"));
+	
+	#define CHECK_NUM(num) ASSERT(Atoi(#num) == num)
+	
+	CHECK_NUM(00);
+	CHECK_NUM(10);
+	CHECK_NUM(1);
+	CHECK_NUM(12);
+	CHECK_NUM(1442);
+	CHECK_NUM(1662);
+	CHECK_NUM(1812);
+	CHECK_NUM(0);
+	CHECK_NUM(7);
+	CHECK_NUM(343247);
+	CHECK_NUM(99999);
+	CHECK_NUM(900000);
+	CHECK_NUM(100);
+	CHECK_NUM(1003200);
+	
+	#undef CHECK_NUM
+	
+	ASSERT(Atoi("0123") == 123);
+	ASSERT(Atoi("0123000") == 123000);
 	
 	char stkConst1[] = "!@#$%^";
 	char stkConst2[] = "!@#$%^";
@@ -242,7 +275,6 @@ int main(int argc, char** argv){
 		SubString substr = str1.GetSubString(3, 2);
 		
 		str1.Release();
-		
 		
 		ASSERT(substr.GetRef() == 1);
 		ASSERT(StrEqualN(substr.start, "EF", 2));
