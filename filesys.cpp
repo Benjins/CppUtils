@@ -73,7 +73,7 @@ void File::Load(const char* path){
 			i--;
 		}
 	}
-
+	closedir(dp);
 }
 #elif defined(_WIN32)
 void File::Load(const char* path){
