@@ -150,7 +150,7 @@ struct SubString{
 		Release();
 	}
 	
-	SubString& operator=(SubString& other);
+	SubString& operator=(const SubString& other);
 	bool operator==(const SubString& other) const;
 	bool operator!=(const SubString& other) const;
 	

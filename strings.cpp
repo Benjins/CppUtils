@@ -166,13 +166,20 @@ inline bool CompareString(const SubString& a, const SubString& b){
 }
 
 
-SubString& SubString::operator=(SubString& other){
-	other.Retain();
-	Release();
-	
-	start = other.start;
-	length = other.length;
-	ref = other.ref;
+SubString& SubString::operator=(const SubString& other){
+	if (other.ref != ref){
+		Release();
+		
+		start = other.start;
+		length = other.length;
+		ref = other.ref;
+		
+		Retain();
+	}
+	else if (other.start != start || other.length != length){
+		start = other.start;
+		length = other.length;
+	}
 	
 	return *this;
 }
@@ -501,6 +508,68 @@ int main(int argc, char** argv){
 		ASSERT(StrEqualN(substr2.start, "CDEF", 4));
 		
 		ASSERT(str1.GetRef() == 3);
+		
+		substr1 = substr2;
+		substr1 = substr2;
+		substr2 = substr1;
+		
+		ASSERT(substr1.GetRef() == 3);
+		ASSERT(substr2.GetRef() == 3);
+	}
+	
+	{
+		char str1B[] = "ABCDEFGHIJ";
+		String str1 = str1B;
+		
+		SubString substr1,substr2;
+		
+		substr1 = str1.GetSubString(3, 4);
+		substr2 = str1.GetSubString(6, 2);
+		
+		ASSERT(substr1 != substr2);
+		ASSERT(substr2 != substr1);
+		
+		ASSERT(substr1.GetRef() == 3);
+		ASSERT(substr2.GetRef() == 3);
+		
+		{
+			SubString temp = substr1;
+			substr1 = substr2;
+			substr2 = temp;
+		}
+		
+		ASSERT(substr1 != substr2);
+		ASSERT(substr2 != substr1);
+		
+		ASSERT(substr1.GetRef() == 3);
+		ASSERT(substr2.GetRef() == 3);
+		
+		ASSERT(substr1 == "GH");
+		ASSERT(substr2 == "DEFG");
+		
+		SubString substr3 = str1.GetSubString(6, 3);
+		
+		ASSERT(substr1 != substr3);
+		ASSERT(substr2 != substr3);
+
+		str1.Release();
+		ASSERT(substr1.GetRef() == 3);
+		ASSERT(substr2.GetRef() == 3);
+		
+		substr1 = substr3;
+		substr2 = substr3;
+		ASSERT(substr1.GetRef() == 3);
+		ASSERT(substr2.GetRef() == 3);
+		ASSERT(substr3.GetRef() == 3);
+		
+		ASSERT(substr1 == substr2);
+		ASSERT(substr2 == substr3);
+		
+		SubString substr4,substr5;
+		substr5 = substr4 = substr1;
+		
+		ASSERT(substr1.GetRef() == 5);
+		ASSERT(substr4.GetRef() == 5);
 	}
 	
 	{
