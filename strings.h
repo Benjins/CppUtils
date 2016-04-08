@@ -56,6 +56,7 @@ struct StringStackBuffer{
 	}
 	
 	StringStackBuffer(const char* format, ...){
+		buffer[0] = '\0';
 		length = 0;
 		va_list varArgs;
 		va_start(varArgs, format);

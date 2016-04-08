@@ -12,10 +12,12 @@ struct Resource{
 	int pad;
 	
 	Resource(){
+		pad = 0;
 		fakeAllocCount++;
 	}
 	
 	Resource(const Resource& orig){
+		pad = 0;
 		fakeAllocCount++;
 		BNS_UNUSED(orig);
 	}

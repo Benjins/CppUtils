@@ -15,8 +15,9 @@ struct Ref{
 
 	Ref(){
 		mem = nullptr;
+		ref = nullptr;
 	}
-	
+
 	Ref(const T& init){
 		void* alloc = malloc(sizeof(T)+sizeof(int));
 		ref = (int*)alloc;

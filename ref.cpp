@@ -11,6 +11,7 @@ struct HelloYou{
 
 	HelloYou(){
 		stuff = 0;
+		nice[0] = 0;
 	}
 };
 
@@ -23,6 +24,7 @@ struct MyStruct{
 	Ref<HelloYou> youPtr;
 
 	MyStruct(){
+		name[0] = '\0';
 		thisIsMe = 0;
 		thisIsYou = 1.0f;
 		youPtr.Allocate();
