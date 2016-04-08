@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
 #include "assert.h"
 
 struct SubString;
@@ -12,11 +13,15 @@ int StrLen(const char* str);
 
 void MemCpy(void* dest, const void* src, int bytes);
 
+bool StrEqual(const char* s1, const char* s2);
+bool StrEqualN(const char* s1, const char* s2, unsigned int len);
+int Atoi(const char* str);
+
 /*
 Structure of string allocation:
- __________________________________
-|Ref|Len|  String.......         |0|
-|_2_|_4_|__________N_____________|1|
+ _____________________________________
+|Ref|Len|  String.......         |NULL|
+|_2_|_4_|__________N_____________|_1__|
 
 */
 
@@ -29,22 +34,43 @@ struct StringStackBuffer{
 		buffer[0] = '\0';
 		length = 0;
 	}
+
+	template<int otherCapacity>
+	bool operator==(const StringStackBuffer<otherCapacity>& other) const{
+		if(other.length == length){
+			return StrEqualN(buffer, other.buffer, length);
+		}
+		else{
+			return false;
+		}
+	}
+	
+	template<int otherCapacity>
+	bool operator!=(const StringStackBuffer<otherCapacity>& other) const{
+		if(other.length == length){
+			return !StrEqualN(buffer, other.buffer, length);
+		}
+		else{
+			return true;
+		}
+	}
 	
 	StringStackBuffer(const char* format, ...){
+		length = 0;
 		va_list varArgs;
 		va_start(varArgs, format);
-		vsnprintf(buffer, capacity, format, varArgs);
+		length += vsnprintf(buffer, capacity, format, varArgs);
 		va_end(varArgs);
 	}
 	
 	void Append(const char* str){
-		snprintf(&buffer[length], capacity - length, "%s", str);
+		length += snprintf(&buffer[length], capacity - length, "%s", str);
 	}
 	
 	void AppendFormat(const char* format, ...){
 		va_list varArgs;
 		va_start(varArgs, format);
-		vsnprintf(&buffer[length], capacity - length, format, varArgs);
+		length += vsnprintf(&buffer[length], capacity - length, format, varArgs);
 		va_end(varArgs);
 	}
 };
@@ -74,15 +100,25 @@ struct String{
 		MemCpy(string, start, newSize);
 	}
 	
+	String& operator=(String& other);
+	bool operator==(const String& other) const;
+	bool operator!=(const String& other) const;
+	
+	bool operator==(const SubString& other) const;
+	bool operator!=(const SubString& other) const;
+	
+	bool operator==(const char* other) const;
+	bool operator!=(const char* other) const;
+	
 	~String(){
 		Release();
 	}
 	
 	void SetSize(int size);
 	
-	int GetRef();
+	int GetRef() const;
 	
-	int GetLength();
+	int GetLength() const;
 	
 	SubString GetSubString(int index, int length);
 	
@@ -114,6 +150,16 @@ struct SubString{
 		Release();
 	}
 	
+	SubString& operator=(SubString& other);
+	bool operator==(const SubString& other) const;
+	bool operator!=(const SubString& other) const;
+	
+	bool operator==(const String& other) const;
+	bool operator!=(const String& other) const;
+	
+	bool operator==(const char* other) const;
+	bool operator!=(const char* other) const;
+	
 	int GetRef(){
 		if(ref == nullptr){
 			return 0;
@@ -141,10 +187,5 @@ struct ConstSubString{
 		start = str;
 	}
 };
-
-bool StrEqual(const char* s1, const char* s2);
-bool StrEqualN(const char* s1, const char* s2, unsigned int len);
-
-int Atoi(const char* str);
 
 #endif
