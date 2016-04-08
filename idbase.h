@@ -35,6 +35,17 @@ struct IDTracker{
 		}
 	}
 	
+	IDTracker(const IDTracker& other){
+		maxCount = other.maxCount;
+		currentCount = other.currentCount;
+		currentMaxId = other.currentMaxId;
+		vals = (T*)malloc(maxCount*sizeof(T));
+
+		for(int i = 0; i < currentCount; i++){
+			new (&vals[i]) T(other.vals[i]);
+		}
+	}
+	
 	void SetSize(uint32 newSize){
 		if(currentCount > 0){
 			// TODO: Should we warn here?

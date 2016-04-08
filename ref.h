@@ -39,11 +39,12 @@ struct Ref{
 	}
 
 	Ref(const Ref& other){
+		// cppcheck-suppress copyCtorPointerCopying
 		mem = other.mem;
 		ref = other.ref;
 		Retain();
 	}
-	
+
 	Ref& operator=(const Ref& other){
 		if(other.mem != nullptr){
 			other.Retain();

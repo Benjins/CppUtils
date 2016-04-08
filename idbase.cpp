@@ -12,11 +12,9 @@ struct TestEntity : IDBase{
 	char name[64];
 	
 	float pos[3];
-	// cppcheck-suppress uninitMemberVar
 	TestEntity(){
 		allocCount++;
 	}
-	// cppcheck-suppress uninitMemberVar
 	TestEntity(const TestEntity& ent){
 		BNS_UNUSED(ent);
 		allocCount++;
