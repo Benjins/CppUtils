@@ -175,8 +175,48 @@ int main(int argc, char** argv){
 	
 	{
 		Vector<Resource> vals = func1();
+		Vector<Resource> vals2 = func1();
+		
+		vals2.PushBack(Resource());
+		
+		vals = vals;
+		vals2 = vals;
+		Vector<Resource> vals3 = vals2;
+		
+		ASSERT(vals.data != vals2.data);
+		ASSERT(vals3.data != vals2.data);
 	}
 
+	{
+		Vector<int> iVec1(4);
+		iVec1.PushBack(3);
+		iVec1.PushBack(4);
+		iVec1.PushBack(8);
+		
+		Vector<int> iVec2;
+		iVec2.PushBack(1);
+		iVec2.PushBack(2);
+		iVec2.PushBack(3);
+		
+		Vector<int> iVec3 = iVec2;
+		iVec2 = iVec3 = iVec2;
+		
+		iVec1 = iVec2;
+		
+		ASSERT(iVec1.count == 3);
+		ASSERT(iVec2.count == 3);
+		ASSERT(iVec3.count == 3);
+		
+		ASSERT(iVec1.data != iVec2.data);
+		ASSERT(iVec3.data != iVec2.data);
+		ASSERT(iVec1.data != iVec3.data);
+		
+		for(int i = 0; i < 3; i++){
+			ASSERT(iVec1.Get(i) == iVec2.Get(i));
+			ASSERT(iVec2.Get(i) == iVec3.Get(i));
+		}
+	}
+	
 	ASSERT(fakeAllocCount == 0);
 
 	return 0;

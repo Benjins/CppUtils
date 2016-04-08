@@ -20,13 +20,26 @@ struct Vector{
 		capacity = 0;
 	}
 	
-	Vector(const Vector& other){
+	void Assign(const Vector& other){
 		data = (T*)malloc(other.capacity*sizeof(T));
 		count = other.count;
 		capacity = other.capacity;
 		for(int i = 0; i < other.count; i++){
 			new(&data[i]) T(other.data[i]);
 		}
+	}
+	
+	Vector(const Vector& other){
+		Assign(other);
+	}
+	
+	Vector& operator=(const Vector& other){
+		if(other.data != data){
+			Destroy();
+			Assign(other);
+		}
+		
+		return *this;
 	}
 	
 	void EnsureCapacity(int newCapacity){
