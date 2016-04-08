@@ -18,7 +18,7 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 hash_test.exe
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
-g++ -Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DVECTOR_TEST_MAIN assert.cpp vector.cpp -o vector_test
+cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DVECTOR_TEST_MAIN assert.cpp vector.cpp /Fevector_test
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
 vector_test.exe
