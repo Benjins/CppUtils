@@ -52,6 +52,7 @@ void String::Retain(){
 void String::Release(){
 	if (string != nullptr){
 		short* ref = (short*)(string - 6);
+		ASSERT(*ref > 0);
 		(*ref)--;
 		
 		if(*ref == 0){
@@ -69,6 +70,7 @@ void SubString::Retain(){
 void SubString::Release(){
 	if (ref){
 		ASSERT(start != nullptr);
+		ASSERT(*ref > 0);
 		(*ref)--;
 		
 		if(*ref == 0){
