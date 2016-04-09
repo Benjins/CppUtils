@@ -194,11 +194,11 @@ bool SubString::operator!=(const SubString& other) const{
 	return !CompareString(*this, other);
 }
 
-String& String::operator=(String& other){
+String& String::operator=(const String& other){
 	if (string != other.string) {
-		other.Retain();
 		Release();
 		string = other.string;
+		Retain();
 	}
 	
 	return *this;

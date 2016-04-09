@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "macros.h"
+#include "hash.h"
 
+#include "macros.h"
 #include "assert.h"
 
 
 typedef unsigned int Hash;
 
-Hash hash(void* mem, int size){
+Hash ComputeHash(void* mem, int size){
 	unsigned char* data = (unsigned char*)mem;
 	
 	unsigned long hashVal = 0xcbf29ce484222325ULL;
@@ -21,8 +22,8 @@ Hash hash(void* mem, int size){
 	return (Hash)hashVal;
 }
 
-Hash hash(char* str){
-	return hash(str, strlen(str));
+Hash ComputeHash(char* str){
+	return ComputeHash(str, strlen(str));
 }
 
 
@@ -36,7 +37,7 @@ int main(int argc, char** argv){
 	int* counts = new int[48238123];
 	
 	for(unsigned int i = 0; i < 5000000; i++){
-		Hash intHash = hash(&i, sizeof(i));
+		Hash intHash = ComputeHash(&i, sizeof(i));
 		
 		int idx = intHash % 48238123;
 		
@@ -48,21 +49,6 @@ int main(int argc, char** argv){
 	}
 	
 	delete[] counts;	
-
-	while(false){
-		printf("Enter a string.\n");
-
-		char response[256] = {0};
-		fgets(response, 255, stdin);
-
-		for(int i = 0; i < 256; i++){
-			if(response[i] == '\n' || response[i] == '\r'){
-				response[i] = '\0';
-			}
-		}
-
-		printf("String: '%s', hash: '%d'", response, hash(response));
-	}
 
 	return 0;
 }

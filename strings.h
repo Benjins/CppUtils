@@ -99,9 +99,10 @@ struct String{
 		SetSize(newSize);
 		
 		MemCpy(string, start, newSize);
+		string[newSize] = '\0';
 	}
 	
-	String& operator=(String& other);
+	String& operator=(const String& other);
 	bool operator==(const String& other) const;
 	bool operator!=(const String& other) const;
 	
