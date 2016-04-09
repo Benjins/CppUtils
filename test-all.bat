@@ -48,6 +48,12 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 stringmap_test.exe
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
+cl /Od /Zi /DBNS_DEBUG /DEXIT__ON_ASSERT /DCOMBINEDTESTS_TEST_MAIN stringmap.cpp strings.cpp hash.cpp assert.cpp combinedtest.cpp /Fecombined_test
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
+combined_test.exe
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
 echo Success!
 goto :EOF
 :somethingbad
