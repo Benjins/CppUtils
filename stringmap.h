@@ -108,8 +108,8 @@ struct StringMap{
 			int low = 0;
 			for( ; low < count && hash > hashes[low]; low++){
 			}
-			
-			if(hashes[low] == hash){
+
+			if(low < count && hashes[low] == hash){
 				bool found = false;
 				for(int i = low; i < count; i++){
 					if(name == names[i]){
@@ -140,7 +140,7 @@ struct StringMap{
 		for ( ; low < count && hash > hashes[low]; low++) {
 		}
 		
-		if(hashes[low] == hash){
+		if(low < count && hashes[low] == hash){
 			for(int i = low; i < count; i++){
 				if(names[i] == name){
 					*out = values[i];
