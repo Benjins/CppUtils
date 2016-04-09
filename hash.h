@@ -5,9 +5,9 @@
 
 typedef unsigned int Hash;
 
-Hash ComputeHash(void* mem, int size);
+Hash ComputeHash(const void* mem, int size);
 
-Hash ComputeHash(char* str);
+Hash ComputeHash(const char* str);
 
 
 #endif

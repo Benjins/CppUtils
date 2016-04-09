@@ -9,8 +9,8 @@
 
 typedef unsigned int Hash;
 
-Hash ComputeHash(void* mem, int size){
-	unsigned char* data = (unsigned char*)mem;
+Hash ComputeHash(const void* mem, int size){
+	const unsigned char* data = (const unsigned char*)mem;
 	
 	unsigned long hashVal = 0xcbf29ce484222325ULL;
 	
@@ -22,8 +22,8 @@ Hash ComputeHash(void* mem, int size){
 	return (Hash)hashVal;
 }
 
-Hash ComputeHash(char* str){
-	return ComputeHash(str, strlen(str));
+Hash ComputeHash(const char* str){
+	return ComputeHash(str, (int)strlen(str));
 }
 
 
