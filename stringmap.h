@@ -141,7 +141,6 @@ struct StringMap{
 		}
 		
 		if(hashes[low] == hash){
-			bool found = false;
 			for(int i = low; i < count; i++){
 				if(names[i] == name){
 					*out = values[i];
