@@ -42,7 +42,7 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 strings_test.exe
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
-cl /Od /Zi /DBNS_DEBUG /DEXIT__ON_ASSERT /DSTRINGMAP_TEST_MAIN assert.cpp hash.cpp strings.cpp stringmap.cpp /Festringmap_test
+cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DSTRINGMAP_TEST_MAIN assert.cpp hash.cpp strings.cpp stringmap.cpp /Festringmap_test
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
 stringmap_test.exe
