@@ -1,5 +1,9 @@
 #include "assert.h"
 
+#if defined(_MSC_VER)
+#include <Windows.h>
+#endif
+
 void assertFrom(const char* cond, const char* function, const char* file, int line, const char* msg){
 	printf("\nASSERTION!\n");
 	if (cond != nullptr){
@@ -14,6 +18,40 @@ void assertFrom(const char* cond, const char* function, const char* file, int li
 
 #if defined(EXIT_ON_ASSERT)
 	exit(-1);
+#else
+
+#if defined(_MSC_VER) && 0
+
+	char messageBoxBuffer[2048];
+	char* messageBoxCursor = messageBoxBuffer;
+
+	messageBoxCursor += snprintf(messageBoxCursor, 2048, "\nASSERTION!\n");
+	if (cond != nullptr) {
+		messageBoxCursor += snprintf(messageBoxCursor, 2048, "Condition: %s\n", cond);
+	}
+
+	if (msg != nullptr) {
+		messageBoxCursor += snprintf(messageBoxCursor, 2048, "Message: %s\n", msg);
+	}
+
+	messageBoxCursor += snprintf(messageBoxCursor, 2048, "File: %s\nLine: %d\nFunction: %s\n", file, line, function);
+
+	int msgboxID = MessageBoxA(
+		NULL,
+		messageBoxBuffer,
+		"Assertion",
+		MB_ICONWARNING | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2
+		);
+
+	switch (msgboxID)
+	{
+	case IDABORT:
+	case IDRETRY:
+		DEBUG_BREAK();
+		break;
+	case IDCONTINUE:
+		break;
+	}
 #else
 
 	printf("Type b to break, or s to skip.\n");
@@ -33,6 +71,7 @@ void assertFrom(const char* cond, const char* function, const char* file, int li
 			printf("Please enter b or s.\n");
 		}
 	}
+#endif
 #endif
 }
 

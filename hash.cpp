@@ -9,10 +9,16 @@
 
 typedef unsigned int Hash;
 
+#if defined(_MSC_VER)
+typedef unsigned long long uint64;
+#else
+typedef unsigned long uint64;
+#endif
+
 Hash ComputeHash(const void* mem, int size){
 	const unsigned char* data = (const unsigned char*)mem;
 	
-	unsigned long hashVal = 0xcbf29ce484222325ULL;
+	uint64 hashVal = 0xcbf29ce484222325ULL;
 	
 	for(int i = 0; i < size; i++){
 		hashVal ^= data[i];

@@ -163,6 +163,70 @@ File* File::Find(const char* path){
 	return nullptr;
 }
 
+void File::Unload() {
+	for (int i = 0; i < childCount; i++) {
+		children[i].Unload();
+	}
+
+	free(children);
+}
+
+void File::FindFilesWithExt(const char* ext, Vector<File*>* outFiles) {
+	for (int i = 0; i < childCount; i++) {
+		if (children[i].childCount == NOT_A_DIRECTORY) {
+			if (strcmp(children[i].fileExt, ext) == 0) {
+				outFiles->PushBack(&children[i]);
+			}
+		}
+		else {
+			children[i].FindFilesWithExt(ext, outFiles);
+		}
+	}
+}
+
+unsigned char* ReadBinaryFile(const char* fileName, int* outLength) {
+	FILE* fIn = fopen(fileName, "rb");
+	if (fIn == NULL) {
+		*outLength = 0;
+		return nullptr;
+	}
+
+	fseek(fIn, 0, SEEK_END);
+	int fileLength = ftell(fIn);
+	fseek(fIn, 0, SEEK_SET);
+
+	unsigned char* data = (unsigned char*)malloc(fileLength);
+	fread(data, 1, fileLength, fIn);
+
+	*outLength = fileLength;
+
+	fclose(fIn);
+
+	return data;
+}
+
+char* ReadTextFile(const char* fileName, int* outLength) {
+	FILE* fIn = fopen(fileName, "rb");
+	if (fIn == NULL) {
+		*outLength = 0;
+		return nullptr;
+	}
+
+	fseek(fIn, 0, SEEK_END);
+	int fileLength = ftell(fIn);
+	fseek(fIn, 0, SEEK_SET);
+
+	char* data = (char*)malloc(fileLength + 1);
+	fread(data, 1, fileLength, fIn);
+	data[fileLength] = '\0';
+
+	*outLength = fileLength;
+
+	fclose(fIn);
+
+	return data;
+}
+
 #if defined(FILESYS_TEST_MAIN)
 
 int main(int argc, char** argv){

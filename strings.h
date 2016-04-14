@@ -17,6 +17,8 @@ bool StrEqual(const char* s1, const char* s2);
 bool StrEqualN(const char* s1, const char* s2, unsigned int len);
 int Atoi(const char* str);
 
+int StrFind(const char* haystack, const char* needle);
+
 /*
 Structure of string allocation:
  _____________________________________
@@ -101,7 +103,17 @@ struct String{
 		MemCpy(string, start, newSize);
 		string[newSize] = '\0';
 	}
-	
+
+	String(const char* start, int length) {
+		string = nullptr;
+		SetSize(length);
+
+		MemCpy(string, start, length);
+		string[length] = '\0';
+	}
+
+	String(const SubString& substr);
+
 	String& operator=(const String& other);
 	bool operator==(const String& other) const;
 	bool operator!=(const String& other) const;
@@ -129,6 +141,8 @@ struct String{
 	void Release();
 };
 
+String ReadStringFromFile(const char* fileName);
+
 struct SubString{
 	short* ref;
 	char* start;
@@ -145,7 +159,9 @@ struct SubString{
 		start = other.start;
 		length = other.length;
 		
-		Retain();
+		if (ref != nullptr) {
+			Retain();
+		}
 	}
 	
 	~SubString(){

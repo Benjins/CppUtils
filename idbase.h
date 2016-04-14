@@ -57,7 +57,7 @@ struct IDTracker{
 			T* newVals = (T*)malloc(maxCount*sizeof(T));
 			
 			for(int i = 0; i < currentCount; i++){
-				newVals[i] = vals[i];
+				new(&newVals[i]) T(vals[i]);
 			}
 			
 			for(int i = 0; i < currentCount; i++){
@@ -79,13 +79,30 @@ struct IDTracker{
 	}
 	
 	T* CreateAndAdd(){
-		ASSERT(currentCount < maxCount);
+		if (currentCount >= maxCount) {
+			SetSize(maxCount > 0 ? maxCount * 2 : 2);
+		}
 		
 		T* ptr = new(&vals[currentCount]) T();
 		vals[currentCount].id = currentMaxId;
 		currentCount++;
 		currentMaxId++;
 		
+		return ptr;
+	}
+
+	T* AddWithId(uint32 id) {
+		ASSERT(id >= currentMaxId);
+
+		if (currentCount >= maxCount) {
+			SetSize(maxCount > 0 ? maxCount * 2 : 2);
+		}
+
+		T* ptr = new(&vals[currentCount]) T();
+		vals[currentCount].id = id;
+		currentCount++;
+		currentMaxId = id + 1;
+
 		return ptr;
 	}
 	

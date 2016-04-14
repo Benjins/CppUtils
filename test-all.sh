@@ -30,4 +30,10 @@ valgrind --quiet --leak-check=full --error-exitcode=12 ./strings_test
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DSTRINGMAP_TEST_MAIN assert.cpp strings.cpp hash.cpp stringmap.cpp -o stringmap_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./stringmap_test
 
-cppcheck --force --inline-suppr --suppress=cstyleCast --suppress=missingIncludeSystem --suppress=unusedFunction --error-exitcode=12 --template '{file},{line},{severity},{id},{message}' --quiet --verbose -DBNS_DEBUG -UREF_TEST_MAIN -UASSERT_TEST_MAIN -UHASH_TEST_MAIN -UVECTOR_TEST_MAIN -UFILESYS_TEST_MAIN -UIDBASE_TEST_MAIN -USTRINGS_TEST_MAIN -USTRINGMAP_TEST_MAIN --enable=all --std=c++11 *.cpp
+eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DMEMSTREAM_TEST_MAIN assert.cpp strings.cpp memstream.cpp -o memstream_test"
+valgrind --quiet --leak-check=full --error-exitcode=12 ./memstream_test
+
+eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DXML_TEST_MAIN strings.cpp assert.cpp hash.cpp xml.cpp -o xml_test"
+valgrind --quiet --leak-check=full --error-exitcode=12 ./xml_test
+
+cppcheck --force --inline-suppr --suppress=cstyleCast --suppress=missingIncludeSystem --suppress=unusedFunction --error-exitcode=12 --template '{file},{line},{severity},{id},{message}' --quiet --verbose -DBNS_DEBUG -UREF_TEST_MAIN -UASSERT_TEST_MAIN -UHASH_TEST_MAIN -UVECTOR_TEST_MAIN -UFILESYS_TEST_MAIN -UIDBASE_TEST_MAIN -USTRINGS_TEST_MAIN -USTRINGMAP_TEST_MAIN -UMEMSTREAM_TEST_MAIN -UXML_TEST_MAIN --enable=all --std=c++11 *.cpp

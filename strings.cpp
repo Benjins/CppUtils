@@ -1,5 +1,7 @@
 #include "strings.h"
 
+#include <stdio.h>
+
 void String::SetSize(int size){
 	Release();
 	
@@ -13,6 +15,10 @@ void String::SetSize(int size){
 	
 	*ref = 1;
 	*length = size;
+}
+
+String::String(const SubString& substr)
+	: String(substr.start, substr.length) {
 }
 
 int String::GetRef() const{
@@ -128,7 +134,7 @@ bool StrEqualN(const char* s1, const char* s2, unsigned int len){
 		counter++;
 	}
 	
-	return counter == len;
+	return counter == len || *s1 == *s2;
 }
 
 void MemCpy(void* dest, const void* src, int bytes){
@@ -152,6 +158,30 @@ int Atoi(const char* str){
 	return val;
 }
 
+int StrFind(const char* haystack, const char* needle) {
+	if (!needle || !haystack) {
+		return -1;
+	}
+
+	const char* originalHaystack = haystack;
+	while (*haystack) {
+		const char* hCursor = haystack;
+		const char* nCursor = needle;
+
+		while (*nCursor && *hCursor && *nCursor == *hCursor) {
+			nCursor++;
+			hCursor++;
+		}
+
+		if (!*nCursor) {
+			return haystack - originalHaystack;
+		}
+
+		haystack++;
+	}
+
+	return -1;
+}
 
 inline bool CompareString(const String& a, const String& b){
 	int length = a.GetLength();
@@ -230,6 +260,23 @@ bool String::operator!=(const char* other) const{
 	return !StrEqualN(string, other, length);
 }
 
+String ReadStringFromFile(const char* fileName) {
+	String str;
+
+	FILE* fIn = fopen(fileName, "rb");
+	fseek(fIn, 0, SEEK_END);
+	int fileLength = ftell(fIn);
+	fseek(fIn, 0, SEEK_SET);
+
+	str.SetSize(fileLength);
+	fread(str.string, 1, fileLength, fIn);
+	str.string[fileLength] = '\0';
+
+	str.Retain();
+
+	return str;
+}
+
 bool SubString::operator==(const String& other) const{
 	return CompareString(other, *this);
 }
@@ -268,13 +315,24 @@ int main(int argc, char** argv){
 	ASSERT(!StrEqualN("abccc", "abccca", 6));
 	ASSERT(!StrEqual("abc", "ABC"));
 	
+	ASSERT(StrFind("abs", "abs") == 0);
+	ASSERT(StrFind("ababababababs", "abs") == 10);
+	ASSERT(StrFind("abSSS", "abs") == -1);
+	ASSERT(StrFind("abbb", "abbyyyaaabbnbbbbn") == -1);
+	ASSERT(StrFind("J121241381835", "818") == 8);
+	ASSERT(StrFind("J121241381835", nullptr) == -1);
+	ASSERT(StrFind(nullptr, "J121241381835") == -1);
+	ASSERT(StrFind(nullptr, nullptr) == -1);
+	ASSERT(StrFind("ABCDABCD", "ABC") == 0);
+	ASSERT(StrFind("ABHHHHHHHABABABAHBAHBAHAB", "ABB") == -1);
+
 	#define CHECK_NUM(num) ASSERT(Atoi(#num) == num)
 	
 	CHECK_NUM(00);
 	CHECK_NUM(10);
 	CHECK_NUM(1);
 	CHECK_NUM(12);
-	CHECK_NUM(1442);
+	CHECK_NUM(1442); 
 	CHECK_NUM(1662);
 	CHECK_NUM(1812);
 	CHECK_NUM(0);

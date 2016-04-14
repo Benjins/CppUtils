@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "vector.h"
+
 #define NOT_A_DIRECTORY -1
 
 struct File{
@@ -23,11 +25,15 @@ struct File{
 	}
 
 	void Load(const char* name);
+
+	void Unload();
 	
 	File* Find(const char* path);
+	void FindFilesWithExt(const char* ext, Vector<File*>* outFiles);
 };
 
-
+unsigned char* ReadBinaryFile(const char* fileName, int* outLength);
+char* ReadTextFile(const char* fileName, int* outLength);
 
 
 #endif
