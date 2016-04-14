@@ -17,7 +17,10 @@ void String::SetSize(int size){
 	*length = size;
 }
 
-String::String(const SubString& substr)
+// FML.
+// cppcheck-suppress unmatchedSuppression
+// cppcheck-suppress uninitVar
+String::String(const SubString& substr) 
 	: String(substr.start, substr.length) {
 }
 
