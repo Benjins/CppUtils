@@ -72,7 +72,9 @@ TestStr GetStruct(){
 }
 
 int main(int argc, char** argv){
-	
+	BNS_UNUSED(argc);
+	BNS_UNUSED(argv);
+
 	{
 		MemStream str;
 		

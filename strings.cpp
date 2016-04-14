@@ -272,6 +272,8 @@ String ReadStringFromFile(const char* fileName) {
 	fread(str.string, 1, fileLength, fIn);
 	str.string[fileLength] = '\0';
 
+	fclose(fIn);
+
 	str.Retain();
 
 	return str;

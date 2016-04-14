@@ -193,7 +193,7 @@ XMLError LexXMLString(String& xmlString, Vector<SubString>* outTokens) {
 			if (isWhiteSpace) {
 				EMIT_TOKEN();
 				currState = LS_WHITESPACE;
-				lastTokenStart = i + 1;
+				lastTokenStart++;
 			}
 			else if (isKeySymbol){
 				EMIT_TOKEN();
@@ -213,6 +213,8 @@ XMLError LexXMLString(String& xmlString, Vector<SubString>* outTokens) {
 #if defined(XML_TEST_MAIN)
 
 int main(int argc, char** argv) {
+	BNS_UNUSED(argc);
+	BNS_UNUSED(argv);
 
 	String xmlStr1 = "<tag attr='valval'></tag>";
 	String xmlStr2 = "<  tag attr =   'val22'>\"This is me talkign sgnkjsngkj '''\"</tag>";

@@ -32,7 +32,6 @@ struct MemStream{
 	char* ReadStringInPlace(){
 		void* oldReadHead = readHead;
 		
-		int len = 0;
 		while(*(char*)readHead != '\0'){
 			readHead = VOID_PTR_ADD(readHead, 1);
 		}
