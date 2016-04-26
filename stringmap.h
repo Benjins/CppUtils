@@ -130,16 +130,16 @@ struct StringMap{
 				InsertAtIndex(name, hash, value, low);
 			}
 		}
-		
+
 	}
-	
-	bool LookUp(const String& name, T* out){
+
+	bool LookUp(const String& name, T* out) const{
 		Hash hash = ComputeHash(name.string);
 		
 		int low = 0;
 		for ( ; low < count && hash > hashes[low]; low++) {
 		}
-		
+
 		if(low < count && hashes[low] == hash){
 			for(int i = low; i < count; i++){
 				if(names[i] == name){
@@ -151,8 +151,7 @@ struct StringMap{
 				}
 			}
 		}
-		
-		
+
 		return false;
 	}
 	

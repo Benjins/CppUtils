@@ -8,10 +8,10 @@
 #include "stringmap.h"
 #include "idbase.h"
 
-struct XMLDocument;
+struct XMLDoc;
 
 struct XMLElement : IDBase {
-	XMLDocument* doc;
+	XMLDoc* doc;
 	SubString name;
 	SubString plainText;
 	StringMap<String> attributes;
@@ -26,9 +26,11 @@ struct XMLElement : IDBase {
 		: IDBase(other), name(other.name), plainText(other.plainText), attributes(other.attributes), childrenIds(other.childrenIds){
 		doc = other.doc;
 	}
+
+	XMLElement* GetChild(const char* name, unsigned int index = 0);
 };
 
-struct XMLDocument {
+struct XMLDoc {
 	IDTracker<XMLElement> elements;
 };
 
@@ -39,9 +41,9 @@ enum XMLError {
 	XMLE_PARSINGERROR
 };
 
-XMLError ParseXMLString(String& xmlString, XMLDocument* outDoc);
+XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc);
 
-XMLError ParseXMLStringFromFile(const char* fileName, XMLDocument* outDoc);
+XMLError ParseXMLStringFromFile(const char* fileName, XMLDoc* outDoc);
 
 XMLError LexXMLString(String& xmlString, Vector<SubString>* outTokens);
 

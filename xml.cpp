@@ -1,7 +1,7 @@
 #include "xml.h"
 
 
-XMLError ParseXMLString(String& xmlString, XMLDocument* outDoc) {
+XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc) {
 	Vector<SubString> tokens;
 
 	XMLError err = LexXMLString(xmlString, &tokens);
@@ -102,14 +102,18 @@ XMLError ParseXMLString(String& xmlString, XMLDocument* outDoc) {
 	return XMLE_NONE;
 }
 
-XMLError ParseXMLStringFromFile(const char* fileName, XMLDocument* outDoc) {
+XMLError ParseXMLStringFromFile(const char* fileName, XMLDoc* outDoc) {
 	String str = ReadStringFromFile(fileName);
 
 	if (str.string == nullptr) {
 		return XMLE_FILENOTFOUND;
 	}
 
-	return ParseXMLString(str, outDoc);
+	XMLError err = ParseXMLString(str, outDoc);
+	short* ref = (short*)(str.string - 6);
+	(*ref)--;
+	
+	return err;
 }
 
 XMLError LexXMLString(String& xmlString, Vector<SubString>* outTokens) {
@@ -210,6 +214,22 @@ XMLError LexXMLString(String& xmlString, Vector<SubString>* outTokens) {
 #undef EMIT_TOKEN
 }
 
+XMLElement* XMLElement::GetChild(const char* name, unsigned int index /*= 0*/) {
+	for (int i = 0; i < childrenIds.count; i++) {
+		XMLElement* child = doc->elements.GetById(childrenIds.Get(i));
+		if (child->name == name) {
+			if (index == 0) {
+				return child;
+			}
+			else {
+				index--;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
 #if defined(XML_TEST_MAIN)
 
 int main(int argc, char** argv) {
@@ -228,10 +248,10 @@ int main(int argc, char** argv) {
 	LexXMLString(xmlStr2, &lex2);
 	LexXMLString(xmlStr3, &lex3);
 
-	XMLDocument doc1;
+	XMLDoc doc1;
 	ParseXMLString(xmlStr1, &doc1);
 
-	XMLDocument doc3;
+	XMLDoc doc3;
 	ParseXMLString(xmlStr3, &doc3);
 
 	ASSERT(doc3.elements.currentCount == 2);
@@ -250,7 +270,7 @@ int main(int argc, char** argv) {
 		"\t<uniform name='tintCol' type='vec4' val='0.4,0.7,0.3,1.0'/>\n"
 		"</Material>\n";
 
-	XMLDocument doc4;
+	XMLDoc doc4;
 	ParseXMLString(xmmlMatStr, &doc4);
 
 	ASSERT(doc4.elements.GetById(0)->attributes.count == 2);

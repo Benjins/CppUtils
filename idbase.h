@@ -46,6 +46,14 @@ struct IDTracker{
 		}
 	}
 	
+	void Reset() {
+		for (int i = 0; i < currentCount; i++) {
+			vals[i].~T();
+		}
+		currentCount = 0;
+		currentMaxId = 0;
+	}
+
 	void SetSize(uint32 newSize){
 		if(currentCount > 0){
 			// TODO: Should we warn here?

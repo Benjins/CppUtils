@@ -168,7 +168,7 @@ void File::Unload() {
 		children[i].Unload();
 	}
 
-	free(children);
+	delete[] children;
 }
 
 void File::FindFilesWithExt(const char* ext, Vector<File*>* outFiles) {
