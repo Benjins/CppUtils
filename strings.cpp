@@ -2,6 +2,20 @@
 
 #include <stdio.h>
 
+size_t FindChar(const char* str, char c) {
+	const char* cursor = str;
+	while (*cursor) {
+
+		if (*cursor == c) {
+			return (cursor - str);
+		}
+
+		cursor++;
+	}
+
+	return -1;
+}
+
 void String::SetSize(int size){
 	Release();
 	

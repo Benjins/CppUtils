@@ -9,6 +9,8 @@
 
 struct SubString;
 
+size_t FindChar(const char* str, char c);
+
 int StrLen(const char* str);
 
 void MemCpy(void* dest, const void* src, int bytes);

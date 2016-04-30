@@ -5,21 +5,6 @@
 
 #include "macros.h"
 
-// TODO: Move this into strings.h
-size_t FindChar(const char* str, char c){
-	const char* cursor = str;
-	while(*cursor){
-		
-		if(*cursor == c){
-			return (cursor - str);
-		}
-		
-		cursor++;
-	}
-	
-	return -1;
-}
-
 typedef enum{
 	STRING,
 	CHARACTER,
@@ -39,10 +24,19 @@ typedef enum{
 
 static const char* whitespace = "\t\r\n ";
 
+static const char* operators[] = {  ",", "++", "--", "*", "/", "->", "+", "-", "&", "|", "&&", "||", "#", "%", "{", "}", ";", "(", ")"
+									"~", "^", "!=", "==", "=", "!", ".", "?", ":", "<", ">", "<<", ">>", "<=", ">=", "[", "]", "+=",
+									"-=", "*=", "/=", "^=", "|=", "&=", "##"};
+							
+int GetOperatorCount(){
+	return BNS_ARRAY_COUNT(operators);
+}
+
+const char** GetOperators(){
+	return operators;
+}
+
 Vector<SubString> LexString(String string){
-	static const char* operators[] = {",", "++", "--", "*", "/", "->", "+", "-", "&", "|", "&&", "||", "#", "%", "{", "}", ";", "(", ")"
-									 "~", "^", "!=", "==", "=", "!", ".", "?", ":", "<", ">", "<<", ">>", "<=", ">=", "[", "]", "+=",
-									 "-=", "*=", "/=", "^=", "|=", "&=", "##"};
 	
 	String annoStart = "/*[";
 	String annoEnd = "]*/";

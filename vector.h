@@ -66,6 +66,10 @@ struct Vector{
 		count--;
 		data[count].~T();
 	}
+
+	T& Back() {
+		return data[count - 1];
+	}
 	
 	void Remove(int index){
 		ASSERT(index >= 0 && index < count);

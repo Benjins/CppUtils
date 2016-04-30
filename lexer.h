@@ -8,4 +8,7 @@
 
 Vector<SubString> LexString(String string);
 
+int GetOperatorCount();
+const char** GetOperators();
+
 #endif
