@@ -273,6 +273,11 @@ int main(int argc, char** argv) {
 	XMLDoc doc4;
 	ParseXMLString(xmmlMatStr, &doc4);
 
+	{
+		XMLDocument doc5;
+		ParseXMLStringFromFile("test1.xml", &doc5);
+	}
+
 	ASSERT(doc4.elements.GetById(0)->attributes.count == 2);
 	ASSERT(doc4.elements.GetById(0)->childrenIds.count == 2);
 	String vsVal;
