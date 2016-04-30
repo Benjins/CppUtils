@@ -101,6 +101,7 @@ struct Assignment : Statement{
 
 struct FunctionCall : Value{
 	FuncDef* func;
+	int stackFrameOffset;
 	
 	Vector<Value*> args;
 	
@@ -220,6 +221,7 @@ struct BNVParser{
 	FuncDef* GetFuncDef(const SubString& name) const;
 	TypeInfo* GetVariableType(const SubString& name) const;
 	int GetVariableOffset(const SubString& name) const;
+	int GetStackFrameOffset() const;
 
 	bool ShuntingYard(const Vector<BNVToken>& inToks, Vector<BNVToken>& outToks);
 	

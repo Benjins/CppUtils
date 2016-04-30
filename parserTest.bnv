@@ -4,26 +4,37 @@ struct Vector3{
 	float z;
 };
 
+int Factorial(int val){
+	if (val <= 1){
+		return 1;
+	}
+
+	return val * Factorial(val-1);
+}
+
+int IsPrime(int val){
+	int counter = 2;
+	int factorCount = 0;
+	while(counter < val){
+		if ((val / counter) * counter == val){
+			factorCount = factorCount + 1;
+		}
+
+		counter = counter + 1;
+	}
+
+	return factorCount == 0;
+}
 
 int main(){
+
+	int fac = READI();
+	PRINTI(Factorial(fac));
 
 	int val = READI();
 	while (val > 0){
 
-		int counter = 2;
-		int factorCount = 0;
-		while(counter < val){
-			if ((val / counter) * counter == val){
-				factorCount = factorCount + 1;
-			}
-
-			counter = counter + 1;
-		}
-
-		PRINTI(val);
-		if(factorCount == 0){
-			PRINTI(0-54321);
-		}
+		PRINTI(IsPrime(val));
 
 		val = READI();
 	}

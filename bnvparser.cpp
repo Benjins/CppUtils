@@ -172,7 +172,8 @@ void BNVParser::ParseFile(const char* fileName){
 			structDefs.PushBack(structDef);
 		}
 		else if(FuncDef* funcDef = ParseFuncDef()){
-			funcDefs.PushBack(funcDef);
+			//funcDefs.PushBack(funcDef);
+			//Do nothing
 		}
 		else{
 			printf("\nWelp.............\n");
@@ -216,20 +217,23 @@ StructDef* BNVParser::ParseStructDef(){
 
 FuncDef* BNVParser::ParseFuncDef(){
 	PushCursorFrame();
+	PushVarFrame();
 	
 	FuncDef* def = new FuncDef();
 	if (TypeInfo* retType = ParseType()){
 		SubString funcName;
 		if(ParseIdentifier(&funcName)){
+			def->retType = retType;
 			def->name = funcName;
 			if(ExpectAndEatWord("(")){
 				if(ExpectAndEatWord(")")){
-					
+					// Do nothing
 				}
 				else{
 					VarDecl funcParam;
 					while(ExpectAndEatVarDecl(&funcParam)){
 						def->params.PushBack(funcParam);
+						varsInScope.PushBack(funcParam);
 						
 						if(ExpectAndEatWord(",")){
 							//Do nothing
@@ -244,28 +248,36 @@ FuncDef* BNVParser::ParseFuncDef(){
 						}
 					}
 				}
+
+				funcDefs.PushBack(def);
 				
 				if(Scope* scope = ParseScope()){
 					def->statements = scope->statements;
+					PopVarFrame();
 					return def;
 				}
 				else{
+					funcDefs.PopBack();
 					PopCursorFrame();
+					PopVarFrame();
 					return nullptr;
 				}
 			}
 			else {
 				PopCursorFrame();
+				PopVarFrame();
 				return nullptr;
 			}
 		}
 		else{
 			PopCursorFrame();
+			PopVarFrame();
 			return nullptr;
 		}
 	}
 	else{
 		PopCursorFrame();
+		PopVarFrame();
 		return nullptr;
 	}
 }
@@ -502,6 +514,15 @@ int BNVParser::GetVariableOffset(const SubString& name) const {
 	}
 
 	return -1;
+}
+
+int BNVParser::GetStackFrameOffset() const {
+	int offset = 0;
+	for (int i = 0; i < varsInScope.count; i++) {
+		offset += varsInScope.data[i].type->size;
+	}
+
+	return offset;
 }
 
 bool BNVParser::ShuntingYard(const Vector<BNVToken>& inToks, Vector<BNVToken>& outToks) {
@@ -932,7 +953,16 @@ void FunctionCall::AddByteCode(BNVM& vm) {
 		vm.code.PushBack(builtinFunc.instr);
 	}
 	else {
-		// AHAHAHHAHAHAH funcs
+		int funcPtr = -1;
+		vm.functionPointers.LookUp(func->name, &funcPtr);
+		IntLiteral lit;
+		lit.value = funcPtr;
+		lit.AddByteCode(vm);
+
+		lit.value = stackFrameOffset;
+		lit.AddByteCode(vm);
+
+		vm.code.PushBack(I_CALL);
 	}
 }
 
@@ -948,6 +978,7 @@ TypeInfo* FunctionCall::TypeCheck(const BNVParser& parser) {
 		}
 	}
 
+	stackFrameOffset = parser.GetStackFrameOffset();
 	type = func->retType;
 	return type;
 }
@@ -987,7 +1018,14 @@ TypeInfo* VariableAccess::TypeCheck(const BNVParser& parser) {
 void FuncDef::AddByteCode(BNVM& vm) {
 	vm.functionPointers.Insert(name, vm.code.count);
 
-	// Parameter popping off stack
+	for (int i = 0; i < params.count; i++) {
+		IntLiteral lit;
+		lit.value = i;
+		lit.AddByteCode(vm);
+
+		//TODO: types;
+		vm.code.PushBack(I_STOREI);
+	}
 
 	Scope::AddByteCode(vm);
 }
@@ -1047,11 +1085,20 @@ int main(int argc, char** argv){
 
 	parser.ParseFile("parserTest.bnv");
 
-	ASSERT(parser.funcDefs.count == 5);
-	ASSERT(parser.funcDefs.data[4]->name == "main");
+	ASSERT(parser.funcDefs.count == 7);
+	ASSERT(parser.funcDefs.data[6]->name == "main");
 
 	BNVM vm;
 	parser.AddByteCode(vm);
+
+	/*
+	int facStart = 0;
+	int facEnd = 0;
+	vm.functionPointers.LookUp("main", &facEnd);
+	for (int i = facStart; i < facEnd; i++) {
+		printf("|%3d|\n", vm.code.data[i]);
+	}
+	*/
 
 	vm.Execute("main");
 

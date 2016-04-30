@@ -27,6 +27,9 @@ int BNVM::Execute(const char* funcName){
 	
 	pc = startPc;
 	
+	callStack.Push<int>(code.count);
+	callStack.Push<int>(0);
+
 	for(int i = startPc; i < code.count; i++){
 		Instruction instr = (Instruction)code.data[i];
 		switch(instr){
@@ -101,11 +104,22 @@ int BNVM::Execute(const char* funcName){
 		} break;
 		
 		case I_CALL:{
-			
+			int stkFrameOffset = tempStack.Pop<int>();
+			int jumpTo = tempStack.Pop<int>();
+
+			callStack.Push<int>(i);
+			callStack.Push<int>(varStack.stackMem.count);
+
+			varStack.Increment(stkFrameOffset);
+			i = jumpTo - 1;
 		} break;
 		
 		case I_RETURN:{
-			
+			int oldStkFrame = callStack.Pop<int>();
+			int returnAddr = callStack.Pop<int>();
+
+			varStack.stackMem.count = oldStkFrame;
+			i = returnAddr;
 		} break;
 		
 		case I_PRINTI:{
