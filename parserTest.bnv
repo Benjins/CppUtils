@@ -1,15 +1,32 @@
-/*
 struct Vector3{
 	float x;
 	float y;
 	float z;
 };
-*/
 
 
 int main(){
 
-	PRINTI(READI() * 5);
+	int val = READI();
+	while (val > 0){
+
+		int counter = 2;
+		int factorCount = 0;
+		while(counter < val){
+			if ((val / counter) * counter == val){
+				factorCount = factorCount + 1;
+			}
+
+			counter = counter + 1;
+		}
+
+		PRINTI(val);
+		if(factorCount == 0){
+			PRINTI(0-54321);
+		}
+
+		val = READI();
+	}
 
 	return 0;
 }

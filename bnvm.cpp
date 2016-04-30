@@ -32,7 +32,9 @@ int BNVM::Execute(const char* funcName){
 		switch(instr){
 			
 		case I_ADDI:{
-			
+			int a = tempStack.Pop<int>();
+			int b = tempStack.Pop<int>();
+			tempStack.Push(a+b);
 		} break;
 		
 		case I_MULTI:{
@@ -42,11 +44,15 @@ int BNVM::Execute(const char* funcName){
 		} break;
 		
 		case I_DIVI:{
-			
+			int a = tempStack.Pop<int>();
+			int b = tempStack.Pop<int>();
+			tempStack.Push(a/b);
 		} break;
 		
 		case I_SUBI:{
-			
+			int a = tempStack.Pop<int>();
+			int b = tempStack.Pop<int>();
+			tempStack.Push(a-b);
 		} break;
 		
 		case I_NEGATEI:{
@@ -74,11 +80,24 @@ int BNVM::Execute(const char* funcName){
 		} break;
 		
 		case I_BRANCH:{
-			
+			int branchto = tempStack.Pop<int>();
+			i = branchto - 1;
 		} break;
 		
 		case I_BRANCHIFZERO:{
-			
+			int branchto = tempStack.Pop<int>();
+			int check = tempStack.Pop<int>();
+			if (!check) {
+				i = branchto - 1;
+			}
+		} break;
+
+		case I_BRANCHIFNOTZERO: {
+			int branchto = tempStack.Pop<int>();
+			int check = tempStack.Pop<int>();
+			if (check) {
+				i = branchto - 1;
+			}
 		} break;
 		
 		case I_CALL:{
@@ -108,12 +127,24 @@ int BNVM::Execute(const char* funcName){
 			
 		} break;
 		
-		case I_LOAD:{
-			
+		case I_LOADI:{
+			int reg = tempStack.Pop<int>();
+			int val = *varStack.Access<int>(reg);
+			tempStack.Push(val);
 		} break;
 		
-		case I_STORE:{
-			
+		case I_STOREI:{
+			int reg = tempStack.Pop<int>();
+			int val = tempStack.Pop<int>();
+			*varStack.Access<int>(reg) = val;
+		} break;
+
+		case I_LOADF: {
+
+		} break;
+
+		case I_STOREF: {
+
 		} break;
 		
 		case I_INTLIT:{
@@ -130,11 +161,59 @@ int BNVM::Execute(const char* funcName){
 		} break;
 		
 		case I_FLTLIT:{
-			
+			float val = *(float*)&code.data[i + 1];
+			tempStack.Push(val);
+			i += 4;
 		} break;
 		
-		default:
-			break;
+		case I_EQI: {
+			tempStack.Push<int>(tempStack.Pop<int>() == tempStack.Pop<int>());
+		} break;
+
+		case I_EQF: {
+			tempStack.Push<int>(tempStack.Pop<float>() == tempStack.Pop<float>());
+		} break;
+		
+		case I_NEQI: {
+			tempStack.Push<int>(tempStack.Pop<int>() != tempStack.Pop<int>());
+		} break;
+
+		case I_NEQF: {
+			tempStack.Push<int>(tempStack.Pop<float>() != tempStack.Pop<float>());
+		} break;
+
+		case I_GTI: {
+			tempStack.Push<int>(tempStack.Pop<int>() > tempStack.Pop<int>());
+		} break;
+
+		case I_GTF: {
+			tempStack.Push<int>(tempStack.Pop<float>() > tempStack.Pop<float>());
+		} break;
+
+		case I_GTEI: {
+			tempStack.Push<int>(tempStack.Pop<int>() >= tempStack.Pop<int>());
+		} break;
+
+		case I_GTEF: {
+			tempStack.Push<int>(tempStack.Pop<float>() >= tempStack.Pop<float>());
+		} break;
+
+		case I_LTI: {
+			tempStack.Push<int>(tempStack.Pop<int>() < tempStack.Pop<int>());
+		} break;
+
+		case I_LTF: {
+			tempStack.Push<int>(tempStack.Pop<float>() < tempStack.Pop<float>());
+		} break;
+
+		case I_LTEI: {
+			tempStack.Push<int>(tempStack.Pop<int>() <= tempStack.Pop<int>());
+		} break;
+
+		case I_LTEF: {
+			tempStack.Push<int>(tempStack.Pop<float>() <= tempStack.Pop<float>());
+		} break;
+
 		}
 	}
 	

@@ -14,7 +14,13 @@ BuiltinOp builtinOps[] = {
 	{"*", I_MULTI, I_MULTF},
 	{"+", I_ADDI,  I_ADDF},
 	{"-", I_SUBI,  I_SUBF},
-	{"/", I_DIVI,  I_DIVF}
+	{"/", I_DIVI,  I_DIVF },
+	{"==", I_EQI,  I_EQF },
+	{"!=", I_NEQI, I_NEQF },
+	{"<", I_LTI, I_LTF },
+	{"<=", I_LTEI, I_LTEF },
+	{">", I_GTI, I_GTF },
+	{">=", I_GTEI, I_GTEF}
 };
 
 struct BuiltinFunc{
@@ -76,12 +82,17 @@ struct OperatorPrecedence {
 };
 
 OperatorPrecedence opPrec[] = {
+	{ ".",  OA_BINARY, 1 },
 	{ "!",  OA_UNARY, 3 },
 	{ "*",  OA_BINARY, 5 },
 	{ "/",  OA_BINARY, 5 },
 	{ "%",  OA_BINARY, 5 },
 	{ "+",  OA_BINARY, 6 },
 	{ "-",  OA_BINARY, 6 },
+	{ ">", OA_BINARY,  9 },
+	{ ">=", OA_BINARY,  9 },
+	{ "<", OA_BINARY,  9 },
+	{ "<=", OA_BINARY,  9 },
 	{ "==", OA_BINARY,  9 },
 	{ "!=", OA_BINARY,  9 },
 	{ "&&", OA_BINARY,  13 },
@@ -288,6 +299,9 @@ Statement* BNVParser::ParseStatement(){
 	else if(Scope* scope = ParseScope()){
 		return scope;
 	}
+	else if (Assignment* assign = ParseAssignment()) {
+		return assign;
+	}
 	else if (Value* val = ParseValue()) {
 		if (ExpectAndEatWord(";")) {
 			return val;
@@ -457,7 +471,7 @@ Assignment* BNVParser::ParseAssignment(){
 	}
 }
 
-FuncDef* BNVParser::GetFuncDef(const SubString& name) {
+FuncDef* BNVParser::GetFuncDef(const SubString& name) const {
 	for (int i = 0; i < funcDefs.count; i++) {
 		if (funcDefs.data[i]->name == name) {
 			return funcDefs.data[i];
@@ -467,7 +481,7 @@ FuncDef* BNVParser::GetFuncDef(const SubString& name) {
 	return nullptr;
 }
 
-TypeInfo* BNVParser::GetVariableType(const SubString& name) {
+TypeInfo* BNVParser::GetVariableType(const SubString& name) const {
 	for (int i = 0; i < varsInScope.count; i++) {
 		if (varsInScope.data[i].name == name) {
 			return varsInScope.data[i].type;
@@ -475,6 +489,19 @@ TypeInfo* BNVParser::GetVariableType(const SubString& name) {
 	}
 
 	return nullptr;
+}
+
+int BNVParser::GetVariableOffset(const SubString& name) const {
+	int offset = 0;
+	for (int i = 0; i < varsInScope.count; i++) {
+		if (varsInScope.data[i].name == name) {
+			return offset;
+		}
+
+		offset += varsInScope.data[i].type->size;
+	}
+
+	return -1;
 }
 
 bool BNVParser::ShuntingYard(const Vector<BNVToken>& inToks, Vector<BNVToken>& outToks) {
@@ -673,6 +700,7 @@ Value* BNVParser::ParseValue(){
 							vals.PushBack(unOp);
 						}
 						else {
+							printf("Unary operator without enough operands.\n");
 							PopCursorFrame();
 							return nullptr;
 						}
@@ -688,11 +716,13 @@ Value* BNVParser::ParseValue(){
 							vals.PushBack(bOp);
 						}
 						else {
+							printf("Binary operator '%.*s' without enough operands.\n", tokStr.length, tokStr.start);
 							PopCursorFrame();
 							return nullptr;
 						}
 					}
 					else {
+						printf("Unknown operator arity '%.*s'.\n", tokStr.length, tokStr.start);
 						PopCursorFrame();
 						return nullptr;
 					}
@@ -709,6 +739,7 @@ Value* BNVParser::ParseValue(){
 			return vals.Back();
 		}
 		else {
+			printf("Parsing value with wrong number of values: %d.\n", vals.count);
 			PopCursorFrame();
 			return nullptr;
 		}
@@ -774,9 +805,11 @@ void Scope::AddByteCode(BNVM& vm) {
 void IfStatement::AddByteCode(BNVM& vm) {
 	check->AddByteCode(vm);
 	IntLiteral intLit;
-	intLit.type = 0;
+	intLit.value = 0;
 	intLit.AddByteCode(vm);
 	int literalIndex = vm.code.count - 4;
+
+	vm.code.PushBack(I_BRANCHIFZERO);
 	Scope::AddByteCode(vm);
 
 	int branchTo = vm.code.count;
@@ -786,7 +819,27 @@ void IfStatement::AddByteCode(BNVM& vm) {
 }
 
 void WhileStatement::AddByteCode(BNVM& vm) {
-	IfStatement::AddByteCode(vm);
+	int loopTo = vm.code.count;
+	
+	check->AddByteCode(vm);
+	IntLiteral intLit;
+	intLit.value = 0;
+	intLit.AddByteCode(vm);
+	int literalIndex = vm.code.count - 4;
+
+	vm.code.PushBack(I_BRANCHIFZERO);
+	Scope::AddByteCode(vm);
+
+	IntLiteral lit;
+	lit.value = loopTo;
+	lit.AddByteCode(vm);
+
+	vm.code.PushBack(I_BRANCH);
+
+	int branchTo = vm.code.count;
+	vm.code.data[literalIndex + 3] = branchTo % 256;
+	vm.code.data[literalIndex + 2] = (branchTo / 256) % 256;
+	vm.code.data[literalIndex + 1] = (branchTo / 65536) % 256;
 }
 
 void IntLiteral::AddByteCode(BNVM& vm) {
@@ -835,11 +888,38 @@ TypeInfo* UnaryOp::TypeCheck(const BNVParser& parser) {
 }
 
 void Assignment::AddByteCode(BNVM& vm){
+	val->AddByteCode(vm);
+	IntLiteral lit;
+	lit.value = regIndex;
+	lit.AddByteCode(vm);
 
+	if (val->type->typeName == "int") {
+		vm.code.PushBack(I_STOREI);
+	}
+	else if (val->type->typeName == "float") {
+		vm.code.PushBack(I_STOREF);
+	}
+	else {
+		//TODO: struct fields
+	}
 }
 
 TypeInfo* Assignment::TypeCheck(const BNVParser& parser) {
-	return nullptr;
+	if (regIndex == -1) {
+		if (TypeInfo* varType = parser.GetVariableType(varName)) {
+			TypeInfo* valType = val->TypeCheck(parser);
+
+			if (valType != (TypeInfo*)0x01 && valType == varType) {
+				regIndex = parser.GetVariableOffset(varName);
+				return varType;
+			}
+		}
+
+		return (TypeInfo*)0x01;
+	}
+	else {
+		return val->type;
+	}
 }
 
 void FunctionCall::AddByteCode(BNVM& vm) {
@@ -873,12 +953,35 @@ TypeInfo* FunctionCall::TypeCheck(const BNVParser& parser) {
 }
 
 void VariableAccess::AddByteCode(BNVM& vm) {
+	IntLiteral lit;
+	lit.value = regOffset;
+	lit.AddByteCode(vm);
 
+	if (type->typeName == "int") {
+		vm.code.PushBack(I_LOADI);
+	}
+	else if (type->typeName == "float") {
+		vm.code.PushBack(I_LOADF);
+	}
+	else {
+		// TODO: struct accesses
+	}
 }
 
 TypeInfo* VariableAccess::TypeCheck(const BNVParser& parser) {
-
-	return nullptr;
+	if (regOffset == -1) {
+		if (TypeInfo* varType = parser.GetVariableType(varName)) {
+			type = varType;
+			regOffset = parser.GetVariableOffset(varName);
+			return type;
+		}
+		else {
+			return (TypeInfo*)0x01;
+		}
+	}
+	else {
+		return type;
+	}
 }
 
 void FuncDef::AddByteCode(BNVM& vm) {
@@ -930,6 +1033,8 @@ bool BNVParser::TypeCheck() {
 			return false;
 		}
 	}
+
+	return true;
 }
 
 #if defined(BNVPARSER_TEST_MAIN)

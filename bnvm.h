@@ -21,16 +21,31 @@ enum Instruction{
 	I_NEGATEF,
 	I_BRANCH,
 	I_BRANCHIFZERO,
+	I_BRANCHIFNOTZERO,
 	I_CALL,
 	I_RETURN,
 	I_PRINTI,
 	I_READI,
 	I_PRINTF,
 	I_READF,
-	I_LOAD,
-	I_STORE,
+	I_LOADI,
+	I_STOREI,
+	I_LOADF,
+	I_STOREF,
 	I_INTLIT,
-	I_FLTLIT
+	I_FLTLIT,
+	I_EQI,
+	I_EQF,
+	I_NEQI,
+	I_NEQF,
+	I_GTI,
+	I_GTF,
+	I_GTEI,
+	I_GTEF,
+	I_LTEI,
+	I_LTEF,
+	I_LTI,
+	I_LTF,
 };
 
 #define DEFAULT_MAX_STACK_LIMIT 8192
@@ -48,7 +63,7 @@ struct MemStack{
 	template<typename T>
 	T* Access(int offset){
 		ASSERT(stackMem.count + offset + sizeof(T) < limit);
-		return (T*)stackMem.data[stackMem.count + offset];
+		return (T*)&stackMem.data[stackMem.count + offset];
 	}
 	
 	void Increment(int amt);

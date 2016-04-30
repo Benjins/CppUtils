@@ -88,7 +88,12 @@ struct UnaryOp : Value{
 
 struct Assignment : Statement{
 	SubString varName;
+	int regIndex;
 	Value* val;
+
+	Assignment() {
+		regIndex = -1;
+	}
 	
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
 	virtual void AddByteCode(BNVM& vm);
@@ -105,7 +110,12 @@ struct FunctionCall : Value{
 
 struct VariableAccess : Value {
 	SubString varName;
+	int regOffset;
 	TypeInfo* info;
+
+	VariableAccess() {
+		regOffset = -1;
+	}
 
 	virtual void AddByteCode(BNVM& vm);
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
@@ -207,8 +217,9 @@ struct BNVParser{
 		}
 	}
 
-	FuncDef* GetFuncDef(const SubString& name);
-	TypeInfo* GetVariableType(const SubString& name);
+	FuncDef* GetFuncDef(const SubString& name) const;
+	TypeInfo* GetVariableType(const SubString& name) const;
+	int GetVariableOffset(const SubString& name) const;
 
 	bool ShuntingYard(const Vector<BNVToken>& inToks, Vector<BNVToken>& outToks);
 	
