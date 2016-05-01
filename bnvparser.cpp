@@ -1210,15 +1210,6 @@ int main(int argc, char** argv){
 	BNVM vm;
 	parser.AddByteCode(vm);
 
-	/*
-	int facStart = 0;
-	int facEnd = 0;
-	vm.functionPointers.LookUp("main", &facEnd);
-	for (int i = facStart; i < facEnd; i++) {
-		printf("|%3d|\n", vm.code.data[i]);
-	}
-	*/
-
 	vm.Execute("main");
 
 	ASSERT((vm.ExecuteTyped<int, int>("Factorial", 5) == 120));
