@@ -108,7 +108,45 @@ struct BNVM{
 	
 	MemStack varStack;
 	
-	int Execute(const char* funcName);
+	void Execute(const char* funcName);
+	void ExecuteInteral(const char* funcName);
+
+	template<typename Arg, typename Ret>
+	Ret ExecuteTyped(const char* funcName, const Arg& arg) {
+		Arg swizzled;
+		const int* cursor = (const int*)(&arg);
+		int* swizCursor = (int*)&swizzled;
+
+		int wordCount = (sizeof(Arg) + 3) / 4;
+		for (int i = 0; i < wordCount; i++) {
+			swizCursor[i] = cursor[wordCount - 1 - i];
+		}
+
+		tempStack.Push<Arg>(swizzled);
+
+		ExecuteInteral(funcName);
+
+		ASSERT(tempStack.stackMem.count == sizeof(Ret));
+		return tempStack.Pop<Ret>();
+	}
+
+	template<typename Arg>
+	void ExecuteTyped(const char* funcName, const Arg& arg) {
+		Arg swizzled;
+		const int* cursor = (const int*)(&arg);
+		int* swizCursor = (int*)&swizzled;
+
+		int wordCount = (sizeof(Arg) + 3) / 4;
+		for (int i = 0; i < wordCount; i++) {
+			swizCursor[i] = cursor[wordCount - 1 - i];
+		}
+
+		tempStack.Push<Arg>(swizzled);
+
+		ExecuteInteral(funcName);
+
+		ASSERT(tempStack.stackMem.count == 0);
+	}
 };
 
 

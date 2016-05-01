@@ -12,12 +12,10 @@ int Factorial(int val){
 	return val * Factorial(val-1);
 }
 
-int PrintVector(Vector3 vec){
+void PrintVector(Vector3 vec){
 	PRINTF(vec.x);
 	PRINTF(vec.y);
 	PRINTF(vec.z);
-
-	return 0;
 }
 
 float DotProduct(Vector3 a, Vector3 b){
@@ -80,6 +78,10 @@ Vector3 CrossProduct(Vector3 a, Vector3 b){
 	cross.z = a.x*b.y-a.y*b.x;
 
 	return cross;
+}
+
+float VectorLengthSqr(Vector3 v){
+	return v.x*v.x + v.y*v.y + v.z*v.z;
 }
 
 int main(){

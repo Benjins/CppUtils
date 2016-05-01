@@ -1182,6 +1182,20 @@ bool BNVParser::TypeCheck() {
 
 #if defined(BNVPARSER_TEST_MAIN)
 
+struct Vector3VM {
+	float x;
+	float y;
+	float z;
+
+	Vector3VM() = default;
+
+	Vector3VM(float _x, float _y, float _z) {
+		x = _x;
+		y = _y;
+		z = _z;
+	}
+};
+
 int main(int argc, char** argv){
 	BNS_UNUSED(argc);
 	BNS_UNUSED(argv);
@@ -1190,8 +1204,8 @@ int main(int argc, char** argv){
 
 	parser.ParseFile("parserTest.bnv");
 
-	ASSERT(parser.funcDefs.count == 13);
-	ASSERT(parser.funcDefs.data[12]->name == "main");
+	ASSERT(parser.funcDefs.count == 14);
+	ASSERT(parser.funcDefs.data[13]->name == "main");
 
 	BNVM vm;
 	parser.AddByteCode(vm);
@@ -1207,26 +1221,20 @@ int main(int argc, char** argv){
 
 	vm.Execute("main");
 
-	vm.tempStack.Push<int>(5);
-	ASSERT(vm.Execute("Factorial") == 120);
+	ASSERT((vm.ExecuteTyped<int, int>("Factorial", 5) == 120));
+	ASSERT((vm.ExecuteTyped<int, int>("Factorial", 0) == 1));
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 2) == 1));
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 5) == 1));
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 6) == 0));
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 17) == 1));
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 117) == 0));
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 997) == 1));
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 1024) == 0));
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 1024) == 0));
+	ASSERT((vm.ExecuteTyped<Vector3VM, float>("VectorLengthSqr", Vector3VM(3.0f, 4.0f, 12.0f)) == 169.0f));
 
-	vm.tempStack.Push<int>(2);
-	ASSERT(vm.Execute("Factorial") == 2);
-
-	vm.tempStack.Push<int>(0);
-	ASSERT(vm.Execute("Factorial") == 1);
-
-	vm.tempStack.Push<int>(2);
-	ASSERT(vm.Execute("IsPrime") == 1);
-
-	vm.tempStack.Push<int>(5);
-	ASSERT(vm.Execute("IsPrime") == 1);
-
-	vm.tempStack.Push<int>(17);
-	ASSERT(vm.Execute("IsPrime") == 1);
-
-	vm.tempStack.Push<int>(4);
-	ASSERT(vm.Execute("IsPrime") == 0);
+	printf("================\n");
+	vm.ExecuteTyped<Vector3VM>("PrintVector", Vector3VM(1.2f, 2.3f, 3.4f));
 
 	return 0;
 }

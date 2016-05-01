@@ -19,7 +19,12 @@ void MemStack::SetSize(int amt){
 	stackMem.count = amt;
 }
 
-int BNVM::Execute(const char* funcName){
+void BNVM::Execute(const char* funcName) {
+	ExecuteInteral(funcName);
+	tempStack.stackMem.count = 0;
+}
+
+void BNVM::ExecuteInteral(const char* funcName){
 	int startPc = -1;
 	bool wasFound = functionPointers.LookUp(funcName, &startPc);
 
@@ -237,14 +242,6 @@ int BNVM::Execute(const char* funcName){
 		} break;
 
 		}
-	}
-	
-	if (tempStack.stackMem.count == 4) {
-		return tempStack.Pop<int>();
-	}
-	else {
-		tempStack.stackMem.Clear();
-		return 0;
 	}
 }
 
