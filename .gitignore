@@ -32,3 +32,6 @@
 .vs/
 *.ilk
 *.pdb
+
+# test files:
+bnvParserOut.txt

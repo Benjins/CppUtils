@@ -109,7 +109,7 @@ struct BNVM{
 	MemStack varStack;
 	
 	void Execute(const char* funcName);
-	void ExecuteInteral(const char* funcName);
+	void ExecuteInternal(const char* funcName);
 
 	template<typename Arg, typename Ret>
 	Ret ExecuteTyped(const char* funcName, const Arg& arg) {
@@ -124,7 +124,7 @@ struct BNVM{
 
 		tempStack.Push<Arg>(swizzled);
 
-		ExecuteInteral(funcName);
+		ExecuteInternal(funcName);
 
 		ASSERT(tempStack.stackMem.count == sizeof(Ret));
 		return tempStack.Pop<Ret>();
@@ -143,7 +143,7 @@ struct BNVM{
 
 		tempStack.Push<Arg>(swizzled);
 
-		ExecuteInteral(funcName);
+		ExecuteInternal(funcName);
 
 		ASSERT(tempStack.stackMem.count == 0);
 	}

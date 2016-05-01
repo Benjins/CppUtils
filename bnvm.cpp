@@ -20,11 +20,11 @@ void MemStack::SetSize(int amt){
 }
 
 void BNVM::Execute(const char* funcName) {
-	ExecuteInteral(funcName);
+	ExecuteInternal(funcName);
 	tempStack.stackMem.count = 0;
 }
 
-void BNVM::ExecuteInteral(const char* funcName){
+void BNVM::ExecuteInternal(const char* funcName){
 	int startPc = -1;
 	bool wasFound = functionPointers.LookUp(funcName, &startPc);
 
@@ -255,16 +255,21 @@ int main(int argc, char** argv){
 	
 	vm.functionPointers.Insert("main", 0);
 	
-	vm.code.PushBack(I_READI);
+	vm.code.PushBack(I_INTLIT);
+	vm.code.PushBack(0);
+	vm.code.PushBack(0);
+	vm.code.PushBack(0);
+	vm.code.PushBack(7);
 	vm.code.PushBack(I_INTLIT);
 	vm.code.PushBack(0);
 	vm.code.PushBack(0);
 	vm.code.PushBack(0);
 	vm.code.PushBack(5);
 	vm.code.PushBack(I_MULTI);
-	vm.code.PushBack(I_PRINTI);
 	
-	vm.Execute("main");
+	vm.ExecuteInternal("main");
+	
+	ASSERT(vm.tempStack.Pop<int>() == 35);
 	
 	return 0;
 }
