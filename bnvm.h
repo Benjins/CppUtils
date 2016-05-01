@@ -44,6 +44,7 @@ enum Instruction{
 	I_LTEF,
 	I_LTI,
 	I_LTF,
+	I_ITOF
 };
 
 #define DEFAULT_MAX_STACK_LIMIT 8192

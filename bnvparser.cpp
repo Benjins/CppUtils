@@ -256,6 +256,11 @@ FuncDef* BNVParser::ParseFuncDef(){
 				
 				if(Scope* scope = ParseScope()){
 					def->statements = scope->statements;
+					if (def->retType->typeName == "void") {
+						ReturnStatement* retStmt = new ReturnStatement();
+						retStmt->retVal = new VoidLiteral();
+						def->statements.PushBack(retStmt);
+					}
 					PopVarFrame();
 					return def;
 				}
@@ -683,6 +688,12 @@ void FloatLiteral::AddByteCode(BNVM& vm) {
 	*(float*)&vm.code.data[litCursor] = value;
 }
 
+TypeInfo* VoidLiteral::TypeCheck(const BNVParser& parser){
+	TypeInfo* info;
+	parser.definedTypes.LookUp("void", &info);
+	return info;
+}
+
 Value* BNVParser::ParseValue(){
 	PushCursorFrame();
 	
@@ -938,7 +949,13 @@ void IntLiteral::AddByteCode(BNVM& vm) {
 
 void BinaryOp::AddByteCode(BNVM& vm) {
 	rVal->AddByteCode(vm);
+	if (rVal->type->typeName == "int" && lVal->type->typeName == "float") {
+		vm.code.PushBack(I_ITOF);
+	}
 	lVal->AddByteCode(vm);
+	if (rVal->type->typeName == "float" && lVal->type->typeName == "int") {
+		vm.code.PushBack(I_ITOF);
+	}
 
 	BuiltinOp opInfo;
 	FindBuiltinOp(op, &opInfo);
@@ -955,7 +972,13 @@ void BinaryOp::AddByteCode(BNVM& vm) {
 TypeInfo* BinaryOp::TypeCheck(const BNVParser& parser) {
 	TypeInfo* rInfo = rVal->TypeCheck(parser);
 	TypeInfo* lInfo = lVal->TypeCheck(parser);
-	if (rInfo == lInfo && (rInfo->typeName == "int" || rInfo->typeName == "float")) {
+
+	if (rInfo == (TypeInfo*)0x01 || lInfo == (TypeInfo*)0x01) {
+		return (TypeInfo*)0x01;
+	}
+
+	if ((lInfo->typeName == "int" || lInfo->typeName == "float") 
+	 && (rInfo->typeName == "int" || rInfo->typeName == "float")) {
 		type = rInfo;
 		return type;
 	}
@@ -975,7 +998,7 @@ TypeInfo* UnaryOp::TypeCheck(const BNVParser& parser) {
 
 void Assignment::AddByteCode(BNVM& vm){
 	val->AddByteCode(vm);
-	for (int i = 0; i < var->type->size/4; i++) {
+	for (int i = 0; i < var->type->size; i += 4) {
 		IntLiteral lit;
 		lit.value = var->regOffset + i;
 		lit.AddByteCode(vm);
@@ -1041,7 +1064,7 @@ TypeInfo* FunctionCall::TypeCheck(const BNVParser& parser) {
 }
 
 void VariableAccess::AddByteCode(BNVM& vm) {
-	for (int i = type->size/4 - 1; i >= 0; i--) {
+	for (int i = (type->size - 1) / 4 * 4; i >= 0; i -= 4) {
 		IntLiteral lit;
 		lit.value = regOffset + i;
 		lit.AddByteCode(vm);
@@ -1094,13 +1117,19 @@ TypeInfo* FieldAccess::TypeCheck(const BNVParser& parser) {
 void FuncDef::AddByteCode(BNVM& vm) {
 	vm.functionPointers.Insert(name, vm.code.count);
 
+	int index = 0;
 	for (int i = 0; i < params.count; i++) {
-		IntLiteral lit;
-		lit.value = i;
-		lit.AddByteCode(vm);
+		int paramSize = params.data[i].type->size;
 
-		//TODO: types;
-		vm.code.PushBack(I_STOREI);
+		for (int j = 0; j < paramSize; j += 4) {
+			IntLiteral lit;
+			lit.value = index;
+			lit.AddByteCode(vm);
+
+			vm.code.PushBack(I_STOREI);
+
+			index += 4;
+		}
 	}
 
 	Scope::AddByteCode(vm);
@@ -1161,8 +1190,8 @@ int main(int argc, char** argv){
 
 	parser.ParseFile("parserTest.bnv");
 
-	ASSERT(parser.funcDefs.count == 7);
-	ASSERT(parser.funcDefs.data[6]->name == "main");
+	ASSERT(parser.funcDefs.count == 13);
+	ASSERT(parser.funcDefs.data[12]->name == "main");
 
 	BNVM vm;
 	parser.AddByteCode(vm);

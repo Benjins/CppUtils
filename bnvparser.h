@@ -81,6 +81,11 @@ struct FloatLiteral : Value {
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
 };
 
+struct VoidLiteral : Value {
+	virtual void AddByteCode(BNVM& vm) {}
+	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+};
+
 struct BinaryOp : Value{
 	Value* lVal;
 	Value* rVal;

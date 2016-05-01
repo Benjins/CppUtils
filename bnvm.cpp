@@ -22,11 +22,11 @@ void MemStack::SetSize(int amt){
 int BNVM::Execute(const char* funcName){
 	int startPc = -1;
 	bool wasFound = functionPointers.LookUp(funcName, &startPc);
-	
+
 	ASSERT(wasFound && startPc >= 0 && startPc < code.count);
-	
+
 	pc = startPc;
-	
+
 	callStack.Push<int>(code.count);
 	callStack.Push<int>(0);
 
@@ -231,6 +231,11 @@ int BNVM::Execute(const char* funcName){
 			tempStack.Push<int>(tempStack.Pop<float>() <= tempStack.Pop<float>());
 		} break;
 
+		case I_ITOF: {
+			int val = tempStack.Pop<int>();
+			tempStack.Push<float>(static_cast<float>(val));
+		} break;
+
 		}
 	}
 	
@@ -238,6 +243,7 @@ int BNVM::Execute(const char* funcName){
 		return tempStack.Pop<int>();
 	}
 	else {
+		tempStack.stackMem.Clear();
 		return 0;
 	}
 }

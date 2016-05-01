@@ -12,6 +12,27 @@ int Factorial(int val){
 	return val * Factorial(val-1);
 }
 
+int PrintVector(Vector3 vec){
+	PRINTF(vec.x);
+	PRINTF(vec.y);
+	PRINTF(vec.z);
+
+	return 0;
+}
+
+float DotProduct(Vector3 a, Vector3 b){
+	return a.x*b.x + a.y*b.y + a.z*b.z;
+}
+
+Vector3 MakeVector3(float x, float y, float z){
+	Vector3 vec;
+	vec.x = x;
+	vec.y = y;
+	vec.z = z;
+
+	return vec;
+}
+
 int IsPrime(int val){
 	int counter = 2;
 	int factorCount = 0;
@@ -26,17 +47,69 @@ int IsPrime(int val){
 	return factorCount == 0;
 }
 
+struct Triangle{
+	Vector3 v1;
+	Vector3 v2;
+	Vector3 v3;
+
+	int color;
+};
+
+Triangle MakeTriangle(Vector3 a, Vector3 b, Vector3 c, int col){
+	Triangle tri;
+
+	tri.v1 = a;
+	tri.v2 = b;
+	tri.v3 = c;
+	tri.color = col;
+
+	return tri;
+}
+
+void PrintTriangle(Triangle tri){
+	PrintVector(tri.v1);
+	PrintVector(tri.v2);
+	PrintVector(tri.v3);
+	PRINTI(tri.color);
+}
+
+Vector3 CrossProduct(Vector3 a, Vector3 b){
+	Vector3 cross;
+	cross.x = a.y*b.z-a.z*b.y;
+	cross.y = a.z*b.x-a.x*b.z;
+	cross.z = a.x*b.y-a.y*b.x;
+
+	return cross;
+}
+
 int main(){
 
+/*
 	int fac = READI();
 	PRINTI(Factorial(fac));
 
 	Vector3 vec;
 	vec.x = READF();
 	vec.y = READF();
+	vec.z = READF();
 
-	PRINTF(vec.x);
-	PRINTF(vec.y);
+	Vector3 vec2 = MakeVector3(1.2, 0-1.2, 1.2);
+*/
+	Triangle myTri = MakeTriangle(
+		MakeVector3(1.2,  2.3,  3.4),
+		MakeVector3(11.2, 22.3, 33.4),
+		MakeVector3(17.7, 25.5, 34.4),
+		77);
+
+	int xp = 13;
+	PrintTriangle(myTri);
+	PRINTI(xp);
+	PRINTI(xp);
+	xp = 31;
+	PrintTriangle(myTri);
+	PRINTI(xp);
+
+	//PRINTF(DotProduct(vec, vec2));
 
 	return 0;
 }
