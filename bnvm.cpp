@@ -63,19 +63,27 @@ int BNVM::Execute(const char* funcName){
 		} break;
 		
 		case I_ADDF:{
-			
+			float a = tempStack.Pop<float>();
+			float b = tempStack.Pop<float>();
+			tempStack.Push(a + b);
 		} break;
 		
 		case I_MULTF:{
-			
+			float a = tempStack.Pop<float>();
+			float b = tempStack.Pop<float>();
+			tempStack.Push(a * b);
 		} break;
 		
 		case I_DIVF:{
-			
+			float a = tempStack.Pop<float>();
+			float b = tempStack.Pop<float>();
+			tempStack.Push(a / b);
 		} break;
 		
 		case I_SUBF:{
-			
+			float a = tempStack.Pop<float>();
+			float b = tempStack.Pop<float>();
+			tempStack.Push(a - b);
 		} break;
 		
 		case I_NEGATEF:{
@@ -134,11 +142,14 @@ int BNVM::Execute(const char* funcName){
 		} break;
 		
 		case I_PRINTF:{
-			
+			float val = tempStack.Pop<float>();
+			printf("%f\n", val);
 		} break;
 		
 		case I_READF:{
-			
+			float val = -1.2f;
+			scanf("%f", &val);
+			tempStack.Push(val);
 		} break;
 		
 		case I_LOADI:{
@@ -151,14 +162,6 @@ int BNVM::Execute(const char* funcName){
 			int reg = tempStack.Pop<int>();
 			int val = tempStack.Pop<int>();
 			*varStack.Access<int>(reg) = val;
-		} break;
-
-		case I_LOADF: {
-
-		} break;
-
-		case I_STOREF: {
-
 		} break;
 		
 		case I_INTLIT:{
@@ -231,7 +234,12 @@ int BNVM::Execute(const char* funcName){
 		}
 	}
 	
-	return -1;
+	if (tempStack.stackMem.count == 4) {
+		return tempStack.Pop<int>();
+	}
+	else {
+		return 0;
+	}
 }
 
 #if defined(BNVM_TEST_MAIN)

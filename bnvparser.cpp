@@ -82,7 +82,6 @@ struct OperatorPrecedence {
 };
 
 OperatorPrecedence opPrec[] = {
-	{ ".",  OA_BINARY, 1 },
 	{ "!",  OA_UNARY, 3 },
 	{ "*",  OA_BINARY, 5 },
 	{ "/",  OA_BINARY, 5 },
@@ -170,6 +169,10 @@ void BNVParser::ParseFile(const char* fileName){
 	while(cursor < toks.count){
 		if(StructDef* structDef = ParseStructDef()){
 			structDefs.PushBack(structDef);
+			TypeInfo* typeInfo = new TypeInfo();
+			typeInfo->typeName = structDef->name;
+			typeInfo->size = structDef->GetSize();
+			definedTypes.Insert(structDef->name, typeInfo);
 		}
 		else if(FuncDef* funcDef = ParseFuncDef()){
 			//funcDefs.PushBack(funcDef);
@@ -287,6 +290,11 @@ Statement* BNVParser::ParseStatement(){
 	VarDecl decl;
 	if(ExpectAndEatVarDecl(&decl)){
 		varsInScope.PushBack(decl);
+
+		if (ExpectAndEatWord(";")) {
+			return new VariableDeclaration();
+		}
+
 		//Add variable name
 		cursor--;
 		
@@ -451,12 +459,38 @@ Assignment* BNVParser::ParseAssignment(){
 
 	if (TypeInfo* varType = ParseVarName()) {
 		SubString varName = toks.data[cursor - 1].substr;
+
+		VariableAccess* varAccess = new VariableAccess();
+		varAccess->varName = varName;
+		varAccess->type = varType;
+
+		StructDef* varStruct = GetStructDef(varType->typeName);
+		while (varStruct && ExpectAndEatWord(".")) {
+			for (int i = 0; i < varStruct->fields.count; i++) {
+				if (varStruct->fields.data[i].name == toks.data[cursor].substr) {
+					TypeInfo* fieldType = varStruct->fields.data[i].type;
+
+					FieldAccess* fieldAccess = new FieldAccess();
+					fieldAccess->var = varAccess;
+					fieldAccess->varName = varAccess->varName;
+					fieldAccess->fieldName = varStruct->fields.data[i].name;
+					fieldAccess->type = fieldType;
+					varAccess = fieldAccess;
+					
+					varStruct = GetStructDef(fieldType->typeName);
+					cursor++;
+
+					break;
+				}
+			}
+		}
+
 		if (ExpectAndEatWord("=")) {
 			if (Value* val = ParseValue()) {
 				if (ExpectAndEatWord(";")) {
 					Assignment* assgn = new Assignment();
 					assgn->val = val;
-					assgn->varName = varName;
+					assgn->var = varAccess;
 					return assgn;
 				}
 				else {
@@ -487,6 +521,16 @@ FuncDef* BNVParser::GetFuncDef(const SubString& name) const {
 	for (int i = 0; i < funcDefs.count; i++) {
 		if (funcDefs.data[i]->name == name) {
 			return funcDefs.data[i];
+		}
+	}
+
+	return nullptr;
+}
+
+StructDef* BNVParser::GetStructDef(const SubString& name) const {
+	for (int i = 0; i < structDefs.count; i++) {
+		if (structDefs.data[i]->name == name) {
+			return structDefs.data[i];
 		}
 	}
 
@@ -690,13 +734,34 @@ Value* BNVParser::ParseValue(){
 			}
 			else if (TypeInfo* varType = GetVariableType(tokStr)) {
 				VariableAccess* varAccess = new VariableAccess();
-				varAccess->info = varType;
 				varAccess->varName = tokStr;
 
 				vals.PushBack(varAccess);
 			}
+			else if (tokStr == ".") {
+				Value* val = vals.Back();
+				vals.PopBack();
+				VariableAccess* varAccess = dynamic_cast<VariableAccess*>(val);
+
+				if (varAccess == nullptr) {
+					printf("Found '.' on non-variable value.\n");
+					return false;
+				}
+				else {
+					FieldAccess* fieldAccess = new FieldAccess();
+					i++;
+					fieldAccess->fieldName = shuntedToks.data[i].substr;
+					fieldAccess->var = varAccess;
+					fieldAccess->varName = varAccess->varName;
+
+					//StructDef* structDef = GetStructDef(GetVariableType(varAccess->varName)->typeName);
+
+					vals.PushBack(fieldAccess);
+				}
+			}
 			else if (tokStr.start[0] >= '0' && tokStr.start[0] <= '9') {
-				if (FindChar(tokStr.start, '.') != -1) {
+				int idx = FindChar(tokStr.start, '.');
+				if (idx != -1 && idx < tokStr.length) {
 					float val = atof(tokStr.start);
 					FloatLiteral* fltLit = new FloatLiteral();
 					fltLit->value = val;
@@ -910,37 +975,29 @@ TypeInfo* UnaryOp::TypeCheck(const BNVParser& parser) {
 
 void Assignment::AddByteCode(BNVM& vm){
 	val->AddByteCode(vm);
-	IntLiteral lit;
-	lit.value = regIndex;
-	lit.AddByteCode(vm);
+	for (int i = 0; i < var->type->size/4; i++) {
+		IntLiteral lit;
+		lit.value = var->regOffset + i;
+		lit.AddByteCode(vm);
 
-	if (val->type->typeName == "int") {
 		vm.code.PushBack(I_STOREI);
-	}
-	else if (val->type->typeName == "float") {
-		vm.code.PushBack(I_STOREF);
-	}
-	else {
-		//TODO: struct fields
 	}
 }
 
 TypeInfo* Assignment::TypeCheck(const BNVParser& parser) {
-	if (regIndex == -1) {
-		if (TypeInfo* varType = parser.GetVariableType(varName)) {
-			TypeInfo* valType = val->TypeCheck(parser);
-
-			if (valType != (TypeInfo*)0x01 && valType == varType) {
-				regIndex = parser.GetVariableOffset(varName);
-				return varType;
-			}
-		}
-
+	TypeInfo* varInfo = val->TypeCheck(parser);
+	if (varInfo == (TypeInfo*)0x01) {
 		return (TypeInfo*)0x01;
 	}
-	else {
-		return val->type;
+	if (var->type) {
+		TypeInfo* valType = var->TypeCheck(parser);
+
+		if (valType != (TypeInfo*)0x01 && valType == var->type){
+			return var->type;
+		}
 	}
+
+	return (TypeInfo*)0x01;
 }
 
 void FunctionCall::AddByteCode(BNVM& vm) {
@@ -984,18 +1041,11 @@ TypeInfo* FunctionCall::TypeCheck(const BNVParser& parser) {
 }
 
 void VariableAccess::AddByteCode(BNVM& vm) {
-	IntLiteral lit;
-	lit.value = regOffset;
-	lit.AddByteCode(vm);
-
-	if (type->typeName == "int") {
+	for (int i = type->size/4 - 1; i >= 0; i--) {
+		IntLiteral lit;
+		lit.value = regOffset + i;
+		lit.AddByteCode(vm);
 		vm.code.PushBack(I_LOADI);
-	}
-	else if (type->typeName == "float") {
-		vm.code.PushBack(I_LOADF);
-	}
-	else {
-		// TODO: struct accesses
 	}
 }
 
@@ -1013,6 +1063,32 @@ TypeInfo* VariableAccess::TypeCheck(const BNVParser& parser) {
 	else {
 		return type;
 	}
+}
+
+TypeInfo* FieldAccess::TypeCheck(const BNVParser& parser) {
+	TypeInfo* info = var->TypeCheck(parser);
+
+	if (info == (TypeInfo*)0x01) {
+		return info;
+	}
+
+	int fieldOffset = 0;
+	TypeInfo* fieldType = (TypeInfo*)0x01;
+	StructDef* def = parser.GetStructDef(var->type->typeName);
+	for (int i = 0; i < def->fields.count; i++) {
+		if (def->fields.data[i].name == fieldName) {
+			fieldType = def->fields.data[i].type;
+			type = fieldType;
+			break;
+		}
+		else {
+			fieldOffset += def->fields.data[i].type->size;
+		}
+	}
+
+	regOffset = var->regOffset + fieldOffset;
+
+	return fieldType;
 }
 
 void FuncDef::AddByteCode(BNVM& vm) {
@@ -1101,6 +1177,27 @@ int main(int argc, char** argv){
 	*/
 
 	vm.Execute("main");
+
+	vm.tempStack.Push<int>(5);
+	ASSERT(vm.Execute("Factorial") == 120);
+
+	vm.tempStack.Push<int>(2);
+	ASSERT(vm.Execute("Factorial") == 2);
+
+	vm.tempStack.Push<int>(0);
+	ASSERT(vm.Execute("Factorial") == 1);
+
+	vm.tempStack.Push<int>(2);
+	ASSERT(vm.Execute("IsPrime") == 1);
+
+	vm.tempStack.Push<int>(5);
+	ASSERT(vm.Execute("IsPrime") == 1);
+
+	vm.tempStack.Push<int>(17);
+	ASSERT(vm.Execute("IsPrime") == 1);
+
+	vm.tempStack.Push<int>(4);
+	ASSERT(vm.Execute("IsPrime") == 0);
 
 	return 0;
 }

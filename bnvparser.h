@@ -24,6 +24,15 @@ struct Statement{
 	virtual TypeInfo* TypeCheck(const BNVParser& parser) = 0;
 };
 
+struct VariableDeclaration : Statement{
+	virtual void AddByteCode(BNVM& vm) {
+
+	}
+	virtual TypeInfo* TypeCheck(const BNVParser& parser) {
+		return nullptr;
+	}
+};
+
 struct ReturnStatement : Statement{
 	Value* retVal;
 	virtual void AddByteCode(BNVM& vm);
@@ -65,6 +74,9 @@ struct IntLiteral : Value {
 struct FloatLiteral : Value {
 	float value;
 
+	FloatLiteral() {
+		value = -12;
+	}
 	virtual void AddByteCode(BNVM& vm);
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
 };
@@ -86,14 +98,11 @@ struct UnaryOp : Value{
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
 };
 
-struct Assignment : Statement{
-	SubString varName;
-	int regIndex;
-	Value* val;
+struct VariableAccess;
 
-	Assignment() {
-		regIndex = -1;
-	}
+struct Assignment : Statement{
+	VariableAccess* var;
+	Value* val;
 	
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
 	virtual void AddByteCode(BNVM& vm);
@@ -112,7 +121,7 @@ struct FunctionCall : Value{
 struct VariableAccess : Value {
 	SubString varName;
 	int regOffset;
-	TypeInfo* info;
+	//TypeInfo* info;
 
 	VariableAccess() {
 		regOffset = -1;
@@ -122,6 +131,13 @@ struct VariableAccess : Value {
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
 };
 
+struct FieldAccess : VariableAccess {
+	VariableAccess* var;
+	SubString fieldName;
+
+	//virtual void AddByteCode(BNVM& vm);
+	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+};
 
 struct VarDecl{
 	SubString name;
@@ -137,14 +153,23 @@ struct FuncDef : Scope{
 	TypeInfo* retType;
 };
 
+struct TypeInfo {
+	SubString typeName;
+	int size;
+};
+
 struct StructDef{
 	SubString name;
 	Vector<VarDecl> fields;
-};
 
-struct TypeInfo{
-	SubString typeName;
-	int size;
+	int GetSize() const {
+		int size = 0;
+		for (int i = 0; i < fields.count; i++) {
+			size += fields.data[i].type->size;
+		}
+
+		return size;
+	}
 };
 
 struct BNVParser{
@@ -219,6 +244,7 @@ struct BNVParser{
 	}
 
 	FuncDef* GetFuncDef(const SubString& name) const;
+	StructDef* GetStructDef(const SubString& name) const;
 	TypeInfo* GetVariableType(const SubString& name) const;
 	int GetVariableOffset(const SubString& name) const;
 	int GetStackFrameOffset() const;

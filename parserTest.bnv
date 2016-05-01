@@ -31,13 +31,12 @@ int main(){
 	int fac = READI();
 	PRINTI(Factorial(fac));
 
-	int val = READI();
-	while (val > 0){
+	Vector3 vec;
+	vec.x = READF();
+	vec.y = READF();
 
-		PRINTI(IsPrime(val));
-
-		val = READI();
-	}
+	PRINTF(vec.x);
+	PRINTF(vec.y);
 
 	return 0;
 }

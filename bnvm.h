@@ -30,8 +30,6 @@ enum Instruction{
 	I_READF,
 	I_LOADI,
 	I_STOREI,
-	I_LOADF,
-	I_STOREF,
 	I_INTLIT,
 	I_FLTLIT,
 	I_EQI,
