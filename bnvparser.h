@@ -19,9 +19,13 @@ struct TypeInfo;
 struct Value;
 struct FuncDef;
 
+#define BNS_SAFE_DELETE(x) if(x){delete (x); (x) = nullptr;}
+
 struct Statement{
 	virtual void AddByteCode(BNVM& vm) = 0;
 	virtual TypeInfo* TypeCheck(const BNVParser& parser) = 0;
+
+	virtual ~Statement(){}
 };
 
 struct VariableDeclaration : Statement{
@@ -37,6 +41,8 @@ struct ReturnStatement : Statement{
 	Value* retVal;
 	virtual void AddByteCode(BNVM& vm);
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+
+	virtual ~ReturnStatement(){BNS_SAFE_DELETE(retVal);}
 };
 
 struct Scope : Statement{
@@ -44,6 +50,8 @@ struct Scope : Statement{
 	
 	virtual void AddByteCode(BNVM& vm);
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+
+	virtual ~Scope(){for(int i = 0; i < statements.count; i++){BNS_SAFE_DELETE(statements.data[i]);}}
 };
 
 struct IfStatement : Scope{
@@ -51,6 +59,8 @@ struct IfStatement : Scope{
 	
 	virtual void AddByteCode(BNVM& vm);
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+
+	virtual ~IfStatement();
 };
 
 struct WhileStatement : IfStatement{
@@ -93,6 +103,8 @@ struct BinaryOp : Value{
 	
 	virtual void AddByteCode(BNVM& vm);
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+
+	virtual ~BinaryOp(){BNS_SAFE_DELETE(lVal); BNS_SAFE_DELETE(rVal);}
 };
 
 struct UnaryOp : Value{
@@ -101,6 +113,8 @@ struct UnaryOp : Value{
 	
 	virtual void AddByteCode(BNVM& vm);
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+
+	virtual ~UnaryOp(){BNS_SAFE_DELETE(val);}
 };
 
 struct VariableAccess;
@@ -111,22 +125,24 @@ struct Assignment : Statement{
 	
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
 	virtual void AddByteCode(BNVM& vm);
+	virtual ~Assignment(){BNS_SAFE_DELETE(val); BNS_SAFE_DELETE(var);}
 };
 
 struct FunctionCall : Value{
 	FuncDef* func;
 	int stackFrameOffset;
-	
+
 	Vector<Value*> args;
-	
+
 	virtual void AddByteCode(BNVM& vm);
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+
+	virtual ~FunctionCall(){for(int i = 0; i < args.count; i++){BNS_SAFE_DELETE(args.data[i]);}}
 };
 
 struct VariableAccess : Value {
 	SubString varName;
 	int regOffset;
-	//TypeInfo* info;
 
 	VariableAccess() {
 		regOffset = -1;
@@ -142,6 +158,8 @@ struct FieldAccess : VariableAccess {
 
 	//virtual void AddByteCode(BNVM& vm);
 	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+
+	virtual ~FieldAccess(){BNS_SAFE_DELETE(var);}
 };
 
 struct VarDecl{
@@ -196,10 +214,13 @@ struct BNVParser{
 	
 	~BNVParser(){
 		for(int i = 0; i < structDefs.count; i++){
-			delete structDefs.data[i];
+			BNS_SAFE_DELETE(structDefs.data[i]);
 		}
 		for(int i = 0; i < funcDefs.count; i++){
-			delete funcDefs.data[i];
+			BNS_SAFE_DELETE(funcDefs.data[i]);
+		}
+		for(int i = 0; i < definedTypes.count; i++){
+			BNS_SAFE_DELETE(definedTypes.values[i]);
 		}
 	}
 	

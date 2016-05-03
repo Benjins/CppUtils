@@ -261,6 +261,9 @@ FuncDef* BNVParser::ParseFuncDef(){
 						retStmt->retVal = new VoidLiteral();
 						def->statements.PushBack(retStmt);
 					}
+					//Because I'm too lazy to write a move constructor
+					scope->statements.count = 0;
+					BNS_SAFE_DELETE(scope);
 					PopVarFrame();
 					return def;
 				}
@@ -346,17 +349,17 @@ Statement* BNVParser::ParseStatement(){
 Scope* BNVParser::ParseScope(){
 	PushCursorFrame();
 	PushVarFrame();
-	
-	Scope* scope = new Scope();
-	
+
 	if(ExpectAndEatWord("{")){
+		Scope* scope = new Scope();
 		while(Statement* stmt = ParseStatement()){
 			scope->statements.PushBack(stmt);
 		}
-		
+
 		if(ExpectAndEatWord("}")){
 			for (int i = 0; i < scope->statements.count; i++) {
 				if (scope->statements.data[i]->TypeCheck(*this) == (TypeInfo*)0x01) {
+					BNS_SAFE_DELETE(scope);
 					PopVarFrame();
 					PopCursorFrame();
 					return nullptr;
@@ -367,6 +370,7 @@ Scope* BNVParser::ParseScope(){
 			return scope;
 		}
 		else{
+			BNS_SAFE_DELETE(scope);
 			PopVarFrame();
 			PopCursorFrame();
 			return nullptr;
@@ -725,6 +729,7 @@ Value* BNVParser::ParseValue(){
 
 			if (FuncDef* funcDef = GetFuncDef(tokStr)) {
 				if (vals.count < funcDef->params.count) {
+					printf("Calling '%.*s' with wrong number of params.\n", funcDef->name.length, funcDef->name.start);
 					PopCursorFrame();
 					return nullptr;
 				}
@@ -825,6 +830,9 @@ Value* BNVParser::ParseValue(){
 					}
 				}
 				else {
+					for(int j = 0; j < vals.count; j++){
+						BNS_SAFE_DELETE(vals.data[j]);
+					}
 					PopCursorFrame();
 					return nullptr;
 				}
@@ -845,7 +853,6 @@ Value* BNVParser::ParseValue(){
 		PopCursorFrame();
 		return nullptr;
 	}
-
 }
 
 TypeInfo* BNVParser::ParseType(){
@@ -913,6 +920,10 @@ void IfStatement::AddByteCode(BNVM& vm) {
 	vm.code.data[literalIndex + 3] = branchTo % 256;
 	vm.code.data[literalIndex + 2] = (branchTo / 256) % 256;
 	vm.code.data[literalIndex + 1] = (branchTo / 65536) % 256;
+}
+
+IfStatement::~IfStatement(){
+	BNS_SAFE_DELETE(check);
 }
 
 void WhileStatement::AddByteCode(BNVM& vm) {
