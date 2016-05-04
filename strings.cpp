@@ -294,8 +294,7 @@ String ReadStringFromFile(const char* fileName) {
 	str.string[fileLength] = '\0';
 
 	fclose(fIn);
-	
-	str.Retain();
+
 	return str;
 }
 

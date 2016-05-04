@@ -110,9 +110,7 @@ XMLError ParseXMLStringFromFile(const char* fileName, XMLDoc* outDoc) {
 	}
 
 	XMLError err = ParseXMLString(str, outDoc);
-	short* ref = (short*)(str.string - 6);
-	(*ref)--;
-	
+
 	return err;
 }
 

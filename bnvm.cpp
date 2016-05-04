@@ -142,7 +142,7 @@ void BNVM::ExecuteInternal(const char* funcName){
 		
 		case I_READI:{
 			int val = -1;
-			scanf("%d", &val);
+			scanf("%64d", &val);
 			tempStack.Push(val);
 		} break;
 		
@@ -153,7 +153,7 @@ void BNVM::ExecuteInternal(const char* funcName){
 		
 		case I_READF:{
 			float val = -1.2f;
-			scanf("%f", &val);
+			scanf("%64f", &val);
 			tempStack.Push(val);
 		} break;
 		

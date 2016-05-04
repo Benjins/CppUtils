@@ -86,17 +86,6 @@ float VectorLengthSqr(Vector3 v){
 
 int main(){
 
-/*
-	int fac = READI();
-	PRINTI(Factorial(fac));
-
-	Vector3 vec;
-	vec.x = READF();
-	vec.y = READF();
-	vec.z = READF();
-
-	Vector3 vec2 = MakeVector3(1.2, 0-1.2, 1.2);
-*/
 	Triangle myTri = MakeTriangle(
 		MakeVector3(1.2,  2.3,  3.4),
 		MakeVector3(11.2, 22.3, 33.4),

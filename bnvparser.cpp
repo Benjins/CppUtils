@@ -199,8 +199,9 @@ StructDef* BNVParser::ParseStructDef(){
 				def->fields.PushBack(fieldDef);
 			}
 			else{
+				BNS_SAFE_DELETE(def);
 				PopCursorFrame();
-				return false;
+				return nullptr;
 			}
 		}
 
@@ -208,11 +209,13 @@ StructDef* BNVParser::ParseStructDef(){
 			return def;
 		}
 		else{
+			BNS_SAFE_DELETE(def);
 			PopCursorFrame();
 			return nullptr;
 		}
 	}
 	else{
+		BNS_SAFE_DELETE(def);
 		PopCursorFrame();
 		return nullptr;
 	}
@@ -335,7 +338,7 @@ Statement* BNVParser::ParseStatement(){
 			return val;
 		}
 		else {
-			delete val;
+			BNS_SAFE_DELETE(val);
 			PopCursorFrame();
 			return nullptr;
 		}
@@ -417,10 +420,12 @@ IfStatement* BNVParser::ParseIfStatement(){
 			ifStmt->check = val;
 			if (Scope* scope = ParseScope()) {
 				ifStmt->statements = scope->statements;
+				scope->statements.count = 0;
+				BNS_SAFE_DELETE(scope);
 				return ifStmt;
 			}
 			else {
-				delete ifStmt;
+				BNS_SAFE_DELETE(ifStmt);
 				PopCursorFrame();
 				return nullptr;
 			}
@@ -444,10 +449,12 @@ WhileStatement* BNVParser::ParseWhileStatement(){
 			whileStmt->check = val;
 			if (Scope* scope = ParseScope()) {
 				whileStmt->statements = scope->statements;
+				scope->statements.count = 0;
+				BNS_SAFE_DELETE(scope);
 				return whileStmt;
 			}
 			else {
-				delete whileStmt;
+				BNS_SAFE_DELETE(whileStmt);
 				PopCursorFrame();
 				return nullptr;
 			}
@@ -503,19 +510,19 @@ Assignment* BNVParser::ParseAssignment(){
 					return assgn;
 				}
 				else {
-					delete varType;
+					BNS_SAFE_DELETE(varType);
 					PopCursorFrame();
 					return nullptr;
 				}
 			}
 			else {
-				delete varType;
+				BNS_SAFE_DELETE(varType);
 				PopCursorFrame();
 				return nullptr;
 			}
 		}
 		else {
-			delete varType;
+			BNS_SAFE_DELETE(varType);
 			PopCursorFrame();
 			return nullptr;
 		}
@@ -761,7 +768,7 @@ Value* BNVParser::ParseValue(){
 
 				if (varAccess == nullptr) {
 					printf("Found '.' on non-variable value.\n");
-					return false;
+					return nullptr;
 				}
 				else {
 					FieldAccess* fieldAccess = new FieldAccess();
@@ -893,6 +900,10 @@ bool BNVParser::ParseIdentifier(SubString* outStr){
 void ReturnStatement::AddByteCode(BNVM& vm) {
 	retVal->AddByteCode(vm);
 	vm.code.PushBack(I_RETURN);
+}
+
+ReturnStatement::~ReturnStatement(){
+	BNS_SAFE_DELETE(retVal);
 }
 
 TypeInfo* ReturnStatement::TypeCheck(const BNVParser& parser) {
@@ -1032,6 +1043,11 @@ TypeInfo* Assignment::TypeCheck(const BNVParser& parser) {
 	}
 
 	return (TypeInfo*)0x01;
+}
+
+Assignment::~Assignment(){
+	BNS_SAFE_DELETE(var);
+	BNS_SAFE_DELETE(val);
 }
 
 void FunctionCall::AddByteCode(BNVM& vm) {
