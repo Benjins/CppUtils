@@ -117,7 +117,6 @@ int GetOperatorPrecedence(const SubString& opName) {
 
 BNVParser::BNVParser(){
 	cursor = 0;
-	currScope = nullptr;
 
 	for(int i = 0; i < BNS_ARRAY_COUNT(builtinTypes); i++){
 		TypeInfo* builtinType = new TypeInfo();
@@ -1038,7 +1037,8 @@ TypeInfo* BinaryOp::TypeCheck(const BNVParser& parser) {
 }
 
 void UnaryOp::AddByteCode(BNVM& vm) {
-	
+	val->AddByteCode(vm);
+	ASSERT_WARN("%s is not yet implemented.\n", __FUNCTION__);
 }
 
 TypeInfo* UnaryOp::TypeCheck(const BNVParser& parser) {
