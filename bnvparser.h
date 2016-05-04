@@ -195,6 +195,16 @@ struct FuncDef : Scope{
 	virtual ~FuncDef(){}
 };
 
+struct ExternFuncDef : FuncDef {
+	virtual void AddByteCode(BNVM& vm) override{}
+	virtual TypeInfo* TypeCheck(const BNVParser& parser) override {
+		return nullptr; 
+	}
+	virtual ~ExternFuncDef() {
+		int xxg = 0;
+	}
+};
+
 struct TypeInfo {
 	SubString typeName;
 	int size;
@@ -228,6 +238,8 @@ struct BNVParser{
 	
 	Vector<VarDecl> varsInScope;
 	Vector<int> varFrames;
+
+	StringMap<int> externFuncNames;
 
 	BNVParser();
 	

@@ -225,7 +225,16 @@ FuncDef* BNVParser::ParseFuncDef(){
 	PushCursorFrame();
 	PushVarFrame();
 	
-	FuncDef* def = new FuncDef();
+	FuncDef* def = nullptr;
+	bool isExtern = false;
+	if (ExpectAndEatWord("extern")) {
+		def = new ExternFuncDef();
+		isExtern = true;
+	}
+	else {
+		def = new FuncDef();
+	}
+	
 	if (TypeInfo* retType = ParseType()){
 		SubString funcName;
 		if(ParseIdentifier(&funcName)){
@@ -256,6 +265,19 @@ FuncDef* BNVParser::ParseFuncDef(){
 				}
 
 				funcDefs.PushBack(def);
+
+				if (isExtern) {
+					PopVarFrame();
+					if (ExpectAndEatWord(";")) {
+						externFuncNames.Insert(def->name, externFuncNames.count);
+						return def;
+					}
+					else {
+						funcDefs.PopBack();
+						BNS_SAFE_DELETE(def);
+						return nullptr;
+					}
+				}
 				
 				if(Scope* scope = ParseScope()){
 					def->statements = scope->statements;
@@ -268,6 +290,7 @@ FuncDef* BNVParser::ParseFuncDef(){
 					scope->statements.count = 0;
 					BNS_SAFE_DELETE(scope);
 					PopVarFrame();
+
 					return def;
 				}
 				else{
@@ -1001,7 +1024,12 @@ TypeInfo* BinaryOp::TypeCheck(const BNVParser& parser) {
 
 	if ((lInfo->typeName == "int" || lInfo->typeName == "float") 
 	 && (rInfo->typeName == "int" || rInfo->typeName == "float")) {
-		type = rInfo;
+		if (op == "<" || op == "==" || op == "<=" || op == ">" || op == ">=") {
+			parser.definedTypes.LookUp("int", &type);
+		}
+		else {
+			type = rInfo;
+		}
 		return type;
 	}
 	else {
@@ -1056,8 +1084,16 @@ void FunctionCall::AddByteCode(BNVM& vm) {
 	}
 
 	BuiltinFunc builtinFunc;
+	int externFuncIndex = -1;
 	if (FindBuiltinFunc(func->name, &builtinFunc)) {
 		vm.code.PushBack(builtinFunc.instr);
+	}
+	else if (vm.externFuncIndices.LookUp(func->name, &externFuncIndex)) {
+		IntLiteral lit;
+		lit.value = externFuncIndex;
+		lit.AddByteCode(vm);
+
+		vm.code.PushBack(I_EXTERNF);
 	}
 	else {
 		int funcPtr = -1;
@@ -1187,6 +1223,8 @@ TypeInfo* IfStatement::TypeCheck(const BNVParser& parser) {
 }
 
 void BNVParser::AddByteCode(BNVM& vm) {
+	vm.externFuncIndices = externFuncNames;
+
 	for (int i = 0; i < funcDefs.count; i++) {
 		BuiltinFunc builtinFunc;
 		if (!FindBuiltinFunc(funcDefs.data[i]->name, &builtinFunc)) {
@@ -1208,6 +1246,14 @@ bool BNVParser::TypeCheck() {
 }
 
 #if defined(BNVPARSER_TEST_MAIN)
+
+#include <math.h>
+
+void mySin(TempStack* stk) {
+	float val = stk->Pop<float>();
+	float ret = sinf(val);
+	stk->Push(ret);
+}
 
 struct Vector3VM {
 	float x;
@@ -1231,13 +1277,17 @@ int main(int argc, char** argv){
 
 	parser.ParseFile("parserTest.bnv");
 
-	ASSERT(parser.funcDefs.count == 14);
-	ASSERT(parser.funcDefs.data[13]->name == "main");
+	ASSERT(parser.funcDefs.count == 16);
+	ASSERT(parser.funcDefs.data[15]->name == "main");
 
 	BNVM vm;
 	parser.AddByteCode(vm);
 
 	vm.Execute("main");
+
+	vm.RegisterExternFunc("sinf", mySin);
+
+	ASSERT((vm.ExecuteTyped<float, float>("sinTest", 2.3f) == sinf(2.3f)));
 
 	ASSERT((vm.ExecuteTyped<int, int>("Factorial", 5) == 120));
 	ASSERT((vm.ExecuteTyped<int, int>("Factorial", 0) == 1));

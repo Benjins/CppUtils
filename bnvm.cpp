@@ -38,7 +38,11 @@ void BNVM::ExecuteInternal(const char* funcName){
 	for(int i = startPc; i < code.count; i++){
 		Instruction instr = (Instruction)code.data[i];
 		switch(instr){
-			
+		
+		case I_INVALIDI: {
+			ASSERT_WARN("%s: Found invalid instruction at index %d", __FUNCTION__, i);
+		} break;
+
 		case I_ADDI:{
 			int a = tempStack.Pop<int>();
 			int b = tempStack.Pop<int>();
@@ -241,8 +245,26 @@ void BNVM::ExecuteInternal(const char* funcName){
 			tempStack.Push<float>(static_cast<float>(val));
 		} break;
 
+		case I_EXTERNF: {
+			int val = tempStack.Pop<int>();
+			ASSERT(val >= 0);
+			ASSERT(val < externFunctions.count);
+			ASSERT(externFunctions.data[val] != nullptr);
+
+			externFunctions.data[val](&tempStack);
+		} break;
+
 		}
 	}
+}
+
+void BNVM::RegisterExternFunc(const char* name, ExternFunc* func){
+	int index = -1;
+	bool exists = externFuncIndices.LookUp(name, &index);
+	ASSERT_MSG(exists, "External function '%s' is being registered without being declared.", name);
+	externFunctions.EnsureCapacity(index + 1);
+	externFunctions.count = BNS_MAX(externFunctions.count, index + 1);
+	externFunctions.data[index] = func;
 }
 
 #if defined(BNVM_TEST_MAIN)

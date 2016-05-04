@@ -4,6 +4,12 @@ struct Vector3{
 	float z;
 };
 
+extern float sinf(float val);
+
+float sinTest(float val){
+	return sinf(val);
+}
+
 int Factorial(int val){
 	if (val <= 1){
 		return 1;

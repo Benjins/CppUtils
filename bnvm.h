@@ -44,7 +44,8 @@ enum Instruction{
 	I_LTEF,
 	I_LTI,
 	I_LTF,
-	I_ITOF
+	I_ITOF,
+	I_EXTERNF
 };
 
 #define DEFAULT_MAX_STACK_LIMIT 8192
@@ -97,17 +98,24 @@ struct TempStack{
 	}
 };
 
+typedef void (ExternFunc)(TempStack*);
+
 struct BNVM{
 	Vector<byte> code;
 	int pc;
 	
 	StringMap<int> functionPointers;
 	
+	Vector<ExternFunc*> externFunctions;
+	StringMap<int> externFuncIndices;
+
 	TempStack tempStack;
 	TempStack callStack;
 	
 	MemStack varStack;
 	
+	void RegisterExternFunc(const char* name, ExternFunc* func);
+
 	void Execute(const char* funcName);
 	void ExecuteInternal(const char* funcName);
 

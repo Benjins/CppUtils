@@ -41,6 +41,11 @@ struct StringMap{
 	~StringMap() {
 		Destroy();
 	}
+
+	StringMap& operator=(const StringMap& orig) {
+		Assign(orig);
+		return *this;
+	}
 	
 	void Assign(const StringMap& orig){
 		EnsureCapacity(orig.capacity);
