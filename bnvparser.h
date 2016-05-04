@@ -19,7 +19,7 @@ struct TypeInfo;
 struct Value;
 struct FuncDef;
 
-#define BNS_SAFE_DELETE(x) if(x){delete (x); (x) = nullptr;}
+#define BNS_SAFE_DELETE(x) delete (x); (x) = nullptr;
 
 struct Statement{
 	virtual void AddByteCode(BNVM& vm) = 0;
