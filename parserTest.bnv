@@ -4,6 +4,27 @@ struct Vector3{
 	float z;
 };
 
+Vector3 MakeVector3(float x, float y, float z){
+	Vector3 vec;
+	vec.x = x;
+	vec.y = y;
+	vec.z = z;
+
+	return vec;
+}
+
+extern float subtract(float a, float b);
+
+float subtractTest(float x){
+	return subtract(1.0, x);
+}
+
+extern float DotProductExt(Vector3 a, Vector3 b);
+
+float DotProductExtTest(Vector3 a){
+	return DotProductExt(a, MakeVector3(1.0, 1.0, 1.0));
+}
+
 extern float sinf(float val);
 
 float sinTest(float val){
@@ -26,15 +47,6 @@ void PrintVector(Vector3 vec){
 
 float DotProduct(Vector3 a, Vector3 b){
 	return a.x*b.x + a.y*b.y + a.z*b.z;
-}
-
-Vector3 MakeVector3(float x, float y, float z){
-	Vector3 vec;
-	vec.x = x;
-	vec.y = y;
-	vec.z = z;
-
-	return vec;
 }
 
 int IsPrime(int val){

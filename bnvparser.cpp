@@ -1247,14 +1247,6 @@ bool BNVParser::TypeCheck() {
 
 #if defined(BNVPARSER_TEST_MAIN)
 
-#include <math.h>
-
-void mySin(TempStack* stk) {
-	float val = stk->Pop<float>();
-	float ret = sinf(val);
-	stk->Push(ret);
-}
-
 struct Vector3VM {
 	float x;
 	float y;
@@ -1269,6 +1261,28 @@ struct Vector3VM {
 	}
 };
 
+#include <math.h>
+
+void mySin(TempStack* stk) {
+	float val = stk->Pop<float>();
+	float ret = sinf(val);
+	stk->Push(ret);
+}
+
+void mySub(TempStack* stk) {
+	float a = stk->Pop<float>();
+	float b = stk->Pop<float>();
+	float ret = a - b;
+	stk->Push(ret);
+}
+
+void myDot(TempStack* stk) {
+	Vector3VM a = stk->Pop<Vector3VM>();
+	Vector3VM b = stk->Pop<Vector3VM>();
+	float ret = a.x*b.x + a.y*b.y + a.z*b.z;
+	stk->Push(ret);
+}
+
 int main(int argc, char** argv){
 	BNS_UNUSED(argc);
 	BNS_UNUSED(argv);
@@ -1277,8 +1291,8 @@ int main(int argc, char** argv){
 
 	parser.ParseFile("parserTest.bnv");
 
-	ASSERT(parser.funcDefs.count == 16);
-	ASSERT(parser.funcDefs.data[15]->name == "main");
+	ASSERT(parser.funcDefs.count == 20);
+	ASSERT(parser.funcDefs.data[19]->name == "main");
 
 	BNVM vm;
 	parser.AddByteCode(vm);
@@ -1286,8 +1300,12 @@ int main(int argc, char** argv){
 	vm.Execute("main");
 
 	vm.RegisterExternFunc("sinf", mySin);
+	vm.RegisterExternFunc("subtract", mySub);
+	vm.RegisterExternFunc("DotProductExt", myDot);
 
 	ASSERT((vm.ExecuteTyped<float, float>("sinTest", 2.3f) == sinf(2.3f)));
+	ASSERT((vm.ExecuteTyped<float, float>("subtractTest", -4.0f) == 5.0f));
+	ASSERT((vm.ExecuteTyped<Vector3VM, float>("DotProductExtTest", Vector3VM(1.0f, 3.0f, 2.0f)) == 6.0f));
 
 	ASSERT((vm.ExecuteTyped<int, int>("Factorial", 5) == 120));
 	ASSERT((vm.ExecuteTyped<int, int>("Factorial", 0) == 1));
