@@ -150,20 +150,50 @@ BNVParser::BNVParser(){
 	}
 }
 
-void BNVParser::ParseFile(const char* fileName){
-	String str = ReadStringFromFile(fileName);
+Vector<BNVToken> BNVParser::ReadTokenizeProcessFile(String fileName) {
+	String str = ReadStringFromFile(fileName.string);
 
 	Vector<SubString> lexedTokens = LexString(str);
-	String fileNamePersistent = fileName;
 
-	toks.Clear();
-	toks.EnsureCapacity(lexedTokens.count);
-	for(int i = 0; i < lexedTokens.count; i++){
-		BNVToken tok;
-		tok.file = fileNamePersistent;
-		tok.substr = lexedTokens.data[i];
-		toks.PushBack(tok);
+	Vector<BNVToken> processedToks;
+	for (int i = 0; i < lexedTokens.count; i++) {
+
+		if (lexedTokens.data[i] == "#") {
+			if (lexedTokens.count > (i + 2) && lexedTokens.data[i+1] == "include") {
+				SubString fileNameToken = lexedTokens.data[i + 2];
+
+				if (fileNameToken.start[0] == '"') {
+					fileNameToken.start++;
+					fileNameToken.length -= 2;
+
+					Vector<BNVToken> includedToks = ReadTokenizeProcessFile(fileNameToken);
+
+					processedToks.InsertVector(processedToks.count, includedToks);
+					i += 2;
+				}
+				else {
+					ASSERT_WARN("Error when processing file '%s'", fileName.string);
+					break;
+				}
+			}
+			else {
+				ASSERT_WARN("Error when processing file '%s'", fileName.string);
+				break;
+			}
+		}
+		else {
+			BNVToken tok;
+			tok.file = fileName;
+			tok.substr = lexedTokens.data[i];
+			processedToks.PushBack(tok);
+		}
 	}
+
+	return processedToks;
+}
+
+void BNVParser::ParseFile(const char* fileName){
+	toks = ReadTokenizeProcessFile(fileName);
 
 	cursor = 0;
 	while(cursor < toks.count){

@@ -100,7 +100,25 @@ struct Vector{
 		new(&data[index]) T(elem);
 		count++;
 	}
+
+	void InsertVector(int index, const Vector<T>& vec) {
+		InsertArray(index, vec.data, vec.count);
+	}
 	
+	void InsertArray(int index, const T* elem, int arrCount) {
+		while (count + arrCount >= capacity) {
+			EnsureCapacity(capacity == 0 ? 2 : capacity * 2);
+		}
+
+		memmove(&data[index + arrCount], &data[index], (count - index)*sizeof(T));
+
+		for (int i = 0; i < arrCount; i++) {
+			new(&data[index+i]) T(elem[i]);
+		}
+
+		count += arrCount;
+	}
+
 	void Destroy(){
 		Clear();
 		

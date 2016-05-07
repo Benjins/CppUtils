@@ -1,0 +1,14 @@
+struct Vector3{
+	float x;
+	float y;
+	float z;
+};
+
+Vector3 MakeVector3(float x, float y, float z){
+	Vector3 vec;
+	vec.x = x;
+	vec.y = y;
+	vec.z = z;
+
+	return vec;
+}

@@ -11,6 +11,13 @@ struct BNVToken{
 	SubString substr;
 	String file;
 	int line;
+
+	BNVToken() = default;
+	BNVToken(const BNVToken& orig) {
+		substr = orig.substr;
+		file = orig.file;
+		line = orig.line;
+	}
 };
 
 struct BNVM;
@@ -260,6 +267,7 @@ struct BNVParser{
 	}
 	
 	void ParseFile(const char* filename);
+	Vector<BNVToken> ReadTokenizeProcessFile(String fileName);
 
 	void AddByteCode(BNVM& vm);
 	bool TypeCheck();

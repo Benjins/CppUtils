@@ -18,11 +18,11 @@
 ::hash_test.exe
 ::if %ERRORLEVEL% NEQ 0 goto somethingbad
 ::
-::cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DVECTOR_TEST_MAIN assert.cpp vector.cpp /Fevector_test
-::if %ERRORLEVEL% NEQ 0 goto somethingbad
-::
-::vector_test.exe
-::if %ERRORLEVEL% NEQ 0 goto somethingbad
+cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DVECTOR_TEST_MAIN assert.cpp vector.cpp /Fevector_test
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
+vector_test.exe
+if %ERRORLEVEL% NEQ 0 goto somethingbad
 ::
 ::cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DFILESYS_TEST_MAIN assert.cpp filesys.cpp /Fefilesys_test
 ::if %ERRORLEVEL% NEQ 0 goto somethingbad

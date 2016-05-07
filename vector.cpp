@@ -221,6 +221,99 @@ int main(int argc, char** argv){
 	
 	ASSERT(fakeAllocCount == 0);
 
+	{
+		Vector<Resource> rVec;
+
+		for (int i = 0; i < 20; i++) {
+			Resource r;
+			rVec.PushBack(r);
+		}
+
+		Vector<Resource> rVec2;
+
+		for (int i = 0; i < 5; i++) {
+			Resource r;
+			rVec2.PushBack(r);
+		}
+
+		rVec.InsertVector(4, rVec2);
+
+		ASSERT(rVec.count == 25);
+
+		rVec.InsertVector(4, rVec2);
+		ASSERT(rVec.count == 30);
+
+		rVec2.InsertVector(3, rVec);
+
+		ASSERT(rVec.count == 30);
+		ASSERT(rVec2.count == 35);
+	}
+
+	ASSERT(fakeAllocCount == 0);
+
+	{
+		Vector<int> iVec;
+		iVec.PushBack(0);
+		iVec.PushBack(2);
+		iVec.PushBack(3);
+
+		Vector<int> iVec2;
+		iVec2.PushBack(1);
+		iVec2.PushBack(4);
+		iVec2.PushBack(5);
+
+		iVec.InsertVector(1, iVec2);
+
+		ASSERT(iVec.count == 6);
+		ASSERT(iVec.data[0] == 0);
+		ASSERT(iVec.data[1] == 1);
+		ASSERT(iVec.data[2] == 4);
+		ASSERT(iVec.data[3] == 5);
+		ASSERT(iVec.data[4] == 2);
+		ASSERT(iVec.data[5] == 3);
+	}
+
+	{
+		Vector<int> iVec;
+		iVec.PushBack(0);
+		iVec.PushBack(2);
+		iVec.PushBack(3);
+
+		Vector<int> iVec2;
+		for (int i = 0; i < 10; i++) {
+			iVec2.PushBack(4);
+		}
+
+		iVec.InsertVector(2, iVec2);
+
+		ASSERT(iVec.count == 13);
+		ASSERT(iVec.data[0] == 0);
+		ASSERT(iVec.data[1] == 2);
+		for (int i = 2; i < 12; i++) {
+			ASSERT(iVec.data[i] == 4);
+		}
+		ASSERT(iVec.data[12] == 3);
+	}
+
+	{
+		Vector<int> iVec2;
+		iVec2.PushBack(4);
+		iVec2.PushBack(3);
+		iVec2.PushBack(2);
+
+		Vector<int> iVec;
+		iVec.PushBack(7);
+
+		iVec.InsertVector(1, iVec2);
+
+		ASSERT(iVec.data[0] == 7);
+		ASSERT(iVec.data[1] == 4);
+		ASSERT(iVec.data[2] == 3);
+		ASSERT(iVec.data[3] == 2);
+	}
+
+	ASSERT(fakeAllocCount == 0);
+
 	return 0;
 }
 
