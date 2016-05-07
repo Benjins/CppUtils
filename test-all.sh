@@ -39,7 +39,7 @@ valgrind --quiet --leak-check=full --gen-suppressions=all --error-exitcode=12 ./
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DLEXER_TEST_MAIN lexer.cpp strings.cpp assert.cpp vector.cpp -o lex_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./lex_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT__ON_ASSERT -DBNVPARSER_TEST_MAIN lexer.cpp strings.cpp assert.cpp hash.cpp vector.cpp bnvm.cpp bnvparser.cpp -o bnvparser_test"
+eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DBNVPARSER_TEST_MAIN lexer.cpp strings.cpp assert.cpp hash.cpp vector.cpp bnvm.cpp bnvparser.cpp -o bnvparser_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./bnvparser_test
 
 ./bnvparser_test > bnvParserOut.txt
