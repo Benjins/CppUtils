@@ -1,0 +1,9 @@
+#include "parserDir/test1.bnv"
+
+void main(int argc){
+	Point pt;
+	pt.x = argc;
+	pt.y = 3;
+	
+	return pt.y;
+}
