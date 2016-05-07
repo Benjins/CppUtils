@@ -102,6 +102,22 @@ float VectorLengthSqr(Vector3 v){
 	return v.x*v.x + v.y*v.y + v.z*v.z;
 }
 
+int globalInteger;
+
+void SetGlobalInteger(int newVal){
+	globalInteger = newVal;
+}
+
+Vector3 globalVec;
+
+void SetGlobalVec(Vector3 vec){
+	globalVec = vec;
+}
+
+void SetGlobalVecX(float x){
+	globalVec.x = x;
+}
+
 int main(){
 
 	Triangle myTri = MakeTriangle(

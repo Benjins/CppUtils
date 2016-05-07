@@ -158,9 +158,11 @@ struct FunctionCall : Value{
 struct VariableAccess : Value {
 	SubString varName;
 	int regOffset;
+	bool isGlobal;
 
 	VariableAccess() {
 		regOffset = -1;
+		isGlobal = false;
 	}
 
 	virtual void AddByteCode(BNVM& vm);
@@ -239,6 +241,8 @@ struct BNVParser{
 	Vector<VarDecl> varsInScope;
 	Vector<int> varFrames;
 
+	Vector<VarDecl> globalVars;
+
 	StringMap<int> externFuncNames;
 
 	BNVParser();
@@ -262,6 +266,7 @@ struct BNVParser{
 	
 	StructDef* ParseStructDef();
 	FuncDef* ParseFuncDef();
+	bool ParseGlobalVar(VarDecl* outDecl);
 	Statement* ParseStatement();
 	ReturnStatement* ParseReturnStatement();
 	IfStatement* ParseIfStatement();
@@ -304,7 +309,10 @@ struct BNVParser{
 	StructDef* GetStructDef(const SubString& name) const;
 	TypeInfo* GetVariableType(const SubString& name) const;
 	int GetVariableOffset(const SubString& name) const;
+	int GetGlobalVariableOffset(const SubString& name) const;
 	int GetStackFrameOffset() const;
+	int GetGlobalVarSize() const;
+	bool VarIsGlobal(const SubString& name) const;
 
 	bool ShuntingYard(const Vector<BNVToken>& inToks, Vector<BNVToken>& outToks);
 	

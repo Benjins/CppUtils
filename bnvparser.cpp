@@ -179,9 +179,15 @@ void BNVParser::ParseFile(const char* fileName){
 			//Do nothing
 		}
 		else{
-			printf("\nWelp.............\n");
-			break;
-			//ERROR
+			VarDecl globalDecl;
+			if (ParseGlobalVar(&globalDecl)) {
+				//Do nothing
+			}
+			else {
+				printf("\nWelp.............\n");
+				break;
+				//ERROR
+			}
 		}
 	}
 }
@@ -317,6 +323,19 @@ FuncDef* BNVParser::ParseFuncDef(){
 		PopVarFrame();
 		return nullptr;
 	}
+}
+
+bool BNVParser::ParseGlobalVar(VarDecl* outDecl) {
+	VarDecl tempDecl;
+	if (ExpectAndEatVarDecl(&tempDecl)) {
+		if (ExpectAndEatWord(";")) {
+			globalVars.PushBack(tempDecl);
+			*outDecl = tempDecl;
+			return true;
+		}
+	}
+
+	return false;
 }
 
 Statement* BNVParser::ParseStatement(){
@@ -501,6 +520,7 @@ Assignment* BNVParser::ParseAssignment(){
 
 		VariableAccess* varAccess = new VariableAccess();
 		varAccess->varName = varName;
+		varAccess->isGlobal = VarIsGlobal(varName);
 		varAccess->type = varType;
 
 		StructDef* varStruct = GetStructDef(varType->typeName);
@@ -512,6 +532,7 @@ Assignment* BNVParser::ParseAssignment(){
 					FieldAccess* fieldAccess = new FieldAccess();
 					fieldAccess->var = varAccess;
 					fieldAccess->varName = varAccess->varName;
+					fieldAccess->isGlobal = varAccess->isGlobal;
 					fieldAccess->fieldName = varStruct->fields.data[i].name;
 					fieldAccess->type = fieldType;
 					varAccess = fieldAccess;
@@ -583,6 +604,12 @@ TypeInfo* BNVParser::GetVariableType(const SubString& name) const {
 		}
 	}
 
+	for (int i = 0; i < globalVars.count; i++) {
+		if (globalVars.data[i].name == name) {
+			return globalVars.data[i].type;
+		}
+	}
+
 	return nullptr;
 }
 
@@ -599,6 +626,19 @@ int BNVParser::GetVariableOffset(const SubString& name) const {
 	return -1;
 }
 
+int BNVParser::GetGlobalVariableOffset(const SubString& name) const {
+	int offset = 0;
+	for (int i = 0; i < globalVars.count; i++) {
+		if (globalVars.data[i].name == name) {
+			return offset;
+		}
+
+		offset += globalVars.data[i].type->size;
+	}
+
+	return -1;
+}
+
 int BNVParser::GetStackFrameOffset() const {
 	int offset = 0;
 	for (int i = 0; i < varsInScope.count; i++) {
@@ -606,6 +646,25 @@ int BNVParser::GetStackFrameOffset() const {
 	}
 
 	return offset;
+}
+
+int BNVParser::GetGlobalVarSize() const {
+	int offset = 0;
+	for (int i = 0; i < globalVars.count; i++) {
+		offset += globalVars.data[i].type->size;
+	}
+
+	return offset;
+}
+
+bool BNVParser::VarIsGlobal(const SubString& name) const {
+	for (int i = 0; i < globalVars.count; i++) {
+		if (globalVars.data[i].name == name) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 bool BNVParser::ShuntingYard(const Vector<BNVToken>& inToks, Vector<BNVToken>& outToks) {
@@ -780,6 +839,7 @@ Value* BNVParser::ParseValue(){
 			}
 			else if (TypeInfo* varType = GetVariableType(tokStr)) {
 				VariableAccess* varAccess = new VariableAccess();
+				varAccess->isGlobal = VarIsGlobal(tokStr);
 				varAccess->varName = tokStr;
 
 				vals.PushBack(varAccess);
@@ -799,8 +859,7 @@ Value* BNVParser::ParseValue(){
 					fieldAccess->fieldName = shuntedToks.data[i].substr;
 					fieldAccess->var = varAccess;
 					fieldAccess->varName = varAccess->varName;
-
-					//StructDef* structDef = GetStructDef(GetVariableType(varAccess->varName)->typeName);
+					fieldAccess->isGlobal = varAccess->isGlobal;
 
 					vals.PushBack(fieldAccess);
 				}
@@ -901,6 +960,13 @@ TypeInfo* BNVParser::ParseVarName(){
 		if (varsInScope.data[i].name == toks.data[cursor].substr) {
 			cursor++;
 			return varsInScope.data[i].type;
+		}
+	}
+
+	for (int i = 0; i < globalVars.count; i++) {
+		if (globalVars.data[i].name == toks.data[cursor].substr) {
+			cursor++;
+			return globalVars.data[i].type;
 		}
 	}
 
@@ -1053,7 +1119,12 @@ void Assignment::AddByteCode(BNVM& vm){
 		lit.value = var->regOffset + i;
 		lit.AddByteCode(vm);
 
-		vm.code.PushBack(I_STOREI);
+		if (var->isGlobal) {
+			vm.code.PushBack(I_STOREG);
+		}
+		else {
+			vm.code.PushBack(I_STOREI);
+		}
 	}
 }
 
@@ -1131,7 +1202,12 @@ void VariableAccess::AddByteCode(BNVM& vm) {
 		IntLiteral lit;
 		lit.value = regOffset + i;
 		lit.AddByteCode(vm);
-		vm.code.PushBack(I_LOADI);
+		if (isGlobal) {
+			vm.code.PushBack(I_LOADG);
+		}
+		else {
+			vm.code.PushBack(I_LOADI);
+		}
 	}
 }
 
@@ -1139,7 +1215,15 @@ TypeInfo* VariableAccess::TypeCheck(const BNVParser& parser) {
 	if (regOffset == -1) {
 		if (TypeInfo* varType = parser.GetVariableType(varName)) {
 			type = varType;
-			regOffset = parser.GetVariableOffset(varName);
+			if (isGlobal) {
+				regOffset = parser.GetGlobalVariableOffset(varName);
+			}
+			else {
+				regOffset = parser.GetVariableOffset(varName);
+			}
+
+			ASSERT_MSG(regOffset >= 0, "Variable '%.*s' had an error when determining its offset.", varName.length, varName.start);
+
 			return type;
 		}
 		else {
@@ -1231,6 +1315,13 @@ void BNVParser::AddByteCode(BNVM& vm) {
 			funcDefs.data[i]->AddByteCode(vm);
 		}
 	}
+
+	for (int i = 0; i < globalVars.count; i++) {
+		SubString name = globalVars.data[i].name;
+		vm.globalVarRegs.Insert(name, GetGlobalVariableOffset(name));
+	}
+
+	vm.globalVarSize = GetGlobalVarSize();
 }
 
 bool BNVParser::TypeCheck() {
@@ -1283,7 +1374,7 @@ void myDot(TempStack* stk) {
 	stk->Push(ret);
 }
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
 	BNS_UNUSED(argc);
 	BNS_UNUSED(argv);
 
@@ -1291,8 +1382,8 @@ int main(int argc, char** argv){
 
 	parser.ParseFile("parserTest.bnv");
 
-	ASSERT(parser.funcDefs.count == 20);
-	ASSERT(parser.funcDefs.data[19]->name == "main");
+	ASSERT(parser.funcDefs.count == 23);
+	ASSERT(parser.funcDefs.data[22]->name == "main");
 
 	BNVM vm;
 	parser.AddByteCode(vm);
@@ -1318,6 +1409,51 @@ int main(int argc, char** argv){
 	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 1024) == 0));
 	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 1024) == 0));
 	ASSERT((vm.ExecuteTyped<Vector3VM, float>("VectorLengthSqr", Vector3VM(3.0f, 4.0f, 12.0f)) == 169.0f));
+
+	int globalIntegerOffset = -1;
+	vm.globalVarRegs.LookUp("globalInteger", &globalIntegerOffset);
+
+	ASSERT(globalIntegerOffset >= 0);
+
+	for (int i = 0; i < 600000; i++) {
+		vm.ExecuteTyped<int>("SetGlobalInteger", i);
+		ASSERT(vm.GetGlobalVariableValueByOffset<int>(globalIntegerOffset) == i);
+	}
+
+	for (int i = 0; i < 60; i++) {
+		vm.ExecuteTyped<int>("SetGlobalInteger", i);
+		ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 1024) == 0));
+		ASSERT((vm.ExecuteTyped<int, int>("Factorial", 7) == 5040));
+		ASSERT(vm.GetGlobalVariableValueByOffset<int>(globalIntegerOffset) == i);
+	}
+
+	int globalVecOffset = -1;
+	vm.globalVarRegs.LookUp("globalVec", &globalVecOffset);
+
+	ASSERT(globalVecOffset >= 0);
+
+	vm.ExecuteTyped<float>("SetGlobalVecX", 12.3f);
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 1024) == 0));
+	ASSERT(vm.GetGlobalVariableValueByOffset<float>(globalVecOffset) == 12.3f);
+
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 1024) == 0));
+	vm.ExecuteTyped<Vector3VM>("SetGlobalVec", Vector3VM(43.5f, -12.3f, 14.4f));
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 1024) == 0));
+	{
+		Vector3VM globalVec = vm.GetGlobalVariableValueByOffset<Vector3VM>(globalVecOffset);
+		ASSERT(globalVec.x == 43.5f);
+		ASSERT(globalVec.y == -12.3f);
+		ASSERT(globalVec.z == 14.4f);
+	}
+
+	vm.ExecuteTyped<float>("SetGlobalVecX", 15.3f);
+	ASSERT((vm.ExecuteTyped<int, int>("IsPrime", 1024) == 0));
+	{
+		Vector3VM globalVec = vm.GetGlobalVariableValueByOffset<Vector3VM>(globalVecOffset);
+		ASSERT(globalVec.x == 15.3f);
+		ASSERT(globalVec.y == -12.3f);
+		ASSERT(globalVec.z == 14.4f)
+	}
 
 	printf("================\n");
 	vm.ExecuteTyped<Vector3VM>("PrintVector", Vector3VM(1.2f, 2.3f, 3.4f));

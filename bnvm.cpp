@@ -20,6 +20,7 @@ void MemStack::SetSize(int amt){
 }
 
 void BNVM::Execute(const char* funcName) {
+	varStack.Increment(globalVarSize);
 	ExecuteInternal(funcName);
 	tempStack.stackMem.count = 0;
 }
@@ -252,6 +253,18 @@ void BNVM::ExecuteInternal(const char* funcName){
 			ASSERT(externFunctions.data[val] != nullptr);
 
 			externFunctions.data[val](&tempStack);
+		} break;
+
+		case I_LOADG: {
+			int reg = tempStack.Pop<int>();
+			int val = *(int*)&varStack.stackMem.data[reg];
+			tempStack.Push(val);
+		} break;
+
+		case I_STOREG: {
+			int reg = tempStack.Pop<int>();
+			int val = tempStack.Pop<int>();
+			*(int*)&varStack.stackMem.data[reg] = val;
 		} break;
 
 		}

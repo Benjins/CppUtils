@@ -45,7 +45,9 @@ enum Instruction{
 	I_LTI,
 	I_LTF,
 	I_ITOF,
-	I_EXTERNF
+	I_EXTERNF,
+	I_LOADG,
+	I_STOREG
 };
 
 #define DEFAULT_MAX_STACK_LIMIT 8192
@@ -106,6 +108,9 @@ struct BNVM{
 	
 	StringMap<int> functionPointers;
 	
+	StringMap<int> globalVarRegs;
+	int globalVarSize;
+
 	Vector<ExternFunc*> externFunctions;
 	StringMap<int> externFuncIndices;
 
@@ -119,6 +124,22 @@ struct BNVM{
 	void Execute(const char* funcName);
 	void ExecuteInternal(const char* funcName);
 
+	template<typename T>
+	T GetGlobalVariableValue(const char* name) {
+		int globalVarOffset = -1;
+		globalVarRegs.LookUp(name, &globalVarOffset);
+		T* globalVarLocation = (T*)&varStack.stackMem.data[globalVarOffset];
+
+		return *globalVarLocation;
+	}
+
+	template<typename T>
+	T GetGlobalVariableValueByOffset(int offset) {
+		T* globalVarLocation = (T*)&varStack.stackMem.data[offset];
+
+		return *globalVarLocation;
+	}
+
 	template<typename Arg, typename Ret>
 	Ret ExecuteTyped(const char* funcName, const Arg& arg) {
 		Arg swizzled;
@@ -131,7 +152,7 @@ struct BNVM{
 		}
 
 		tempStack.Push<Arg>(swizzled);
-
+		varStack.Increment(globalVarSize);
 		ExecuteInternal(funcName);
 
 		ASSERT(tempStack.stackMem.count == sizeof(Ret));
@@ -150,7 +171,7 @@ struct BNVM{
 		}
 
 		tempStack.Push<Arg>(swizzled);
-
+		varStack.Increment(globalVarSize);
 		ExecuteInternal(funcName);
 
 		ASSERT(tempStack.stackMem.count == 0);
