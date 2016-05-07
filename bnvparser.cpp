@@ -259,7 +259,7 @@ StructDef* BNVParser::ParseStructDef(){
 FuncDef* BNVParser::ParseFuncDef(){
 	PushCursorFrame();
 	PushVarFrame();
-	
+
 	FuncDef* def = nullptr;
 	bool isExtern = false;
 	if (ExpectAndEatWord("extern")) {
@@ -269,7 +269,7 @@ FuncDef* BNVParser::ParseFuncDef(){
 	else {
 		def = new FuncDef();
 	}
-	
+
 	if (TypeInfo* retType = ParseType()){
 		SubString funcName;
 		if(ParseIdentifier(&funcName)){
@@ -284,7 +284,7 @@ FuncDef* BNVParser::ParseFuncDef(){
 					while(ExpectAndEatVarDecl(&funcParam)){
 						def->params.PushBack(funcParam);
 						varsInScope.PushBack(funcParam);
-						
+
 						if(ExpectAndEatWord(",")){
 							//Do nothing
 						}
@@ -313,7 +313,7 @@ FuncDef* BNVParser::ParseFuncDef(){
 						return nullptr;
 					}
 				}
-				
+
 				if(Scope* scope = ParseScope()){
 					def->statements = scope->statements;
 					if (def->retType->typeName == "void") {
@@ -332,24 +332,28 @@ FuncDef* BNVParser::ParseFuncDef(){
 					funcDefs.PopBack();
 					PopCursorFrame();
 					PopVarFrame();
+					BNS_SAFE_DELETE(def);
 					return nullptr;
 				}
 			}
 			else {
 				PopCursorFrame();
 				PopVarFrame();
+				BNS_SAFE_DELETE(def);
 				return nullptr;
 			}
 		}
 		else{
 			PopCursorFrame();
 			PopVarFrame();
+			BNS_SAFE_DELETE(def);
 			return nullptr;
 		}
 	}
 	else{
 		PopCursorFrame();
 		PopVarFrame();
+		BNS_SAFE_DELETE(def);
 		return nullptr;
 	}
 }
@@ -1445,7 +1449,7 @@ int main(int argc, char** argv) {
 
 	ASSERT(globalIntegerOffset >= 0);
 
-	for (int i = 0; i < 600000; i++) {
+	for (int i = 0; i < 68000; i += 100) {
 		vm.ExecuteTyped<int>("SetGlobalInteger", i);
 		ASSERT(vm.GetGlobalVariableValueByOffset<int>(globalIntegerOffset) == i);
 	}
