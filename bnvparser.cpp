@@ -162,10 +162,24 @@ Vector<BNVToken> BNVParser::ReadTokenizeProcessFile(String fileName) {
 				SubString fileNameToken = lexedTokens.data[i + 2];
 
 				if (fileNameToken.start[0] == '"') {
-					fileNameToken.start++;
-					fileNameToken.length -= 2;
+					StringStackBuffer<512> fullFileName("%s", fileName.string);
+					int lastSlash = 0;
+					for (int i = 0; i < fullFileName.length; i++) {
+						if (fullFileName.buffer[i] == '/') {
+							lastSlash = i;
+						}
+					}
 
-					Vector<BNVToken> includedToks = ReadTokenizeProcessFile(fileNameToken);
+					fullFileName.length = lastSlash;
+					fullFileName.buffer[lastSlash] = '\0';
+					if (fullFileName.length > 0) {
+						fullFileName.Append("/");
+					}
+
+					//Append the include'd relative fileName, but trim the quotes
+					fullFileName.AppendFormat("%.*s", fileNameToken.length - 2, fileNameToken.start + 1);
+
+					Vector<BNVToken> includedToks = ReadTokenizeProcessFile(fullFileName.buffer);
 
 					processedToks.InsertVector(processedToks.count, includedToks);
 					i += 2;
@@ -1491,6 +1505,17 @@ int main(int argc, char** argv) {
 
 	printf("================\n");
 	vm.ExecuteTyped<Vector3VM>("PrintVector", Vector3VM(1.2f, 2.3f, 3.4f));
+
+	{
+		BNVParser relIncludeParser;
+
+		relIncludeParser.ParseFile("relIncludeTest.bnv");
+
+		BNVM relVm;
+		relIncludeParser.AddByteCode(relVm);
+
+		ASSERT((relVm.ExecuteTyped<int, int>("main", 17) == 3));
+	}
 
 	return 0;
 }
