@@ -69,6 +69,14 @@ int main(int argc, char** argv){
 			ASSERT(ents.GetById(i) == nullptr);
 		}
 	}
+
+	{
+		IDTracker<TestEntity> ents(20);
+
+		for(int i = 1; i < 50; i++){
+			ents.SetSize(30  * i);
+		}
+	}
 	
 	ASSERT(allocCount == 0);
 	

@@ -19,6 +19,8 @@ bool StrEqual(const char* s1, const char* s2);
 bool StrEqualN(const char* s1, const char* s2, unsigned int len);
 int Atoi(const char* str);
 
+char* StrDup(const char* str);
+
 int StrFind(const char* haystack, const char* needle);
 
 /*

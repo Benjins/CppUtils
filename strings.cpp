@@ -116,6 +116,15 @@ int StrLen(const char* str){
 	return len;
 }
 
+char* StrDup(const char* str){
+	int strLen = StrLen(str);
+	char* newStr = (char*)malloc(strLen + 1);
+
+	MemCpy(newStr, str, strLen);
+	newStr[strLen] = '\0';
+	return newStr;
+}
+
 bool StrEqual(const char* s1, const char* s2){
 	if(s1 == s2){
 		return true;
@@ -666,7 +675,15 @@ int main(int argc, char** argv){
 		str1.Retain();
 		ASSERT(StrEqualN(substr.start, "EF", 2));
 	}
-	
+
+	{
+		const char* str = "This is a test string lol.23523%@";
+		char* newStr = StrDup(str);
+		ASSERT(StrEqual(str, newStr));
+
+		free(newStr);
+	}
+
 	return 0;
 }
 
