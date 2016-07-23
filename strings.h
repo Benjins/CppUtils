@@ -27,7 +27,7 @@ int StrFind(const char* haystack, const char* needle);
 Structure of string allocation:
  _____________________________________
 |Ref|Len|  String.......         |NULL|
-|_2_|_4_|__________N_____________|_1__|
+|_4_|_4_|__________N_____________|_1__|
 
 */
 
@@ -148,7 +148,7 @@ struct String{
 String ReadStringFromFile(const char* fileName);
 
 struct SubString{
-	short* ref;
+	int* ref;
 	char* start;
 	int length;
 	

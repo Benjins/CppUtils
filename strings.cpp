@@ -19,12 +19,12 @@ size_t FindChar(const char* str, char c) {
 void String::SetSize(int size){
 	Release();
 	
-	void* alloc = malloc(6 + size + 1);
+	void* alloc = malloc(8 + size + 1);
 	
-	string = ((char*)alloc) + 6;
+	string = ((char*)alloc) + 8;
 	string[0] = '\0';
 	
-	short* ref = (short*)alloc;
+	int* ref = (int*)alloc;
 	int* length = (int*)(string - 4);
 	
 	*ref = 1;
@@ -44,7 +44,7 @@ int String::GetRef() const{
 		return 0;
 	}
 	
-	return *(short*)(string - 6);
+	return *(int*)(string - 8);
 }
 
 int String::GetLength() const{
@@ -61,7 +61,7 @@ SubString String::GetSubString(int index, int length){
 	
 	SubString substr;
 	substr.start = &string[index];
-	substr.ref = (short*)(string - 6);
+	substr.ref = (int*)(string - 8);
 	substr.length = length;
 	
 	substr.Retain();
@@ -70,12 +70,12 @@ SubString String::GetSubString(int index, int length){
 }
 
 void String::Retain(){
-	(*(short*)(string - 6))++;
+	(*(int*)(string - 8))++;
 }
 
 void String::Release(){
 	if (string != nullptr){
-		short* ref = (short*)(string - 6);
+		int* ref = (int*)(string - 8);
 		ASSERT(*ref > 0);
 		(*ref)--;
 		

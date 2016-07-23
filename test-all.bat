@@ -87,6 +87,12 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 bnvm_test.exe
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
+cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DCOMMANDLINE_TEST_MAIN commandline.cpp strings.cpp assert.cpp /Fecommandline_test
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
+commandline_test.exe
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
 echo Success!
 goto :EOF
 :somethingbad

@@ -144,6 +144,24 @@ struct Vector{
 		ASSERT(idx >= 0 && idx < count);
 		return data[idx];
 	}
+
+	Vector<T> GetSubVector(int idx, int length) const {
+		ASSERT(idx >= 0 && idx + length <= count);
+
+		Vector<T> subVec;
+		subVec.EnsureCapacity(length);
+		subVec.count = length;
+		for (int i = 0; i < length; i++) {
+			new(&subVec.data[i]) T(data[i + idx]);
+		}
+
+		return subVec;
+	}
+	
+	const T& Get(int idx) const{
+		ASSERT(idx >= 0 && idx < count);
+		return data[idx];
+	}
 	
 	~Vector(){
 		Destroy();
