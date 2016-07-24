@@ -20,12 +20,12 @@ void String::SetSize(int size){
 	Release();
 
 	if (size > 0) {
-		void* alloc = malloc(6 + size + 1);
+		void* alloc = malloc(8 + size + 1);
 
-		string = ((char*)alloc) + 6;
+		string = ((char*)alloc) + 8;
 		string[0] = '\0';
 
-		short* ref = (short*)alloc;
+		int* ref = (int*)alloc;
 		int* length = (int*)(string - 4);
 
 		*ref = 1;
@@ -74,15 +74,8 @@ SubString String::GetSubString(int index, int length){
 	return substr;
 }
 
-<<<<<<< HEAD
-void String::Retain() {
-	if (string != nullptr) {
-		(*(short*)(string - 6))++;
-	}
-=======
 void String::Retain(){
 	(*(int*)(string - 8))++;
->>>>>>> master
 }
 
 void String::Release(){
@@ -768,8 +761,7 @@ int main(int argc, char** argv){
 		str1.Retain();
 		ASSERT(StrEqualN(substr.start, "EF", 2));
 	}
-<<<<<<< HEAD
-	
+
 	{
 		String str1 = "ABCDEF";
 		String str2 = str1.Insert("@@@", 0);
@@ -839,15 +831,14 @@ int main(int argc, char** argv){
 		String str2 = str1.Remove(9);
 
 		ASSERT(str2 == "ABCDEFGHI");
-=======
-
+	}
+	
 	{
 		const char* str = "This is a test string lol.23523%@";
 		char* newStr = StrDup(str);
 		ASSERT(StrEqual(str, newStr));
 
 		free(newStr);
->>>>>>> master
 	}
 
 	return 0;
