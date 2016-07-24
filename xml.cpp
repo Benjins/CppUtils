@@ -228,6 +228,49 @@ XMLElement* XMLElement::GetChild(const char* name, unsigned int index /*= 0*/) {
 	return nullptr;
 }
 
+void WriteXMLElementToFile(XMLElement* elem, FILE* outFile, int indentation) {
+
+#define PRINT_INDENT(n) for(int idt = 0; idt < n; idt++){fprintf(outFile, "\t");}
+
+	PRINT_INDENT(indentation);
+	fprintf(outFile, "<%.*s", elem->name.length, elem->name.start);
+
+	for (int i = 0; i < elem->attributes.count; i++) {
+		fprintf(outFile, " %s='%s'", elem->attributes.names[i].string, elem->attributes.values[i].string);
+	}
+
+	if (elem->childrenIds.count == 0) {
+		fprintf(outFile, "/>\n");
+	}
+	else {
+		fprintf(outFile, ">\n");
+
+		for (int i = 0; i < elem->childrenIds.count; i++) {
+			uint32 childId = elem->childrenIds.Get(i);
+			XMLElement* childElem = elem->doc->elements.GetById(childId);
+			WriteXMLElementToFile(childElem, outFile, indentation + 1);
+		}
+
+		PRINT_INDENT(indentation);
+		fprintf(outFile, "</%.*s>\n", elem->name.length, elem->name.start);
+	}
+
+#undef PRINT_INDENT
+}
+
+XMLError SaveXMLDocToFile(XMLDoc* doc, const char* fileName) {
+	FILE* outFile = fopen(fileName, "wb");
+	if (outFile == NULL) {
+		return XMLE_FILENOTFOUND;
+	}
+
+	WriteXMLElementToFile(&doc->elements.vals[0], outFile, 0);
+
+	fclose(outFile);
+
+	return XMLE_NONE;
+}
+
 #if defined(XML_TEST_MAIN)
 
 int main(int argc, char** argv) {

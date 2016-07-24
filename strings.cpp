@@ -2,12 +2,12 @@
 
 #include <stdio.h>
 
-size_t FindChar(const char* str, char c) {
+int FindChar(const char* str, char c) {
 	const char* cursor = str;
 	while (*cursor) {
 
 		if (*cursor == c) {
-			return (cursor - str);
+			return (int)(cursor - str);
 		}
 
 		cursor++;
@@ -19,16 +19,21 @@ size_t FindChar(const char* str, char c) {
 void String::SetSize(int size){
 	Release();
 	
-	void* alloc = malloc(6 + size + 1);
-	
-	string = ((char*)alloc) + 6;
-	string[0] = '\0';
-	
-	short* ref = (short*)alloc;
-	int* length = (int*)(string - 4);
-	
-	*ref = 1;
-	*length = size;
+	if (size > 0) {
+		void* alloc = malloc(6 + size + 1);
+
+		string = ((char*)alloc) + 6;
+		string[0] = '\0';
+
+		short* ref = (short*)alloc;
+		int* length = (int*)(string - 4);
+
+		*ref = 1;
+		*length = size;
+	}
+	else {
+		string = nullptr;
+	}
 }
 
 // FML.
@@ -69,8 +74,10 @@ SubString String::GetSubString(int index, int length){
 	return substr;
 }
 
-void String::Retain(){
-	(*(short*)(string - 6))++;
+void String::Retain() {
+	if (string != nullptr) {
+		(*(short*)(string - 6))++;
+	}
 }
 
 void String::Release(){
@@ -179,6 +186,39 @@ int Atoi(const char* str){
 	return val*sign;
 }
 
+float Atof(const char* str) {
+	ASSERT(str != nullptr);
+
+	float val = 0;
+	float sign = 1;
+	if (*str == '-') {
+		sign = -1;
+		str++;
+	}
+
+	while (*str >= '0' && *str <= '9') {
+		val = (val * 10) + (*str - '0');
+		str++;
+	}
+
+	if (*str != '.') {
+		return val*sign;
+	}
+	else {
+		str++;
+	}
+
+	float decVal = 0.0f;
+	float mult = 0.1f;
+	while (*str >= '0' && *str <= '9') {
+		decVal = decVal + (*str - '0') * mult;
+		mult /= 10.0f;
+		str++;
+	}
+
+	return sign * (val + decVal);
+}
+
 int StrFind(const char* haystack, const char* needle) {
 	if (!needle || !haystack) {
 		return -1;
@@ -195,7 +235,7 @@ int StrFind(const char* haystack, const char* needle) {
 		}
 
 		if (!*nCursor) {
-			return haystack - originalHaystack;
+			return (int)(haystack - originalHaystack);
 		}
 
 		haystack++;
@@ -281,6 +321,45 @@ bool String::operator!=(const char* other) const{
 	return !StrEqualN(string, other, length);
 }
 
+String String::Insert(const char* str, int index) const {
+	int len = GetLength();
+	ASSERT(index >= 0 && index <= len);
+	int strLen = StrLen(str);
+
+	String ret;
+	ret.SetSize(len + strLen);
+
+	MemCpy(ret.string, string, index);
+	MemCpy(ret.string + index, str, strLen);
+	MemCpy(ret.string + index + strLen, string + index, len - index);
+
+	ret.string[len + strLen] = '\0';
+
+	return ret;
+}
+
+String String::Insert(char c, int index) const {
+	char fakeStr[2] = { c, '\0' };
+	return Insert(fakeStr, index);
+}
+
+String String::Remove(int index) const {
+	String ret;
+
+	int len = GetLength();
+	ASSERT(index >= 0 && index < len);
+
+	ret.SetSize(len - 1);
+
+	MemCpy(ret.string, string, index);
+	MemCpy(ret.string + index, string + index + 1, len - index - 1);
+	if (len > 1) {
+		ret.string[len - 1] = '\0';
+	}
+
+	return ret;
+}
+
 String ReadStringFromFile(const char* fileName) {
 	String str;
 
@@ -307,11 +386,11 @@ bool SubString::operator!=(const String& other) const{
 }
 
 bool SubString::operator==(const char* other) const{
-	return StrEqualN(start, other, length);
+	return StrEqualN(start, other, length) && other[length] == '\0';
 }
 
 bool SubString::operator!=(const char* other) const{
-	return !StrEqualN(start, other, length);
+	return !StrEqualN(start, other, length) || other[length] != '\0';
 }
 
 #if defined(STRINGS_TEST_MAIN)
@@ -369,6 +448,15 @@ int main(int argc, char** argv){
 	ASSERT(Atoi("0123") == 123);
 	ASSERT(Atoi("0123000") == 123000);
 	
+	ASSERT(Atof("1.0") == 1.0f);
+	ASSERT(Atof("1.4") == 1.4f);
+	ASSERT(Atof("12.4") == 12.4f);
+	ASSERT(Atof("0.4") == 0.4f);
+	ASSERT(Atof(".4") == 0.4f);
+	ASSERT(Atof("43.4") == 43.4f);
+	ASSERT(Atof("43.4556") == 43.4556f);
+	ASSERT(Atof("43.0056") == 43.0056f);
+
 	char stkConst1[] = "!@#$%^";
 	char stkConst2[] = "!@#$%^";
 	
@@ -667,6 +755,77 @@ int main(int argc, char** argv){
 		ASSERT(StrEqualN(substr.start, "EF", 2));
 	}
 	
+	{
+		String str1 = "ABCDEF";
+		String str2 = str1.Insert("@@@", 0);
+
+		ASSERT(str2 == "@@@ABCDEF");
+		ASSERT(str2.GetLength() == 9);
+	}
+
+	{
+		String str1 = "ABCDEF";
+		String str2 = str1.Insert("@@@", 1);
+
+		ASSERT(str2 == "A@@@BCDEF");
+		ASSERT(str2.GetLength() == 9);
+	}
+
+	{
+		String str1 = "ABCDEF";
+		String str2 = str1.Insert('@', 2);
+
+		ASSERT(str2 == "AB@CDEF");
+		ASSERT(str2.GetLength() == 7);
+	}
+
+	{
+		String str1 = "ABCDEF";
+		String str2 = str1.Insert('@', 6);
+
+		ASSERT(str2 == "ABCDEF@");
+		ASSERT(str2.GetLength() == 7);
+	}
+
+	{
+		for (int i = 0; i < 7; i++) {
+			String str1 = "ABCDEF";
+			String str2 = str1.Insert("", i);
+
+			ASSERT(str2 == "ABCDEF");
+			ASSERT(str2.GetLength() == 6);
+		}
+	}
+
+	{
+		String str1 = "";
+		String str2 = str1.Insert("GHT", 0);
+
+		ASSERT(str2 == "GHT");
+		ASSERT(str2.GetLength() == 3);
+	}
+
+	{
+		String str1 = "ABCDEFGHIJ";
+		String str2 = str1.Remove(0);
+
+		ASSERT(str2 == "BCDEFGHIJ");
+	}
+
+	{
+		String str1 = "ABCDEFGHIJ";
+		String str2 = str1.Remove(1);
+
+		ASSERT(str2 == "ACDEFGHIJ");
+	}
+
+	{
+		String str1 = "ABCDEFGHIJ";
+		String str2 = str1.Remove(9);
+
+		ASSERT(str2 == "ABCDEFGHI");
+	}
+
 	return 0;
 }
 

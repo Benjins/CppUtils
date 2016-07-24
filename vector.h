@@ -60,7 +60,21 @@ struct Vector{
 		
 		count = 0;
 	}
-	
+
+	void Swap(Vector& other) {
+		int _capacity = capacity;
+		int _count = count;
+		T* _data = data;
+
+		capacity = other.capacity;
+		count = other.count;
+		data = other.data;
+
+		other.capacity = _capacity;
+		other.count = _count;
+		other.data = _data;
+	}
+
 	void PopBack(){
 		ASSERT(count > 0);
 		count--;
@@ -141,6 +155,11 @@ struct Vector{
 	}
 	
 	T& Get(int idx){
+		ASSERT(idx >= 0 && idx < count);
+		return data[idx];
+	}
+
+	const T& Get(int idx) const {
 		ASSERT(idx >= 0 && idx < count);
 		return data[idx];
 	}

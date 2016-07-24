@@ -9,7 +9,7 @@
 
 struct SubString;
 
-size_t FindChar(const char* str, char c);
+int FindChar(const char* str, char c);
 
 int StrLen(const char* str);
 
@@ -18,6 +18,7 @@ void MemCpy(void* dest, const void* src, int bytes);
 bool StrEqual(const char* s1, const char* s2);
 bool StrEqualN(const char* s1, const char* s2, unsigned int len);
 int Atoi(const char* str);
+float Atof(const char* str);
 
 int StrFind(const char* haystack, const char* needle);
 
@@ -102,16 +103,20 @@ struct String{
 		int newSize = StrLen(start);
 		SetSize(newSize);
 		
-		MemCpy(string, start, newSize);
-		string[newSize] = '\0';
+		if (newSize > 0) {
+			MemCpy(string, start, newSize);
+			string[newSize] = '\0';
+		}
 	}
 
 	String(const char* start, int length) {
 		string = nullptr;
 		SetSize(length);
 
-		MemCpy(string, start, length);
-		string[length] = '\0';
+		if (length) {
+			MemCpy(string, start, length);
+			string[length] = '\0';
+		}
 	}
 
 	String(const SubString& substr);
@@ -138,6 +143,10 @@ struct String{
 	
 	SubString GetSubString(int index, int length);
 	
+	String Insert(const char* str, int index) const;
+	String Insert(char c, int index) const;
+	String Remove(int index) const;
+
 	void Retain();
 	
 	void Release();
@@ -207,5 +216,7 @@ struct ConstSubString{
 		start = str;
 	}
 };
+
+#define STATIC_TO_SUBSTRING(str) String(str).GetSubString(0, sizeof(str) - 1)
 
 #endif

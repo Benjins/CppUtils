@@ -55,16 +55,14 @@ struct IDTracker{
 	}
 
 	void SetSize(uint32 newSize){
-		if(currentCount > 0){
-			// TODO: Should we warn here?
-		}
-		
 		maxCount = newSize;
 		
 		if(vals != nullptr){
 			T* newVals = (T*)malloc(maxCount*sizeof(T));
+			memset(newVals, 0xFE, maxCount*sizeof(T));
 			
 			for(int i = 0; i < currentCount; i++){
+				size_t ptrVal = (size_t)(&newVals[i]);
 				new(&newVals[i]) T(vals[i]);
 			}
 			
@@ -88,7 +86,7 @@ struct IDTracker{
 	
 	T* CreateAndAdd(){
 		if (currentCount >= maxCount) {
-			SetSize(maxCount > 0 ? maxCount * 2 : 2);
+			SetSize(maxCount > 0 ? maxCount + 2 : 2);
 		}
 		
 		T* ptr = new(&vals[currentCount]) T();
@@ -114,7 +112,7 @@ struct IDTracker{
 		return ptr;
 	}
 	
-	T* GetById(uint32 id){
+	T* GetById(uint32 id) {
 		for(int i = 0; i < currentCount; i++){
 			if(vals[i].id == id){
 				return &vals[i];

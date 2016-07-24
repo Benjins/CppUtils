@@ -32,6 +32,12 @@ struct XMLElement : IDBase {
 
 struct XMLDoc {
 	IDTracker<XMLElement> elements;
+
+	XMLElement* AddElement() {
+		XMLElement* elem = elements.CreateAndAdd();
+		elem->doc = this;
+		return elem;
+	}
 };
 
 enum XMLError {
@@ -46,5 +52,7 @@ XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc);
 XMLError ParseXMLStringFromFile(const char* fileName, XMLDoc* outDoc);
 
 XMLError LexXMLString(String& xmlString, Vector<SubString>* outTokens);
+
+XMLError SaveXMLDocToFile(XMLDoc* doc, const char* fileName);
 
 #endif

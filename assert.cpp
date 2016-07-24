@@ -20,38 +20,8 @@ void assertFrom(const char* cond, const char* function, const char* file, int li
 	exit(-1);
 #else
 
-#if defined(_MSC_VER) && 0
-
-	char messageBoxBuffer[2048];
-	char* messageBoxCursor = messageBoxBuffer;
-
-	messageBoxCursor += snprintf(messageBoxCursor, 2048, "\nASSERTION!\n");
-	if (cond != nullptr) {
-		messageBoxCursor += snprintf(messageBoxCursor, 2048, "Condition: %s\n", cond);
-	}
-
-	if (msg != nullptr) {
-		messageBoxCursor += snprintf(messageBoxCursor, 2048, "Message: %s\n", msg);
-	}
-
-	messageBoxCursor += snprintf(messageBoxCursor, 2048, "File: %s\nLine: %d\nFunction: %s\n", file, line, function);
-
-	int msgboxID = MessageBoxA(
-		NULL,
-		messageBoxBuffer,
-		"Assertion",
-		MB_ICONWARNING | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2
-		);
-
-	switch (msgboxID)
-	{
-	case IDABORT:
-	case IDRETRY:
-		DEBUG_BREAK();
-		break;
-	case IDCONTINUE:
-		break;
-	}
+#if defined(_MSC_VER)
+	DEBUG_BREAK();
 #else
 
 	printf("Type b to break, or s to skip.\n");

@@ -6,20 +6,20 @@
 #include "macros.h"
 
 typedef enum{
-	STRING,
-	CHARACTER,
-	INTEGER,
-	FLOAT,
-	OCTAL,
-	HEX,
-	OPERATOR,
-	IDENTIFIER,
-	LINECOMMENT,
-	ANNOTATION_STR,
-	ANNOTATION_ID,
-	ANNOTATION_WS,
-	BLOCKCOMMENT,
-	WHITESPACE
+	LS_STRING,
+	LS_CHARACTER,
+	LS_INTEGER,
+	LS_FLOAT,
+	LS_OCTAL,
+	LS_HEX,
+	LS_OPERATOR,
+	LS_IDENTIFIER,
+	LS_LINECOMMENT,
+	LS_ANNOTATION_STR,
+	LS_ANNOTATION_ID,
+	LS_ANNOTATION_WS,
+	LS_BLOCKCOMMENT,
+	LS_WHITESPACE
 } LexerState;
 
 static const char* whitespace = "\t\r\n ";
@@ -42,7 +42,7 @@ Vector<SubString> LexString(String string){
 	String annoEnd = "]*/";
 	
 	Vector<SubString> tokens;	
-	LexerState currState = WHITESPACE;
+	LexerState currState = LS_WHITESPACE;
 	
 	#define EMIT_TOKEN() {currToken.length = (int)(fileCursor - currToken.start+1);tokens.PushBack(currToken);\
 						  currToken.length = 0; currToken.start = fileCursor+1;}
@@ -54,66 +54,66 @@ Vector<SubString> LexString(String string){
 
 	while(fileCursor - string.string < fileSize){
 		switch(currState){
-			case STRING:{
+			case LS_STRING:{
 				if(*fileCursor == '\\'){
 					fileCursor++;
 				}
 				else if(*fileCursor == '"'){
 					EMIT_TOKEN();
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 				}
 			}break;
 			
-			case CHARACTER:{
+			case LS_CHARACTER:{
 				if(*fileCursor == '\\'){
 					fileCursor++;
 				}
 				else if(*fileCursor == '\''){
 					EMIT_TOKEN();
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 				}
 			}break;
 			
-			case INTEGER:{
+			case LS_INTEGER:{
 				if(*fileCursor == '.'){
-					currState = FLOAT;
+					currState = LS_FLOAT;
 				}
 				else if(*fileCursor < '0' || *fileCursor > '9'){
 					fileCursor--;
 					EMIT_TOKEN();
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 				}
 			}break;
 			
-			case FLOAT:{
+			case LS_FLOAT:{
 				if(*fileCursor < '0' || *fileCursor > '9'){
 					fileCursor--;
 					EMIT_TOKEN();
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 				}
 			}break;
 			
-			case OCTAL:{
+			case LS_OCTAL:{
 				if(*fileCursor < '0' || *fileCursor > '9'){
 					fileCursor--;
 					EMIT_TOKEN();
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 				}
 				else if(*fileCursor == 'x' || *fileCursor == 'X'){
-					currState = HEX;
+					currState = LS_HEX;
 				}
 			}break;
 			
-			case HEX:{
+			case LS_HEX:{
 				if((*fileCursor < '0' || *fileCursor > '9') && (*fileCursor < 'a' || *fileCursor > 'f')
 					&& (*fileCursor < 'A' || *fileCursor > 'F')){
 					fileCursor--;
 					EMIT_TOKEN();
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 				}
 			}break;
 			
-			case OPERATOR:{
+			case LS_OPERATOR:{
 				bool found = false;
 
 				for(int i = 0; i < BNS_ARRAY_COUNT(operators); i++){
@@ -126,15 +126,15 @@ Vector<SubString> LexString(String string){
 				if(!found){
 					fileCursor--;
 					EMIT_TOKEN();
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 				}
 			}break;
 			
-			case IDENTIFIER:{		
+			case LS_IDENTIFIER:{
 				if(FindChar(whitespace, *fileCursor) != -1){
 					fileCursor--;
 					EMIT_TOKEN();
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 				}
 				else{
 					bool isOp = false;
@@ -148,95 +148,95 @@ Vector<SubString> LexString(String string){
 					if(isOp){
 						fileCursor--;
 						EMIT_TOKEN();
-						currState = WHITESPACE;
+						currState = LS_WHITESPACE;
 					}
 				}
 			}break;
 			
-			case LINECOMMENT:{
+			case LS_LINECOMMENT:{
 				if(*fileCursor == '\n'){
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 				}
 				
 				currToken.start++;
 			}break;
 			
-			case ANNOTATION_STR:{
+			case LS_ANNOTATION_STR:{
 				if(*fileCursor == '"'){
 					EMIT_TOKEN();
 					break;
 				}
 			}
-			case ANNOTATION_ID:{
+			case LS_ANNOTATION_ID:{
 				if(*fileCursor == ']'){
 					fileCursor--;
 					EMIT_TOKEN();
 					tokens.PushBack(annoEnd.GetSubString(0,3));
-					currState = BLOCKCOMMENT;
+					currState = LS_BLOCKCOMMENT;
 				}
 				else if(FindChar(whitespace, *fileCursor) != -1 || *fileCursor == '('){
 					fileCursor--;
 					EMIT_TOKEN();
-					currState = ANNOTATION_WS;
+					currState = LS_ANNOTATION_WS;
 				}
 			}break;
 
-			case ANNOTATION_WS:{
+			case LS_ANNOTATION_WS:{
 				if(*fileCursor == ']'){
 					tokens.PushBack(annoEnd.GetSubString(0,3));
-					currState = BLOCKCOMMENT;
+					currState = LS_BLOCKCOMMENT;
 					break;
 				}
 				else if(*fileCursor == '(' || *fileCursor == ')'){
-					SubString thisTok = string.GetSubString(fileCursor - string.string, 1);
+					SubString thisTok = string.GetSubString((int)(fileCursor - string.string), 1);
 					tokens.PushBack(thisTok);
 					break;
 				}
 				else if(*fileCursor == '"'){
-					currState = ANNOTATION_STR;
+					currState = LS_ANNOTATION_STR;
 				}
 				else if(FindChar(whitespace, *fileCursor) == -1){
-					currState = ANNOTATION_ID;
+					currState = LS_ANNOTATION_ID;
 				}
 			}
 			
-			case BLOCKCOMMENT:{
+			case LS_BLOCKCOMMENT:{
 				if(fileCursor - string.string < fileSize - 2 && fileCursor[0] == '*' && fileCursor[1] == '/'){
-					currState = WHITESPACE;
+					currState = LS_WHITESPACE;
 					fileCursor += 2;
 					currToken.start += 2;
 				}
 				else if(*fileCursor == '[' && *(fileCursor - 1) == '*' && *(fileCursor - 2) == '/'){
 					tokens.PushBack(annoStart.GetSubString(0,3));
-					currState = ANNOTATION_WS;
+					currState = LS_ANNOTATION_WS;
 				}
 				
 				currToken.start++;
 			}break;
 			
-			case WHITESPACE:{
+			case LS_WHITESPACE:{
 				currToken.start = fileCursor;
 				if(fileCursor - string.string < fileSize - 2 && fileCursor[0] == '/' && fileCursor[1] == '/'){
-					currState = LINECOMMENT;
+					currState = LS_LINECOMMENT;
 				}
 				else if(fileCursor - string.string < fileSize - 2 && fileCursor[0] == '/' && fileCursor[1] == '*'){
-					currState = BLOCKCOMMENT;
+					currState = LS_BLOCKCOMMENT;
 				}
 				else if(FindChar(whitespace, *fileCursor) == -1){
 					
 					if(*fileCursor == '"'){
-						currState = STRING;
+						currState = LS_STRING;
 						fileCursor++;
 					}
 					else if(*fileCursor == '\''){
-						currState = CHARACTER;
+						currState = LS_CHARACTER;
 						fileCursor++;
 					}
 					else if(*fileCursor == '0'){
-						currState = OCTAL;
+						currState = LS_OCTAL;
 					}
 					else if(*fileCursor >= '1' && *fileCursor <= '9'){
-						currState = INTEGER;
+						currState = LS_INTEGER;
 					}
 					else{
 						bool isOp = false;
@@ -248,10 +248,10 @@ Vector<SubString> LexString(String string){
 						}
 						
 						if(isOp){
-							currState = OPERATOR;
+							currState = LS_OPERATOR;
 						}
 						else{
-							currState = IDENTIFIER;
+							currState = LS_IDENTIFIER;
 						}
 					}
 					
@@ -263,7 +263,7 @@ Vector<SubString> LexString(String string){
 		fileCursor++;
 	}
 	
-	if(currState != WHITESPACE){
+	if(currState != LS_WHITESPACE){
 		fileCursor--;
 		EMIT_TOKEN();
 		fileCursor++;

@@ -29,7 +29,7 @@ Hash ComputeHash(const void* mem, int size){
 }
 
 Hash ComputeHash(const char* str){
-	return ComputeHash(str, (int)strlen(str));
+	return ComputeHash(str, str ? (int)strlen(str) : 0);
 }
 
 

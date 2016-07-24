@@ -162,10 +162,24 @@ Vector<BNVToken> BNVParser::ReadTokenizeProcessFile(String fileName) {
 				SubString fileNameToken = lexedTokens.data[i + 2];
 
 				if (fileNameToken.start[0] == '"') {
-					fileNameToken.start++;
-					fileNameToken.length -= 2;
+					StringStackBuffer<512> fullFileName("%s", fileName.string);
+					int lastSlash = 0;
+					for (int i = 0; i < fullFileName.length; i++) {
+						if (fullFileName.buffer[i] == '/') {
+							lastSlash = i;
+						}
+					}
 
-					Vector<BNVToken> includedToks = ReadTokenizeProcessFile(fileNameToken);
+					fullFileName.length = lastSlash;
+					fullFileName.buffer[lastSlash] = '\0';
+					if (fullFileName.length > 0) {
+						fullFileName.Append("/");
+					}
+
+					//Append the include'd relative fileName, but trim the quotes
+					fullFileName.AppendFormat("%.*s", fileNameToken.length - 2, fileNameToken.start + 1);
+
+					Vector<BNVToken> includedToks = ReadTokenizeProcessFile(fullFileName.buffer);
 
 					processedToks.InsertVector(processedToks.count, includedToks);
 					i += 2;
@@ -259,7 +273,7 @@ StructDef* BNVParser::ParseStructDef(){
 FuncDef* BNVParser::ParseFuncDef(){
 	PushCursorFrame();
 	PushVarFrame();
-	
+
 	FuncDef* def = nullptr;
 	bool isExtern = false;
 	if (ExpectAndEatWord("extern")) {
@@ -269,7 +283,7 @@ FuncDef* BNVParser::ParseFuncDef(){
 	else {
 		def = new FuncDef();
 	}
-	
+
 	if (TypeInfo* retType = ParseType()){
 		SubString funcName;
 		if(ParseIdentifier(&funcName)){
@@ -284,7 +298,7 @@ FuncDef* BNVParser::ParseFuncDef(){
 					while(ExpectAndEatVarDecl(&funcParam)){
 						def->params.PushBack(funcParam);
 						varsInScope.PushBack(funcParam);
-						
+
 						if(ExpectAndEatWord(",")){
 							//Do nothing
 						}
@@ -313,7 +327,7 @@ FuncDef* BNVParser::ParseFuncDef(){
 						return nullptr;
 					}
 				}
-				
+
 				if(Scope* scope = ParseScope()){
 					def->statements = scope->statements;
 					if (def->retType->typeName == "void") {
@@ -332,24 +346,28 @@ FuncDef* BNVParser::ParseFuncDef(){
 					funcDefs.PopBack();
 					PopCursorFrame();
 					PopVarFrame();
+					BNS_SAFE_DELETE(def);
 					return nullptr;
 				}
 			}
 			else {
 				PopCursorFrame();
 				PopVarFrame();
+				BNS_SAFE_DELETE(def);
 				return nullptr;
 			}
 		}
 		else{
 			PopCursorFrame();
 			PopVarFrame();
+			BNS_SAFE_DELETE(def);
 			return nullptr;
 		}
 	}
 	else{
 		PopCursorFrame();
 		PopVarFrame();
+		BNS_SAFE_DELETE(def);
 		return nullptr;
 	}
 }
@@ -896,7 +914,7 @@ Value* BNVParser::ParseValue(){
 			else if (tokStr.start[0] >= '0' && tokStr.start[0] <= '9') {
 				int idx = FindChar(tokStr.start, '.');
 				if (idx != -1 && idx < tokStr.length) {
-					float val = atof(tokStr.start);
+					float val = Atof(tokStr.start);
 					FloatLiteral* fltLit = new FloatLiteral();
 					fltLit->value = val;
 					vals.PushBack(fltLit);
@@ -1445,7 +1463,7 @@ int main(int argc, char** argv) {
 
 	ASSERT(globalIntegerOffset >= 0);
 
-	for (int i = 0; i < 600000; i++) {
+	for (int i = 0; i < 68000; i += 100) {
 		vm.ExecuteTyped<int>("SetGlobalInteger", i);
 		ASSERT(vm.GetGlobalVariableValueByOffset<int>(globalIntegerOffset) == i);
 	}
@@ -1487,6 +1505,17 @@ int main(int argc, char** argv) {
 
 	printf("================\n");
 	vm.ExecuteTyped<Vector3VM>("PrintVector", Vector3VM(1.2f, 2.3f, 3.4f));
+
+	{
+		BNVParser relIncludeParser;
+
+		relIncludeParser.ParseFile("relIncludeTest.bnv");
+
+		BNVM relVm;
+		relIncludeParser.AddByteCode(relVm);
+
+		ASSERT((relVm.ExecuteTyped<int, int>("main", 17) == 3));
+	}
 
 	return 0;
 }
