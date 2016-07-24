@@ -18,7 +18,7 @@ int FindChar(const char* str, char c) {
 
 void String::SetSize(int size){
 	Release();
-	
+
 	if (size > 0) {
 		void* alloc = malloc(6 + size + 1);
 
@@ -49,7 +49,7 @@ int String::GetRef() const{
 		return 0;
 	}
 	
-	return *(short*)(string - 6);
+	return *(int*)(string - 8);
 }
 
 int String::GetLength() const{
@@ -66,7 +66,7 @@ SubString String::GetSubString(int index, int length){
 	
 	SubString substr;
 	substr.start = &string[index];
-	substr.ref = (short*)(string - 6);
+	substr.ref = (int*)(string - 8);
 	substr.length = length;
 	
 	substr.Retain();
@@ -74,15 +74,20 @@ SubString String::GetSubString(int index, int length){
 	return substr;
 }
 
+<<<<<<< HEAD
 void String::Retain() {
 	if (string != nullptr) {
 		(*(short*)(string - 6))++;
 	}
+=======
+void String::Retain(){
+	(*(int*)(string - 8))++;
+>>>>>>> master
 }
 
 void String::Release(){
 	if (string != nullptr){
-		short* ref = (short*)(string - 6);
+		int* ref = (int*)(string - 8);
 		ASSERT(*ref > 0);
 		(*ref)--;
 		
@@ -121,6 +126,15 @@ int StrLen(const char* str){
 	}
 	
 	return len;
+}
+
+char* StrDup(const char* str){
+	int strLen = StrLen(str);
+	char* newStr = (char*)malloc(strLen + 1);
+
+	MemCpy(newStr, str, strLen);
+	newStr[strLen] = '\0';
+	return newStr;
 }
 
 bool StrEqual(const char* s1, const char* s2){
@@ -754,6 +768,7 @@ int main(int argc, char** argv){
 		str1.Retain();
 		ASSERT(StrEqualN(substr.start, "EF", 2));
 	}
+<<<<<<< HEAD
 	
 	{
 		String str1 = "ABCDEF";
@@ -824,6 +839,15 @@ int main(int argc, char** argv){
 		String str2 = str1.Remove(9);
 
 		ASSERT(str2 == "ABCDEFGHI");
+=======
+
+	{
+		const char* str = "This is a test string lol.23523%@";
+		char* newStr = StrDup(str);
+		ASSERT(StrEqual(str, newStr));
+
+		free(newStr);
+>>>>>>> master
 	}
 
 	return 0;

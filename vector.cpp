@@ -21,6 +21,14 @@ struct Resource{
 		fakeAllocCount++;
 		BNS_UNUSED(orig);
 	}
+
+	Resource& operator=(const Resource& orig) {
+		pad = 0;
+		fakeAllocCount++;
+		BNS_UNUSED(orig);
+
+		return *this;
+	}
 	
 	~Resource(){
 		fakeAllocCount--;
@@ -310,6 +318,41 @@ int main(int argc, char** argv){
 		ASSERT(iVec.data[1] == 4);
 		ASSERT(iVec.data[2] == 3);
 		ASSERT(iVec.data[3] == 2);
+	}
+
+	{
+		Vector<int> iVec2;
+		iVec2.PushBack(4);
+		iVec2.PushBack(3);
+		iVec2.PushBack(2);
+		
+		Vector<int> iVec3 = iVec2.GetSubVector(0, 3);
+		ASSERT(iVec3.data[0] == 4);
+		ASSERT(iVec3.data[1] == 3);
+		ASSERT(iVec3.data[2] == 2);
+
+		Vector<int> iVec4 = iVec2.GetSubVector(1, 1);
+		ASSERT(iVec4.data[0] == 3);
+		ASSERT(iVec4.count== 1);
+	}
+
+	ASSERT(fakeAllocCount == 0);
+
+	{
+		Vector<Resource> rVec;
+
+		for (int i = 0; i < 20; i++) {
+			Resource r;
+			rVec.PushBack(r);
+		}
+
+		Vector<Resource> rVec2 = rVec.GetSubVector(3, 14);
+		Vector<Resource> rVec3 = rVec.GetSubVector(7, 9);
+		Vector<Resource> rVec4 = rVec.GetSubVector(17, 2);
+
+		BNS_UNUSED(rVec2);
+		BNS_UNUSED(rVec3);
+		BNS_UNUSED(rVec4);
 	}
 
 	ASSERT(fakeAllocCount == 0);
