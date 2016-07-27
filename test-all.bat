@@ -93,6 +93,12 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 commandline_test.exe
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
+cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DUNICODE_TEST_MAIN unicode.cpp strings.cpp filesys.cpp assert.cpp /Feunicode_test
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
+unicode_test.exe
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
 echo Success!
 goto :EOF
 :somethingbad

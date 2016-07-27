@@ -51,8 +51,10 @@ valgrind --quiet --leak-check=full --error-exitcode=12 ./lex_test
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DCOMMANDLINE_TEST_MAIN commandline.cpp strings.cpp assert.cpp -o commandline_test.out"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./commandline_test.out
 
+eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DUNICODE_TEST_MAIN unicode.cpp strings.cpp filesys.cpp assert.cpp -o unicode_test.out"
+valgrind --quiet --leak-check=full --error-exitcode=12 ./unicode_test.out
+diff bnvParserOut.txt bnvParserExpectedOut.txt
+
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DSOCKET_TEST_MAIN socket.cpp assert.cpp -o socket_test.out"
-##./socket_test.out
-##Seems to cause issues.
 
 cppcheck --force --inline-suppr --suppress=memsetClass --suppress=purgedConfiguration --suppress=noExplicitConstructor --suppress=cstyleCast --suppress=missingIncludeSystem --suppress=unusedFunction --error-exitcode=21 --template '{file},{line},{severity},{id},{message}' --quiet --verbose -DBNS_DEBUG -UREF_TEST_MAIN -UASSERT_TEST_MAIN -UHASH_TEST_MAIN -UVECTOR_TEST_MAIN -UFILESYS_TEST_MAIN -UIDBASE_TEST_MAIN -USTRINGS_TEST_MAIN -USTRINGMAP_TEST_MAIN -UMEMSTREAM_TEST_MAIN -UBNVPARSER_TEST_MAIN -UUBNVM_TEST_MAIN -UXML_TEST_MAIN -ULEXER_TEST_MAIN -USOCKET_TEST_MAIN -UCOMMANDLINE_TEST_MAIN --std=c++11 *.cpp
