@@ -197,6 +197,7 @@ int main(int argc, char** argv){
 	DeallocateU32String(utf32);
 	
 	free(fileBytes);
+	free(reEncoded);
 	
 	return 0;
 }
