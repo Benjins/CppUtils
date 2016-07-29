@@ -1,9 +1,14 @@
 #include "socket.h"
 
+#if defined(_WIN32)
+// TODO: headers for windows
+#pragma comment( lib, "wsock32.lib" )
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <unistd.h>
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -48,6 +53,10 @@ bool Socket::Create(SocketProtocol _protocol, SocketBlockingType _blockingType){
 	protocol = _protocol;
 	blockingType = _blockingType;
 
+#if defined(_WIN32)
+	// TODO: socket creation for windows
+	return false;
+#else
 	if (protocol == SP_UDP){
 		handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	}
@@ -67,6 +76,9 @@ bool Socket::Create(SocketProtocol _protocol, SocketBlockingType _blockingType){
 			return false;
 		}
 	}
+#endif
+
+return true;
 }
 
 bool Socket::Bind(int _port /*= 0*/){
@@ -77,16 +89,24 @@ bool Socket::Bind(int _port /*= 0*/){
 
 	source.addr = htonl((127 << 24) | 1);
 	source.port = htons(_port);
+#if defined(_WIN32)
+	// TODO: bind for windows
+#else
 	bind(handle, (const sockaddr*) &address, sizeof(sockaddr_in));
+#endif
 	if (source.port < 0 ){
 		printf( "failed to bind socket\n" );
 		return false;
 	}
+	
+	return true;
 }
 
 bool Socket::Connect(IPV4Addr addr){
 	destination = addr;
 	source = IPV4Addr(127, 0, 0, 1, ntohs(source.port));
+
+	return true;
 }
 
 bool Socket::SendData(const void* buffer, int buffLength, int* bytesSent){
@@ -99,8 +119,14 @@ bool Socket::SendData(const void* buffer, int buffLength, int* bytesSent){
 	printf("Sending %d bytes from '%s' to '%s'\n", buffLength, srcAddr, dstAddr);
 
 	sockaddr_in address = destination.ToSockAddr();
+	
 	int sentBytes =
+#if defined(_WIN32)
+// TODO: headers for windows
+	0;
+#else
 		sendto(handle, (const char*)buffer, buffLength, 0, (sockaddr*)&address, sizeof(sockaddr_in));
+#endif
 
 	if (sentBytes != buffLength){
 		printf("failed to send packet\n");
@@ -113,11 +139,16 @@ bool Socket::SendData(const void* buffer, int buffLength, int* bytesSent){
 }
 
 bool Socket::ReceiveData(void* buffer, int buffLength, int* bytesReceived, IPV4Addr* outAddr){
-	sockaddr_in from;
+	sockaddr_in from = {};
+	
+#if defined(_WIN32)
+// TODO: headers for windows
+	int receivedBytes = 0;
+#else
 	socklen_t fromLen = sizeof(from);
-
 	int receivedBytes =
 		recvfrom(handle, buffer, buffLength, 0, (sockaddr*)&from, &fromLen);
+#endif
 
 	IPV4Addr addr;
 	addr.addr = from.sin_addr.s_addr;
@@ -131,15 +162,31 @@ bool Socket::ReceiveData(void* buffer, int buffLength, int* bytesReceived, IPV4A
 }
 
 bool Socket::Destroy(){
+#if defined(_WIN32)
+	// TODO: close for windows	
+	return true;
+#else
 	close(handle);
+	return true;
+#endif
 }
 
 bool isSocketSystemInitialised = false;
 
 bool StartUpSocketSystem(){
+#if defined(_WIN32)
+	return true;
+#else
+	return true;
+#endif
 }
 
 bool ShutdownSocketSystem(){
+#if defined(_WIN32)
+	return true;
+#else
+	return true;
+#endif
 }
 
 #if defined(SOCKET_TEST_MAIN)
