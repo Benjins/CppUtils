@@ -1,3 +1,8 @@
+#ifndef COROUTINERUNTIME_H
+#define COROUTINERUNTIME_H
+
+#pragma once
+
 enum struct CoroutineResult {
 	CR_Yield,
 	CR_Return
@@ -20,3 +25,5 @@ struct CoroutineInstance {
 #define BNS_YIELD()
 #define BNS_YIELD_FROM(f) f()
 #define BNS_YIELD_FROM_ARGS(f, ...) f(__VA_ARGS__)
+
+#endif

@@ -44,6 +44,8 @@ void PatrolPath(const Vector<PatrolPoint>* path){
 	}
 }
 
+#if defined(COROUTINE_TEST_MAIN)
+
 int main(int argc, char** argv) {
 	
 	float list[5] = {5.23f, 51.1f, -34.55f, 0.0f, 43.21f};
@@ -82,3 +84,4 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+#endif

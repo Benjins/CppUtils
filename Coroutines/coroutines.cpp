@@ -70,6 +70,7 @@ void SerializeTypeName(MetaTypeInfo* info, char* buffer, int buffLength){
 
 //-------------------------
 // example usage
+#if 0
 
 #define BNS_YIELD()
 #define BNS_YIELD_FROM(f) f##_Func()
@@ -94,7 +95,6 @@ void loopThroughIVec(const Vector<int>* iVec) {
 
 //-------------------------------
 // example gen
-#if 0
 struct loopThroughFlts_Data{
 	int _case;
 	const float* _arr_5;
@@ -605,6 +605,8 @@ void ParseCoroutinesInFiles(const char** files, int fileCount, FILE* fileHandle)
 	fprintf(fileHandle, "\n#endif\n");
 }
 
+#if defined (COROUTINE_MAIN)
+
 int main(int argc, char** argv){
 	
 	
@@ -618,3 +620,5 @@ int main(int argc, char** argv){
 
 	return 0;
 }
+
+#endif
