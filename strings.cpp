@@ -178,7 +178,7 @@ void MemCpy(void* dest, const void* src, int bytes){
 void MemSet(void* dst, int val, int bytes){
 	unsigned char* bDst = (unsigned char*)dst;
 	for (int i = 0; i < bytes; i++){
-		*bDst = (unsigned char)val;
+		bDst[i] = (unsigned char)val;
 	}
 }
 

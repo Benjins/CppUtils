@@ -47,6 +47,7 @@ void BitSet::EnsureCapacity(int newCap){
 			free(values);
 		}
 		values = newValues;
+		bytesAlloc = newBytesAlloc;
 	}
 }
 
