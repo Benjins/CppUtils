@@ -48,7 +48,7 @@ int String::GetRef() const{
 	if(string == nullptr){
 		return 0;
 	}
-	
+
 	return *(int*)(string - 8);
 }
 
@@ -172,6 +172,13 @@ void MemCpy(void* dest, const void* src, int bytes){
 	
 	for(int i = 0; i < bytes; i++){
 		bDest[i] = bSrc[i];
+	}
+}
+
+void MemSet(void* dst, int val, int bytes){
+	unsigned char* bDst = (unsigned char*)dst;
+	for (int i = 0; i < bytes; i++){
+		*bDst = (unsigned char)val;
 	}
 }
 

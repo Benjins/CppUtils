@@ -14,6 +14,7 @@ int FindChar(const char* str, char c);
 int StrLen(const char* str);
 
 void MemCpy(void* dest, const void* src, int bytes);
+void MemSet(void* dst, int val, int bytes);
 
 bool StrEqual(const char* s1, const char* s2);
 bool StrEqualN(const char* s1, const char* s2, unsigned int len);
