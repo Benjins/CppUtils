@@ -1,0 +1,17 @@
+
+#windows binaries
+*.ilk
+*.pdb
+*.exe
+*.obj
+*.lib
+
+#linux binaries
+*.o
+*.a
+*.out
+
+# autosaves
+*.*~
+
+.vs/

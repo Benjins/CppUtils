@@ -57,4 +57,7 @@ diff bnvParserOut.txt bnvParserExpectedOut.txt
 
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DSOCKET_TEST_MAIN socket.cpp assert.cpp -o socket_test.out"
 
+cd Coroutines
+./coroutine-test.sh
+
 cppcheck --force --inline-suppr --suppress=memsetClass --suppress=purgedConfiguration --suppress=noExplicitConstructor --suppress=cstyleCast --suppress=missingIncludeSystem --suppress=unusedFunction --error-exitcode=21 --template '{file},{line},{severity},{id},{message}' --quiet --verbose -DBNS_DEBUG -UREF_TEST_MAIN -UASSERT_TEST_MAIN -UHASH_TEST_MAIN -UVECTOR_TEST_MAIN -UFILESYS_TEST_MAIN -UIDBASE_TEST_MAIN -USTRINGS_TEST_MAIN -USTRINGMAP_TEST_MAIN -UMEMSTREAM_TEST_MAIN -UBNVPARSER_TEST_MAIN -UUBNVM_TEST_MAIN -UXML_TEST_MAIN -ULEXER_TEST_MAIN -USOCKET_TEST_MAIN -UCOMMANDLINE_TEST_MAIN --std=c++11 *.cpp

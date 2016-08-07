@@ -99,6 +99,10 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 unicode_test.exe
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
+cd Coroutines
+coroutine-test.bat
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
 echo Success!
 goto :EOF
 :somethingbad
