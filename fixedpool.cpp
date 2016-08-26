@@ -63,6 +63,10 @@ int main(){
 			pool.Deallocate(allocs[i]);
 		}
 	}
+	
+	for (int i = 0; i < 70; i++) {
+		ASSERT(!pool.allocTracker.GetBit(i));
+	}
 
 	return 0;
 }

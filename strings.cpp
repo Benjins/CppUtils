@@ -303,7 +303,9 @@ String& String::operator=(const String& other){
 	if (string != other.string) {
 		Release();
 		string = other.string;
-		Retain();
+		if (string != nullptr) {
+			Retain();
+		}
 	}
 	
 	return *this;
