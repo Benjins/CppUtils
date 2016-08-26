@@ -218,6 +218,7 @@ void BNVParser::ParseFile(const char* fileName){
 			definedTypes.Insert(structDef->name, typeInfo);
 		}
 		else if(FuncDef* funcDef = ParseFuncDef()){
+			BNS_UNUSED(funcDef);
 			//funcDefs.PushBack(funcDef);
 			//Do nothing
 		}
@@ -821,7 +822,7 @@ TypeInfo* FloatLiteral::TypeCheck(const BNVParser& parser) {
 void FloatLiteral::AddByteCode(BNVM& vm) {
 	vm.code.PushBack(I_FLTLIT);
 	int litCursor = vm.code.count;
-	for (int i = 0; i < sizeof(float); i++) {
+	for (unsigned int i = 0; i < sizeof(float); i++) {
 		vm.code.PushBack(0);
 	}
 
@@ -836,7 +837,7 @@ TypeInfo* VoidLiteral::TypeCheck(const BNVParser& parser){
 
 Value* BNVParser::ParseValue(){
 	PushCursorFrame();
-	
+
 	int valEnd = cursor;
 	for (int i = cursor; i < toks.count; i++) {
 		//HACK: I'm so sorry.
@@ -885,6 +886,7 @@ Value* BNVParser::ParseValue(){
 				}
 			}
 			else if (TypeInfo* varType = GetVariableType(tokStr)) {
+				BNS_UNUSED(varType);
 				VariableAccess* varAccess = new VariableAccess();
 				varAccess->isGlobal = VarIsGlobal(tokStr);
 				varAccess->varName = tokStr;

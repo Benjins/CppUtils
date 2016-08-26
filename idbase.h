@@ -62,7 +62,6 @@ struct IDTracker{
 			memset(newVals, 0xFE, maxCount*sizeof(T));
 			
 			for(int i = 0; i < currentCount; i++){
-				size_t ptrVal = (size_t)(&newVals[i]);
 				new(&newVals[i]) T(vals[i]);
 			}
 			
