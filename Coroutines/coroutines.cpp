@@ -1,43 +1,9 @@
 #include "../lexer.h"
 
+#include "coroutines.h"
+
 //--------------------
 // metagen
-
-struct MetaTypeInfo{
-	int pointerLevel;
-	SubString arrayCount;
-	SubString typeName;
-	SubString genericParam;
-
-	bool isConst;
-
-	int tokenStartIndex;
-	int tokenEndIndex;
-
-	MetaTypeInfo() {
-		pointerLevel = 0;
-		tokenStartIndex = 0;
-		tokenEndIndex = 0;
-		isConst = false;
-	}
-};
-
-struct MetaVarDecl{
-	int tokenIndex;
-	SubString name;
-	MetaTypeInfo type;
-
-	MetaVarDecl() {
-		tokenIndex = 0;
-	}
-};
-
-struct MetaFuncDef{
-	MetaTypeInfo retType;
-	SubString name;
-	Vector<MetaVarDecl> params;
-	Vector<MetaVarDecl> localVars;
-};
 
 void SerializeVarDecl(MetaTypeInfo* info, const char* varName, int varNameLength, char* buffer, int buffLength){
 	if (info->isConst) {
@@ -193,7 +159,13 @@ int ParseFuncHeader(const Vector<SubString>& tokens, int startingIndex, MetaFunc
 		index++;
 	}
 
-	if (tokens.Get(index) != "(") {
+	if (index < tokens.count - 1 && tokens.Get(index) == "::") {
+		outFuncDef->nameSpace = outFuncDef->name;
+		outFuncDef->name = tokens.Get(index + 1);
+		index += 2;
+	}
+
+	if (index >= tokens.count || tokens.Get(index) != "(") {
 		return startingIndex;
 	}
 	else {
@@ -209,11 +181,14 @@ int ParseFuncHeader(const Vector<SubString>& tokens, int startingIndex, MetaFunc
 		return startingIndex;
 	}
 
-	for (; index < closeParen; index++) {
+	for (; index < closeParen; ) {
 		MetaVarDecl param;
 		index = ParseVarDecl(tokens, index, &param);
 		if (tokens.Get(index) != "," && index != closeParen) {
 			return startingIndex;
+		}
+		else if (tokens.Get(index) == ","){
+			index++;
 		}
 
 		outFuncDef->params.PushBack(param);
@@ -259,7 +234,11 @@ int ParseCoroutineFuncDef(const Vector<SubString>& tokens, int startingIndex, Me
 
 	index = ParseFuncHeader(tokens, startingIndex, outFuncDef);
 
-	int braceCount = 1;
+	if (index == startingIndex) {
+		return startingIndex;
+	}
+
+	int braceCount = 0;
 	int endIndex = index + 1;
 	while (endIndex < tokens.count && braceCount > 0) {
 		if (tokens.Get(endIndex) == "{") {
@@ -552,6 +531,21 @@ void GenerateCoroutineWrapperCode(
 	fprintf(fileHandle, "\n\treturn CoroutineResult::CR_Return; \n}\n");
 
 	fprintf(fileHandle, "//------------------------\n");
+}
+
+void ParseFunctionsFromTokens(const Vector<SubString>& tokens, Vector<MetaFuncDef>* outDefs){
+	for (int i = 0; i < tokens.count; i++) {
+		MetaFuncDef funcDef;
+		int startIdx = i;
+		i = ParseCoroutineFuncDef(tokens, i, &funcDef);
+		
+		if (i > startIdx){
+			outDefs->PushBack(funcDef);
+			
+			// Since we increment i for the loop
+			i--;
+		}
+	}
 }
 
 void ParseCoroutinesInFiles(const char** files, int fileCount, FILE* fileHandle) {

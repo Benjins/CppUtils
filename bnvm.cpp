@@ -271,6 +271,10 @@ void BNVM::ExecuteInternal(const char* funcName){
 	}
 }
 
+int GetAnInteger() {
+	return 3 + 2;
+}
+
 void BNVM::RegisterExternFunc(const char* name, ExternFunc* func){
 	int index = -1;
 	bool exists = externFuncIndices.LookUp(name, &index);
