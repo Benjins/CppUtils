@@ -38,9 +38,6 @@ const char** GetOperators() {
 
 Vector<SubString> LexString(String string) {
 
-	String annoStart = "/*[";
-	String annoEnd = "]*/";
-
 	Vector<SubString> tokens;
 	LexerState currState = LS_WHITESPACE;
 
@@ -177,7 +174,7 @@ Vector<SubString> LexString(String string) {
 			if (*fileCursor == ']') {
 				fileCursor--;
 				EMIT_TOKEN();
-				tokens.PushBack(annoEnd.GetSubString(0, 3));
+				tokens.PushBack(string.GetSubString((int)(fileCursor - string.string + 1), 3));
 				currState = LS_BLOCKCOMMENT;
 			}
 			else if (FindChar(whitespace, *fileCursor) != -1 || *fileCursor == '(') {
@@ -189,7 +186,7 @@ Vector<SubString> LexString(String string) {
 
 		case LS_ANNOTATION_WS: {
 			if (*fileCursor == ']') {
-				tokens.PushBack(annoEnd.GetSubString(0, 3));
+				tokens.PushBack(string.GetSubString((int)(fileCursor - string.string + 1), 3));
 				currState = LS_BLOCKCOMMENT;
 				break;
 			}
@@ -213,7 +210,7 @@ Vector<SubString> LexString(String string) {
 				currToken.start += 2;
 			}
 			else if (*fileCursor == '[' && *(fileCursor - 1) == '*' && *(fileCursor - 2) == '/') {
-				tokens.PushBack(annoStart.GetSubString(0, 3));
+				tokens.PushBack(string.GetSubString((int)(fileCursor - string.string - 2), 3));
 				currState = LS_ANNOTATION_WS;
 			}
 

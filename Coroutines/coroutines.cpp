@@ -20,6 +20,10 @@ void SerializeVarDecl(MetaTypeInfo* info, const char* varName, int varNameLength
 		buffer += snprintf(buffer, buffLength, "*");
 	}
 
+	if (info->isReference) {
+		buffer += snprintf(buffer, buffLength, "&");
+	}
+
 	buffer += snprintf(buffer, buffLength, " %.*s", varNameLength, varName);
 
 	if (info->arrayCount.start != nullptr) {
@@ -92,14 +96,6 @@ CoroutineResult loopThroughFlts_Func(void* ptr){
 
 //-------------------------------
 
-inline bool IsAlpha(char c) {
-	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-}
-
-bool IsIdentifier(const SubString& token) {
-	return token.length > 0 && (IsAlpha(token.start[0]) || token.start[0] == '_');
-}
-
 int ParseTypeName(const Vector<SubString>& tokens, int startingIndex, MetaTypeInfo* outType) {
 	int index = startingIndex;
 	if (index < tokens.count && tokens.Get(index) == "const") {
@@ -123,6 +119,11 @@ int ParseTypeName(const Vector<SubString>& tokens, int startingIndex, MetaTypeIn
 
 	while (index < tokens.count && tokens.Get(index) == "*") {
 		outType->pointerLevel++;
+		index++;
+	}
+
+	while (index < tokens.count && tokens.Get(index) == "&") {
+		outType->isReference = true;
 		index++;
 	}
 
@@ -197,15 +198,21 @@ int ParseFuncHeader(const Vector<SubString>& tokens, int startingIndex, MetaFunc
 	return index;
 }
 
-bool IsVarInScope(const SubString& token, const MetaFuncDef* funcDef) {
+bool IsVarInScope(const SubString& token, const MetaFuncDef* funcDef, MetaVarDecl* outDecl /*= nullptr*/) {
 	for (int i = 0; i < funcDef->params.count; i++) {
 		if (funcDef->params.Get(i).name == token) {
+			if (outDecl != nullptr) {
+				*outDecl = funcDef->params.Get(i);
+			}
 			return true;
 		}
 	}
 
 	for (int i = 0; i < funcDef->localVars.count; i++) {
 		if (funcDef->localVars.Get(i).name == token) {
+			if (outDecl != nullptr) {
+				*outDecl = funcDef->localVars.Get(i);
+			}
 			return true;
 		}
 	}
@@ -229,6 +236,8 @@ const MetaVarDecl* GetDeclForVar(const SubString& token, const MetaFuncDef* func
 	return nullptr;
 }
 
+void ParseFunctionsFromTokensSubVec(const Vector<SubString>* tokens, int startIndex, int endIndex, Vector<MetaFuncDef>* outDefs);
+
 int ParseCoroutineFuncDef(const Vector<SubString>& tokens, int startingIndex, MetaFuncDef* outFuncDef) {
 	int index = startingIndex;
 
@@ -238,8 +247,8 @@ int ParseCoroutineFuncDef(const Vector<SubString>& tokens, int startingIndex, Me
 		return startingIndex;
 	}
 
-	int braceCount = 0;
-	int endIndex = index + 1;
+	int braceCount = 1;
+	int endIndex = index + 2;
 	while (endIndex < tokens.count && braceCount > 0) {
 		if (tokens.Get(endIndex) == "{") {
 			braceCount++;
@@ -253,8 +262,10 @@ int ParseCoroutineFuncDef(const Vector<SubString>& tokens, int startingIndex, Me
 
 	ASSERT(braceCount == 0);
 
+	int funcBodyStartIndex = index + 1;
+
 	// Skip past opening brace
-	index++;
+	index += 2;
 
 	while (index < endIndex) {
 		if (IsIdentifier(tokens.Get(index)) && !IsVarInScope(tokens.Get(index), outFuncDef)
@@ -303,17 +314,32 @@ int ParseCoroutineFuncDef(const Vector<SubString>& tokens, int startingIndex, Me
 			}
 		}
 	}
-	
+
+	outFuncDef->headerStartIndex = startingIndex;
+	outFuncDef->bodyStartIndex = funcBodyStartIndex;
+	outFuncDef->endIndex = endIndex;
+
+	ParseFunctionsFromTokensSubVec(&tokens, funcBodyStartIndex, endIndex, &outFuncDef->localFuncDefs);
+
+	for (int i = 0; i < outFuncDef->localFuncDefs.count; i++) {
+		for (int j = 0; j < outFuncDef->localVars.count; j++) {
+			int varIdx = outFuncDef->localVars.data[j].tokenIndex;
+			int localFuncStart = outFuncDef->localFuncDefs.data[i].bodyStartIndex;
+			int localFuncEnd   = outFuncDef->localFuncDefs.data[i].endIndex;
+
+			if (localFuncStart < varIdx && varIdx < localFuncEnd) {
+				outFuncDef->localVars.Remove(j);
+				j--;
+			}
+		}
+	}
+
 	return endIndex;
 }
 
 template<int cap>
 void GetNewFieldName(const MetaVarDecl& decl, StringStackBuffer<cap>* buffer) {
-	buffer->AppendFormat(
-		"_%.*s_%d",
-		decl.name.length,
-		decl.name.start,
-		decl.tokenIndex);
+	buffer->AppendFormat("_%.*s_%d", decl.name.length, decl.name.start, decl.tokenIndex);
 }
 
 void PrintYieldToFile(FILE* fileHandle, int yieldCount, int braceCount) {
@@ -533,11 +559,81 @@ void GenerateCoroutineWrapperCode(
 	fprintf(fileHandle, "//------------------------\n");
 }
 
-void ParseFunctionsFromTokens(const Vector<SubString>& tokens, Vector<MetaFuncDef>* outDefs){
-	for (int i = 0; i < tokens.count; i++) {
+void FindClosureVariables(const Vector<SubString>* tokens, MetaFuncDef* def) {
+	if (def->parent != nullptr) {
+		for (int i = def->bodyStartIndex; i < def->endIndex; i++) {
+			SubString tok = tokens->data[i];
+			if (IsIdentifier(tok) && !IsVarInScope(tok, def)) {
+				bool foundClosure = false;
+				MetaFuncDef* parentDef = def->parent;
+				MetaVarDecl closureDecl;
+				while (parentDef != nullptr) {
+					if (IsVarInScope(tok, parentDef, &closureDecl)) {
+						foundClosure = true;
+						break;
+					}
+
+					parentDef = parentDef->parent;
+				}
+
+				if (foundClosure) {
+					MetaFuncDef* defWithClosure = def;
+
+					while (defWithClosure != parentDef) {
+						bool hasClosureAlready = FuncHasClosure(defWithClosure, tok);
+
+						if (!hasClosureAlready) {
+							closureDecl.tokenIndex = i;
+							defWithClosure->closureVars.PushBack(closureDecl);
+						}
+
+						defWithClosure = defWithClosure->parent;
+					}
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < def->localFuncDefs.count; i++) {
+		FindClosureVariables(tokens, &def->localFuncDefs.data[i]);
+	}
+}
+
+bool FuncHasClosure(MetaFuncDef* def, SubString tok) {
+	for (int i = 0; i < def->closureVars.count; i++) {
+		if (def->closureVars.data[i].name == tok) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void SetParentPtrInChildren(MetaFuncDef* def) {
+	for (int i = 0; i < def->localFuncDefs.count; i++) {
+		def->localFuncDefs.data[i].parent = def;
+		SetParentPtrInChildren(&def->localFuncDefs.data[i]);
+	}
+}
+
+void ParseFunctionsFromTokens(const Vector<SubString>* tokens, Vector<MetaFuncDef>* outDefs) {
+
+	ParseFunctionsFromTokensSubVec(tokens, 0, tokens->count, outDefs);
+
+	for (int i = 0; i < outDefs->count; i++) {
+		SetParentPtrInChildren(&outDefs->data[i]);
+	}
+
+	for (int i = 0; i < outDefs->count; i++) {
+		FindClosureVariables(tokens, &outDefs->data[i]);
+	}
+}
+
+void ParseFunctionsFromTokensSubVec(const Vector<SubString>* tokens, int startIndex, int endIndex, Vector<MetaFuncDef>* outDefs){
+	for (int i = startIndex; i < endIndex && i < tokens->count; i++) {
 		MetaFuncDef funcDef;
 		int startIdx = i;
-		i = ParseCoroutineFuncDef(tokens, i, &funcDef);
+		i = ParseCoroutineFuncDef(*tokens, i, &funcDef);
 		
 		if (i > startIdx){
 			outDefs->PushBack(funcDef);
@@ -546,6 +642,10 @@ void ParseFunctionsFromTokens(const Vector<SubString>& tokens, Vector<MetaFuncDe
 			i--;
 		}
 	}
+
+
+
+	
 }
 
 void ParseCoroutinesInFiles(const char** files, int fileCount, FILE* fileHandle) {

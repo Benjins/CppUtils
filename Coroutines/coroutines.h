@@ -10,6 +10,7 @@ struct MetaTypeInfo{
 	SubString genericParam;
 
 	bool isConst;
+	bool isReference;
 
 	int tokenStartIndex;
 	int tokenEndIndex;
@@ -19,6 +20,7 @@ struct MetaTypeInfo{
 		tokenStartIndex = 0;
 		tokenEndIndex = 0;
 		isConst = false;
+		isReference = false;
 	}
 };
 
@@ -38,12 +40,36 @@ struct MetaFuncDef{
 	SubString nameSpace;
 	Vector<MetaVarDecl> params;
 	Vector<MetaVarDecl> localVars;
+
+	Vector<MetaVarDecl> closureVars;
+
+	MetaFuncDef* parent;
+	Vector<MetaFuncDef> localFuncDefs;
+	int headerStartIndex;
+	int bodyStartIndex;
+	int endIndex;
+
+	MetaFuncDef() {
+		parent = nullptr;
+	}
 };
 
 int ParseCoroutineFuncDef(const Vector<SubString>& tokens, int startingIndex, MetaFuncDef* outFuncDef);
 
 void SerializeVarDecl(MetaTypeInfo* info, const char* varName, int varNameLength, char* buffer, int buffLength);
 
-void ParseFunctionsFromTokens(const Vector<SubString>& tokens, Vector<MetaFuncDef>* outDefs);
+void ParseFunctionsFromTokens(const Vector<SubString>* tokens, Vector<MetaFuncDef>* outDefs);
+
+bool IsVarInScope(const SubString& token, const MetaFuncDef* funcDef, MetaVarDecl* outDecl = nullptr);
+
+bool FuncHasClosure(MetaFuncDef* def, SubString tok);
+
+inline bool IsAlpha(char c) {
+	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+inline bool IsIdentifier(const SubString token) {
+	return token.length > 0 && (IsAlpha(token.start[0]) || token.start[0] == '_');
+}
 
 #endif
