@@ -14,4 +14,6 @@
 # autosaves
 *.*~
 
+coroutine_gen.h
+
 .vs/
