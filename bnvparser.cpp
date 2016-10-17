@@ -820,7 +820,15 @@ TypeInfo* FloatLiteral::TypeCheck(const BNVParser& parser) {
 }
 
 void FloatLiteral::AddByteCode(BNVM& vm) {
+	// Ensure that floats are aligned to 4 bytes.
+	int codeSize = vm.code.count;
+	int noopCount = 3 - (codeSize % 4);
+	for (int i = 0; i < noopCount; i++){
+		vm.code.PushBack(I_NOOP);
+	}
+
 	vm.code.PushBack(I_FLTLIT);
+
 	int litCursor = vm.code.count;
 	for (unsigned int i = 0; i < sizeof(float); i++) {
 		vm.code.PushBack(0);

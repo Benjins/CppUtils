@@ -44,6 +44,10 @@ void BNVM::ExecuteInternal(const char* funcName){
 			ASSERT_WARN("%s: Found invalid instruction at index %d", __FUNCTION__, i);
 		} break;
 
+		case I_NOOP: {
+			// Do nothing, it's a no-op
+		} break;
+
 		case I_ADDI:{
 			int a = tempStack.Pop<int>();
 			int b = tempStack.Pop<int>();

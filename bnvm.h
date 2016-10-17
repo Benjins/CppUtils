@@ -9,7 +9,8 @@ typedef unsigned char byte;
 
 enum Instruction{
 	I_INVALIDI = -1,
-	I_ADDI = 0,
+	I_NOOP = 0,
+	I_ADDI,
 	I_MULTI,
 	I_DIVI,
 	I_SUBI,
