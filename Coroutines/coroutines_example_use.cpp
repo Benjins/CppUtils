@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include "../vector.h"
 
+#include "coroutine_runtime.h"
+
 struct PatrolPoint{
 	float x;
 	float y;
 	float delay;
 };
-
-#include "coroutine_gen.h"
 
 /*[Coroutine]*/
 void loopThroughFlts(const float* arr, int count) {
@@ -45,6 +45,8 @@ void PatrolPath(const Vector<PatrolPoint>* path){
 }
 
 #if defined(COROUTINE_TEST_MAIN)
+
+#include "coroutine_gen.h"
 
 int main(int argc, char** argv) {
 	
