@@ -8,6 +8,7 @@
 
 #include "hash.h"
 #include "strings.h"
+#include "macros.h"
 
 template<typename T>
 struct StringMap{
@@ -70,9 +71,9 @@ struct StringMap{
 			String* newNames = (String*)malloc(newCapacity*sizeof(String));
 			Hash* newHashes = (Hash*)malloc(newCapacity*sizeof(Hash));
 			
-			memcpy(newHashes, hashes, count * sizeof(Hash));
-			memcpy(newNames, names, count * sizeof(String));
-			memcpy(newValues, values, count * sizeof(T));
+			BNS_MEMCPY(newHashes, hashes, count * sizeof(Hash));
+			BNS_MEMCPY(newNames, names, count * sizeof(String));
+			BNS_MEMCPY(newValues, values, count * sizeof(T));
 				
 			free(hashes);
 			free(names);

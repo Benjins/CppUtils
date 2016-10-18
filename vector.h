@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "assert.h"
+#include "macros.h"
 
 template<typename T>
 struct Vector{
@@ -45,7 +46,7 @@ struct Vector{
 	void EnsureCapacity(int newCapacity){
 		if(newCapacity > capacity){
 			T* newData = (T*)malloc(newCapacity*sizeof(T));
-			memcpy(newData, data, count*sizeof(T));
+			BNS_MEMCPY(newData, data, count*sizeof(T));
 			free(data);
 			
 			data = newData;
