@@ -38,7 +38,7 @@ struct CommandLineParser{
 		flagCount = 0;
 		isProgramNamePresent = true;
 		cmdLineOwnedString = nullptr;
-		optionCount;
+		optionCount = 0;
 	}
 
 	~CommandLineParser(){
