@@ -1,17 +1,14 @@
 #include "socket.h"
 
-#if defined(_WIN32)
-// TODO: headers for windows
-#pragma comment( lib, "wsock32.lib" )
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-#include <unistd.h>
-#endif
-
 #include <stdio.h>
 #include <string.h>
+
+#if defined(_WIN32)
+#pragma comment( lib, "wsock32.lib" )
+#pragma comment( lib, "Ws2_32.lib" )
+#else
+#include <errno.h>
+#endif
 
 IPV4Addr::IPV4Addr(int _addr, short _port){
 	addr = _addr;
@@ -24,7 +21,24 @@ IPV4Addr::IPV4Addr(unsigned char a, unsigned char b, unsigned char c, unsigned c
 }
 
 IPV4Addr::IPV4Addr(const char* hostName, int _port){
+#if defined(_WIN32)
+	struct addrinfo hints = {};
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
 
+	struct addrinfo* result;
+	int error = getaddrinfo(hostName, NULL, &hints, &result);
+	if (result != nullptr) {
+		addr = ((sockaddr_in*)(result->ai_addr))->sin_addr.s_addr;
+		port = htons(_port);
+		freeaddrinfo(result);
+	}
+	else {
+		printf("\nError resolving host: '%s'\n", hostName);
+	}
+#else
+#endif
 }
 
 void IPV4Addr::WriteToString(char* buffer, int bufferSize){
@@ -37,26 +51,15 @@ sockaddr_in IPV4Addr::ToSockAddr(){
 	sockaddr_in ip = {};
 	ip.sin_addr.s_addr = addr;
 	ip.sin_port = port;
+	ip.sin_family = AF_INET;
 
 	return ip;
 }
 
-/**
-int handle;
-SocketBlockingType blockingType;
-SocketProtocol protocol;
-IPV4Addr source;
-IPV4Addr destination;
-*/
-
 bool Socket::Create(SocketProtocol _protocol, SocketBlockingType _blockingType){
 	protocol = _protocol;
 	blockingType = _blockingType;
-
-#if defined(_WIN32)
-	// TODO: socket creation for windows
-	return false;
-#else
+	
 	if (protocol == SP_UDP){
 		handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	}
@@ -64,11 +67,21 @@ bool Socket::Create(SocketProtocol _protocol, SocketBlockingType _blockingType){
 		handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	}
 	else{
+		//uuuuhhhh...
 	}
 
 	if (handle <= 0){
 	}
 
+#if defined(_WIN32)
+	if (_blockingType == SBT_NonBlocking){
+		u_long nonBlocking = 1;
+		if (ioctlsocket( handle, FIONBIO, &nonBlocking ) != 0){
+			printf( "failed to set non-blocking\n" );
+			return false;
+		}
+	}
+#else
 	if (_blockingType == SBT_NonBlocking){
 		int nonBlocking = 1;
 		if (fcntl( handle, F_SETFL, O_NONBLOCK, nonBlocking) == -1){
@@ -88,25 +101,72 @@ bool Socket::Bind(int _port /*= 0*/){
 	address.sin_port = htons((unsigned short)_port);
 
 	source.addr = htonl((127 << 24) | 1);
-	source.port = htons(_port);
-#if defined(_WIN32)
-	// TODO: bind for windows
-#else
-	bind(handle, (const sockaddr*) &address, sizeof(sockaddr_in));
-#endif
-	if (source.port < 0 ){
+
+	int retVal = bind(handle, (const sockaddr*) &address, sizeof(sockaddr_in));
+
+	if (retVal < 0 ){
 		printf( "failed to bind socket\n" );
 		return false;
 	}
-	
+
+	if (_port == 0) {
+		sockaddr boundAddr;
+		
+#if defined(_WIN32)
+		typedef socklen_t int;
+#endif
+		
+		socklen_t boundLen = sizeof(sockaddr);
+		int val = getsockname(handle, &boundAddr, &boundLen);
+		
+		if (val != 0) {
+#if defined(_WIN32)
+	printf("\nWarning: could not determine port of socket (error %d).\n", WSAGetLastError());
+#else
+	printf("\nWarning: could not determine port of socket.\n");
+#endif
+			source.port = 0;
+		}
+		else {
+			source.port = ((sockaddr_in*)(&boundAddr))->sin_port;
+		}
+	}
+	else {
+		source.port = htons(_port);
+	}
 	return true;
 }
 
 bool Socket::Connect(IPV4Addr addr){
 	destination = addr;
-	source = IPV4Addr(127, 0, 0, 1, ntohs(source.port));
+	source = IPV4Addr(127, 0, 0, 1, source.port);
 
-	return true;
+	sockaddr_in dstAddr = destination.ToSockAddr();
+	int ret = connect(handle, (sockaddr*)(&dstAddr), sizeof(dstAddr));
+
+	if (ret != 0) {
+#if defined(_WIN32)
+		int err = WSAGetLastError();
+		printf("connect failed (err: %d)\n", err);
+#else
+		printf("connect failed\n");
+#endif
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
+bool Socket::SetBlocking(SocketBlockingType bt) {
+#if defined(_WIN32)
+	u_long iMode = (bt == SBT_NonBlocking ? 1 : 0);
+	int rv = ioctlsocket(handle, FIONBIO, &iMode);
+
+	return rv == 0;
+#else
+	return false;
+#endif	
 }
 
 bool Socket::SendData(const void* buffer, int buffLength, int* bytesSent){
@@ -120,16 +180,15 @@ bool Socket::SendData(const void* buffer, int buffLength, int* bytesSent){
 
 	sockaddr_in address = destination.ToSockAddr();
 	
-	int sentBytes =
-#if defined(_WIN32)
-// TODO: headers for windows
-	0;
-#else
-		sendto(handle, (const char*)buffer, buffLength, 0, (sockaddr*)&address, sizeof(sockaddr_in));
-#endif
+	int sentBytes = sendto(handle, (const char*)buffer, buffLength, 0, (sockaddr*)&address, sizeof(sockaddr_in));
 
 	if (sentBytes != buffLength){
-		printf("failed to send packet\n");
+#if defined(_WIN32)
+		int lastErr = WSAGetLastError();
+		printf("failed to send packet (err: %d)\n", lastErr);
+#else
+		printf("failed to send packet.\n");
+#endif
 		return false;
 	}
 
@@ -142,13 +201,16 @@ bool Socket::ReceiveData(void* buffer, int buffLength, int* bytesReceived, IPV4A
 	sockaddr_in from = {};
 	
 #if defined(_WIN32)
-// TODO: headers for windows
-	int receivedBytes = 0;
-#else
-	socklen_t fromLen = sizeof(from);
-	int receivedBytes =
-		recvfrom(handle, buffer, buffLength, 0, (sockaddr*)&from, &fromLen);
+	// TODO: headers for windows
+
+    typedef int socklen_t;
 #endif
+	socklen_t fromLen = sizeof(from);
+	int receivedBytes = recvfrom(handle, (char*)buffer, buffLength, 0, (sockaddr*)&from, &fromLen);
+	
+	if (receivedBytes == -1 && errno != EWOULDBLOCK){
+		printf("Socket encountered error '%s'\n", strerror(errno));
+	}
 
 	IPV4Addr addr;
 	addr.addr = from.sin_addr.s_addr;
@@ -164,6 +226,7 @@ bool Socket::ReceiveData(void* buffer, int buffLength, int* bytesReceived, IPV4A
 bool Socket::Destroy(){
 #if defined(_WIN32)
 	// TODO: close for windows	
+	closesocket(handle);
 	return true;
 #else
 	close(handle);
@@ -175,23 +238,25 @@ bool isSocketSystemInitialised = false;
 
 bool StartUpSocketSystem(){
 #if defined(_WIN32)
-	return true;
+	WSADATA WsaData;
+    return WSAStartup(MAKEWORD(2,2), &WsaData) == NO_ERROR;
 #else
 	return true;
 #endif
 }
 
 bool ShutdownSocketSystem(){
-#if defined(_WIN32)
 	return true;
-#else
-	return true;
-#endif
 }
 
 #if defined(SOCKET_TEST_MAIN)
 
 int main(int argc, char** argv){
+	
+	if(StartUpSocketSystem()){
+		printf("Failed to init socket system, exiting.\n");
+		return -1;
+	}
 
 	Socket sock1;
 	sock1.Create(SP_UDP, SBT_NonBlocking);

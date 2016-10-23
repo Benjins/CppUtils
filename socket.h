@@ -3,6 +3,17 @@
 
 #pragma once
 
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <Ws2tcpip.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <netdb.h>
+#endif
+
 struct sockaddr_in;
 
 struct IPV4Addr{
@@ -42,6 +53,8 @@ struct Socket{
 	bool Bind(int port = 0);
 
 	bool Connect(IPV4Addr addr);
+
+	bool SetBlocking(SocketBlockingType bt);
 
 	bool SendData(const void* buffer, int buffLength, int* bytesSent);
 	bool ReceiveData(void* buffer, int buffLength, int* bytesReceived, IPV4Addr* outAddr);
