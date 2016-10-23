@@ -171,7 +171,14 @@ bool Socket::SetBlocking(SocketBlockingType bt) {
 
 	return rv == 0;
 #else
-	return false;
+	int nonBlocking = (bt == SBT_NonBlocking ? 1 : 0);
+	if (fcntl( handle, F_SETFL, O_NONBLOCK, nonBlocking) == -1){
+		printf( "failed to set non-blocking\n" );
+		return false;
+	}
+	else{
+		return true;
+	}
 #endif	
 }
 
@@ -247,6 +254,8 @@ bool Socket::AcceptConnection(Socket* outSocket){
 	else{
 		*outSocket = *this;
 		outSocket->handle = rv;
+		
+		outSocket->SetBlocking(blockingType);
 		
 		IPV4Addr addr;
 		addr.addr = from.sin_addr.s_addr;
