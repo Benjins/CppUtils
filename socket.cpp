@@ -121,11 +121,7 @@ bool Socket::Bind(int _port /*= 0*/){
 
 	if (_port == 0) {
 		sockaddr boundAddr;
-		
-#if defined(_WIN32)
-		typedef socklen_t int;
-#endif
-		
+
 		socklen_t boundLen = sizeof(sockaddr);
 		int val = getsockname(handle, &boundAddr, &boundLen);
 		
@@ -243,7 +239,7 @@ bool Socket::Listen(int backlog){
 bool Socket::AcceptConnection(Socket* outSocket){
 	sockaddr_in from = {};
 	socklen_t fromLen = sizeof(from);
-	int rv = accept(handle, &from, &fromLen);
+	int rv = accept(handle, (sockaddr*)&from, &fromLen);
 	
 	if (rv < 0){
 		return false;
@@ -256,7 +252,7 @@ bool Socket::AcceptConnection(Socket* outSocket){
 		addr.addr = from.sin_addr.s_addr;
 		addr.port = from.sin_port;
 		
-		outSocket->dest = addr;
+		outSocket->destination = addr;
 		
 		return true;
 	}
