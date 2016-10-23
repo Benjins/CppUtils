@@ -209,7 +209,7 @@ bool Socket::ReceiveData(void* buffer, int buffLength, int* bytesReceived, IPV4A
 	socklen_t fromLen = sizeof(from);
 	int receivedBytes = recvfrom(handle, (char*)buffer, buffLength, 0, (sockaddr*)&from, &fromLen);
 	
-	if (receivedBytes == -1 && errno != EWOULDBLOCK){
+	if (receivedBytes == -1 && errno != 0 && errno != EWOULDBLOCK){
 		printf("Socket encountered error '%s'\n", strerror(errno));
 	}
 
