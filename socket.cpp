@@ -17,7 +17,7 @@ typedef int socklen_t;
 #if defined(_WIN32)
 #define BNS_SOCKET_ERROR() printf("Socket error: %d\n", WSAGetLastError())
 #else
-#define BNS_SOCKET_ERROR() printf("Socket error: %d\n", WSAGetLastError())
+#define BNS_SOCKET_ERROR() printf("Socket error: %s\n", strerror(errno))
 #endif
 
 IPV4Addr::IPV4Addr(int _addr, short _port){
