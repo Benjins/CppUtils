@@ -52,6 +52,9 @@ struct Socket{
 	bool Create(SocketProtocol _protocol, SocketBlockingType _blockingType);
 	bool Bind(int port = 0);
 
+	bool Listen();
+	bool AcceptConnection(Socket* outSocket);
+
 	bool Connect(IPV4Addr addr);
 
 	bool SetBlocking(SocketBlockingType bt);

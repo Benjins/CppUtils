@@ -10,6 +10,16 @@
 #include <errno.h>
 #endif
 
+#if defined(_WIN32)
+typedef int socklen_t;
+#endif
+
+#if defined(_WIN32)
+#define BNS_SOCKET_ERROR() printf("Socket error: %d\n", WSAGetLastError())
+#else
+#define BNS_SOCKET_ERROR() printf("Socket error: %d\n", WSAGetLastError())
+#endif
+
 IPV4Addr::IPV4Addr(int _addr, short _port){
 	addr = _addr;
 	port = _port;
@@ -200,11 +210,6 @@ bool Socket::SendData(const void* buffer, int buffLength, int* bytesSent){
 bool Socket::ReceiveData(void* buffer, int buffLength, int* bytesReceived, IPV4Addr* outAddr){
 	sockaddr_in from = {};
 	
-#if defined(_WIN32)
-	// TODO: headers for windows
-
-    typedef int socklen_t;
-#endif
 	socklen_t fromLen = sizeof(from);
 	int receivedBytes = recvfrom(handle, (char*)buffer, buffLength, 0, (sockaddr*)&from, &fromLen);
 	
@@ -221,6 +226,40 @@ bool Socket::ReceiveData(void* buffer, int buffLength, int* bytesReceived, IPV4A
 	*bytesReceived = receivedBytes;
 
 	return receivedBytes > 0;
+}
+
+bool Socket::Listen(int backlog){
+	int retVal = listen(handle, backlog);
+	
+	if (retVal == 0){
+		return true;
+	}
+	else{
+		BNS_SOCKET_ERROR();
+		return false;
+	}
+}
+
+bool Socket::AcceptConnection(Socket* outSocket){
+	sockaddr_in from = {};
+	socklen_t fromLen = sizeof(from);
+	int rv = accept(handle, &from, &fromLen);
+	
+	if (rv < 0){
+		return false;
+	}
+	else{
+		*outSocket = *this;
+		outSocket->handle = rv;
+		
+		IPV4Addr addr;
+		addr.addr = from.sin_addr.s_addr;
+		addr.port = from.sin_port;
+		
+		outSocket->dest = addr;
+		
+		return true;
+	}
 }
 
 bool Socket::Destroy(){
