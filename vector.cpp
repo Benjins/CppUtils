@@ -357,6 +357,53 @@ int main(int argc, char** argv){
 
 	ASSERT(fakeAllocCount == 0);
 
+	{
+		Vector<int> iVec1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+		Vector<int> iVec2;
+		BNS_VEC_MAP(iVec1, iVec2){
+			result = (item - 1) * 7 + 3;
+		}
+		
+		ASSERT(iVec2.count == 11);
+		for (int i = 0; i < iVec2.count; i++){
+			ASSERT(iVec2.data[i] == i * 7 + 3);
+		}
+	}
+	
+	{
+		Vector<int> v1;
+		ASSERT(v1.count == 0);
+		
+		for (int i = 0; i < 55; i++){
+			int val = v1.EmplaceBack();
+			ASSERT(val == 0);
+			ASSERT(v1.count == (i + 1));
+		}
+		
+	}
+	
+	{
+		Vector<int> iVec1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+		Vector<int> iVec2;
+		BNS_VEC_MAP(iVec1, iVec2){
+			result = (item - 1) * 7 + 3;
+		}
+		
+		ASSERT(iVec2.count == 11);
+		for (int i = 0; i < iVec2.count; i++){
+			ASSERT(iVec2.data[i] == i * 7 + 3);
+		}
+	}
+	
+	{
+		Vector<int> emptyV;
+		Vector<int> empty2;
+		BNS_VEC_MAP(iVec1, iVec2){
+			result = (item - 1) * 7 + 3;
+		}
+		
+	}
+
 	return 0;
 }
 

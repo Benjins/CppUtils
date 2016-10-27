@@ -101,6 +101,17 @@ struct Vector{
 		new(&data[count]) T(elem);
 		count++;
 	}
+
+	T& EmplaceBack(){
+		if(count >= capacity){
+			EnsureCapacity(capacity == 0 ? 2 : capacity * 2);
+		}
+		
+		new(&data[count]) T();
+		count++;
+		
+		return data[count - 1];
+	}
 	
 	void Insert(int index, const T& elem){
 		if(count >= capacity){
@@ -182,5 +193,8 @@ struct Vector{
 		Destroy();
 	}
 };
+
+#define BNS_VEC_MAP(from, to) (to).EnsureCapacity((from).GetCapacity); \
+	for (int index = 0, auto& item = (to).Get(index), auto& result = (from).Get(index); item < to.count; index = index + 1, item = (to).Get(index), result = (from).Get(index);)
 
 #endif
