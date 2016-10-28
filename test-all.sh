@@ -46,14 +46,14 @@ valgrind --quiet --leak-check=full --error-exitcode=12 ./bnvparser_test
 diff bnvParserOut.txt bnvParserExpectedOut.txt
 
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DBNVM_TEST_MAIN lexer.cpp strings.cpp assert.cpp hash.cpp stringmap.cpp bnvm.cpp vector.cpp bnvparser.cpp -o bnvm_test"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./lex_test
+valgrind --quiet --leak-check=full --error-exitcode=12 ./bnvm_test
 
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DCOMMANDLINE_TEST_MAIN commandline.cpp strings.cpp assert.cpp -o commandline_test.out"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./commandline_test.out
 
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DUNICODE_TEST_MAIN unicode.cpp strings.cpp filesys.cpp assert.cpp -o unicode_test.out"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./unicode_test.out
-diff bnvParserOut.txt bnvParserExpectedOut.txt
+diff unicode_test.txt unicode__out.txt
 
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DSOCKET_TEST_MAIN socket.cpp assert.cpp -o socket_test.out"
 

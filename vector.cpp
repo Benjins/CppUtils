@@ -5,6 +5,43 @@
 
 #if defined(VECTOR_TEST_MAIN)
 
+int AtoiTest(const char* str) {
+	int total = 0;
+	while (str) {
+		total = total * 10;
+		total = total + (*str - '0');
+		str++;
+	}
+
+	return total;
+}
+
+struct Vector3Test{
+	float x;
+	float y;
+	float z;
+
+	Vector3Test() {
+		x = 0;
+		y = 0;
+		z = 0;
+	}
+
+	Vector3Test(float _x, float _y, float _z) {
+		x = _x;
+		y = _y;
+		z = _z;
+	}
+
+	Vector3Test operator+(const Vector3Test& param) {
+		return Vector3Test(x + param.x, y + param.y, z + param.z);
+	}
+
+	bool operator==(const Vector3Test& param) {
+		return x == param.x && y == param.y && z == param.z;
+	}
+};
+
 //Used to track potential resource leaks in the vector test
 int fakeAllocCount = 0;
 
@@ -358,11 +395,20 @@ int main(int argc, char** argv){
 	ASSERT(fakeAllocCount == 0);
 
 	{
+		Vector<const char*> iVec1 = { "1", "2", "3", "4", "5" };
+		Vector<int> iVec2;
+		BNS_VEC_MAP(iVec1, iVec2, AtoiTest(item));
+
+		ASSERT(iVec2.count == 5);
+		for (int i = 0; i < 5; i++) {
+			ASSERT(iVec2.data[i] == i + 1);
+		}
+	}
+
+	{
 		Vector<int> iVec1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 		Vector<int> iVec2;
-		BNS_VEC_MAP(iVec1, iVec2){
-			result = (item - 1) * 7 + 3;
-		}
+		BNS_VEC_MAP(iVec1, iVec2, (item - 1) * 7 + 3);
 		
 		ASSERT(iVec2.count == 11);
 		for (int i = 0; i < iVec2.count; i++){
@@ -383,11 +429,45 @@ int main(int argc, char** argv){
 	}
 	
 	{
+		Vector<int> v1 = {1, 2, 3, 4, 5};
+		
+		ASSERT(v1.count == 5);
+		for (int i = 0; i < v1.count; i++){
+			ASSERT(v1.data[i] == i + 1);
+		}
+	}
+
+	{
+		Vector<int> v1 = { 1, 2, 3, 4, 5 };
+
+		ASSERT(v1.count == 5);
+		
+		v1.AppendList({6, 7, 8, 9, 10, 11, 12, 13});
+		ASSERT(v1.count == 13);
+		for (int i = 0; i < v1.count; i++) {
+			ASSERT(v1.data[i] == i + 1);
+		}
+	}
+
+	ASSERT(fakeAllocCount == 0);
+	{
+		Vector<Resource> v1 = { Resource(), Resource() };
+
+		ASSERT(v1.count == 2);
+
+		v1.EmplaceBack();
+		v1.EmplaceBack();
+		v1.EmplaceBack();
+		ASSERT(v1.count == 5);
+
+		v1.AppendList({Resource(), Resource(), Resource()});
+	}
+	ASSERT(fakeAllocCount == 0);
+	
+	{
 		Vector<int> iVec1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 		Vector<int> iVec2;
-		BNS_VEC_MAP(iVec1, iVec2){
-			result = (item - 1) * 7 + 3;
-		}
+		BNS_VEC_MAP(iVec1, iVec2, (item - 1) * 7 + 3);
 		
 		ASSERT(iVec2.count == 11);
 		for (int i = 0; i < iVec2.count; i++){
@@ -396,12 +476,43 @@ int main(int argc, char** argv){
 	}
 	
 	{
-		Vector<int> emptyV;
-		Vector<int> empty2;
-		BNS_VEC_MAP(iVec1, iVec2){
-			result = (item - 1) * 7 + 3;
-		}
-		
+		Vector<int> emptyV1;
+		Vector<int> emptyV2;
+		BNS_VEC_MAP(emptyV1, emptyV2, (item - 1) * 7 + 3);
+
+		ASSERT(emptyV1.count == 0);
+		ASSERT(emptyV2.count == 0);
+	}
+
+	{
+		Vector<int> v1 = {1, 2, 3, 4, 5, 6};
+		int sum = 0;
+		BNS_VEC_FOLDR(sum, v1, 0, acc + item);
+		int prod = 1;
+		BNS_VEC_FOLDR(prod, v1, 0, acc * item);
+
+		ASSERT(sum  == 21);
+		ASSERT(prod == 720);
+	}
+
+	{
+		Vector3Test vArr[] = {Vector3Test(1.0f, 2.0f, 3.0f), Vector3Test(3.0f, 2.0f, 1.0f), Vector3Test(0.0f, 0.0f, 1.0f)};
+
+		Vector<int> indices = {1, 3, 3, 2, 2, 3};
+		Vector3Test sum;
+		BNS_VEC_FOLDR(sum, indices, Vector3Test(), acc + vArr[item]);
+
+		ASSERT(sum == Vector3Test(7.0f, 6.0f, 8.0f));
+	}
+
+	{
+		Vector<int> nums = {17, 12, 3, 0, 5};
+		Vector<int> evenNums;
+		BNS_VEC_FILTER(nums, evenNums, (item % 2) == 0);
+
+		ASSERT(evenNums.count == 2);
+		ASSERT(evenNums.data[0] == 12);
+		ASSERT(evenNums.data[1] == 0);
 	}
 
 	return 0;

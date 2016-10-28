@@ -20,7 +20,6 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 
 cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DVECTOR_TEST_MAIN assert.cpp vector.cpp /Fevector_test
 if %ERRORLEVEL% NEQ 0 goto somethingbad
-goto :EOF
 
 vector_test.exe
 if %ERRORLEVEL% NEQ 0 goto somethingbad

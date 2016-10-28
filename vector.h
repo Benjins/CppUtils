@@ -4,6 +4,7 @@
 #pragma once
 
 #include <new>
+#include <initializer_list>
 #include <string.h>
 
 #include "assert.h"
@@ -166,6 +167,20 @@ struct Vector{
 		EnsureCapacity(initialCapacity);
 	}
 	
+	Vector(std::initializer_list<T> l){
+		count = 0;
+		capacity = 0;
+		data = nullptr;
+		
+		EnsureCapacity(l.size());
+		BNS_MEMCPY(data, l.begin(), l.size() * sizeof(T));
+		count = l.size();
+	}
+	
+	void AppendList(std::initializer_list<T> l){
+		InsertArray(count, l.begin(), l.size());
+	}
+	
 	T& Get(int idx){
 		ASSERT(idx >= 0 && idx < count);
 		return data[idx];
@@ -194,7 +209,26 @@ struct Vector{
 	}
 };
 
-#define BNS_VEC_MAP(from, to) (to).EnsureCapacity((from).GetCapacity); \
-	for (int index = 0, auto& item = (to).Get(index), auto& result = (from).Get(index); item < to.count; index = index + 1, item = (to).Get(index), result = (from).Get(index);)
+#define BNS_VEC_MAP(from, to, action) (to).Clear(); (to).EnsureCapacity((from).count); \
+	for (int index = 0; index < (from).count; index++){ \
+		auto& item = (from).Get(index);\
+		(to).EmplaceBack() = action; \
+	}
+
+#define BNS_VEC_FOLDR(result, from, base, action) { \
+	auto& acc = result; acc = base; \
+	for (int index = 0; index < (from).count; index++){ \
+		auto& item = (from).Get(index); \
+		acc = action; \
+	} \
+}
+
+#define BNS_VEC_FILTER(from, good, pred) (good).Clear(); (good).EnsureCapacity((from).count); \
+	for (int index = 0; index < (from).count; index++){ \
+		auto& item = (from).data[index]; \
+		if (pred) { \
+			(good).PushBack(item); \
+		}\
+	}
 
 #endif
