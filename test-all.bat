@@ -103,7 +103,7 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 pushd .
 
 cd Coroutines
-coroutine-test.bat
+call coroutine-test.bat
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
 popd

@@ -173,7 +173,9 @@ struct Vector{
 		data = nullptr;
 		
 		EnsureCapacity(l.size());
-		BNS_MEMCPY(data, l.begin(), l.size() * sizeof(T));
+		for (int i = 0; i < l.size(); i++) {
+			new(&data[i]) T(l.begin()[i]);
+		}
 		count = l.size();
 	}
 	

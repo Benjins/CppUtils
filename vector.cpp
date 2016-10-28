@@ -7,7 +7,7 @@
 
 int AtoiTest(const char* str) {
 	int total = 0;
-	while (str) {
+	while (str && *str) {
 		total = total * 10;
 		total = total + (*str - '0');
 		str++;
@@ -489,7 +489,7 @@ int main(int argc, char** argv){
 		int sum = 0;
 		BNS_VEC_FOLDR(sum, v1, 0, acc + item);
 		int prod = 1;
-		BNS_VEC_FOLDR(prod, v1, 0, acc * item);
+		BNS_VEC_FOLDR(prod, v1, 1, acc * item);
 
 		ASSERT(sum  == 21);
 		ASSERT(prod == 720);
@@ -498,7 +498,7 @@ int main(int argc, char** argv){
 	{
 		Vector3Test vArr[] = {Vector3Test(1.0f, 2.0f, 3.0f), Vector3Test(3.0f, 2.0f, 1.0f), Vector3Test(0.0f, 0.0f, 1.0f)};
 
-		Vector<int> indices = {1, 3, 3, 2, 2, 3};
+		Vector<int> indices = {0, 2, 2, 1, 1, 2};
 		Vector3Test sum;
 		BNS_VEC_FOLDR(sum, indices, Vector3Test(), acc + vArr[item]);
 
