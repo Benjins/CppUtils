@@ -178,7 +178,7 @@ int ParseFuncHeader(const Vector<SubString>& tokens, int startingIndex, MetaFunc
 		closeParen++;
 	}
 
-	if (closeParen >= tokens.count - 1 || tokens.Get(closeParen + 1) != "{") {
+	if (closeParen >= tokens.count - 1 || (tokens.Get(closeParen + 1) != "{" && tokens.Get(closeParen + 1) != ";")) {
 		return startingIndex;
 	}
 

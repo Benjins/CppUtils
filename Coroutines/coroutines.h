@@ -54,6 +54,8 @@ struct MetaFuncDef{
 	}
 };
 
+int ParseFuncHeader(const Vector<SubString>& tokens, int startingIndex, MetaFuncDef* outFuncDef);
+
 int ParseCoroutineFuncDef(const Vector<SubString>& tokens, int startingIndex, MetaFuncDef* outFuncDef);
 
 void SerializeVarDecl(MetaTypeInfo* info, const char* varName, int varNameLength, char* buffer, int buffLength);
