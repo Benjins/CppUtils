@@ -4,8 +4,16 @@
 #pragma once
 
 #if defined(_WIN32)
+
+// This is a tragic hack used in case windows.h is included beforehand
+// Requires a #define _WINSOCKAPI_ before any windows.h is included.
+// I'm sorry.
+#if defined(_WINSOCKAPI_)
+#undef _WINSOCKAPI_
+#endif
 #include <winsock2.h>
 #include <Ws2tcpip.h>
+
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
