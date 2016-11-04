@@ -91,7 +91,7 @@ struct String{
 		string = nullptr;
 	}
 	
-	String(int size){
+	explicit String(int size){
 		string = nullptr;
 		SetSize(size);
 	}
