@@ -20,24 +20,39 @@ void MemStack::SetSize(int amt){
 }
 
 void BNVM::Execute(const char* funcName) {
+	inst.Execute(funcName);
+}
+
+void BNVM::ExecuteInternal(const char* funcName) {
+	inst.ExecuteInternal(funcName);
+}
+
+void BNVM::InitNewInst(BNVMInstance* newInst) {
+	newInst->vm = this;
+	newInst->pc = 0;
+	newInst->globalVarSize = inst.globalVarSize;
+	newInst->globalVarRegs = inst.globalVarRegs;
+}
+
+void BNVMInstance::Execute(const char* funcName) {
 	varStack.Increment(globalVarSize);
 	ExecuteInternal(funcName);
 	tempStack.stackMem.count = 0;
 }
 
-void BNVM::ExecuteInternal(const char* funcName){
+void BNVMInstance::ExecuteInternal(const char* funcName){
 	int startPc = -1;
-	bool wasFound = functionPointers.LookUp(funcName, &startPc);
+	bool wasFound = vm->functionPointers.LookUp(funcName, &startPc);
 
-	ASSERT(wasFound && startPc >= 0 && startPc < code.count);
+	ASSERT(wasFound && startPc >= 0 && startPc < vm->code.count);
 
 	pc = startPc;
 
-	callStack.Push<int>(code.count);
+	callStack.Push<int>(vm->code.count);
 	callStack.Push<int>(0);
 
-	for(int i = startPc; i < code.count; i++){
-		Instruction instr = (Instruction)code.data[i];
+	for(int i = startPc; i < vm->code.count; i++){
+		Instruction instr = (Instruction)vm->code.data[i];
 		switch(instr){
 		
 		case I_INVALIDI: {
@@ -179,10 +194,10 @@ void BNVM::ExecuteInternal(const char* funcName){
 		} break;
 		
 		case I_INTLIT:{
-			int a = code.data[i+1];
-			int b = code.data[i+2];
-			int c = code.data[i+3];
-			int d = code.data[i+4];
+			int a = vm->code.data[i+1];
+			int b = vm->code.data[i+2];
+			int c = vm->code.data[i+3];
+			int d = vm->code.data[i+4];
 			
 			int val = (a << 24) | (b << 16) | (c << 8) | d;
 			
@@ -192,7 +207,7 @@ void BNVM::ExecuteInternal(const char* funcName){
 		} break;
 		
 		case I_FLTLIT:{
-			float val = *(float*)&code.data[i + 1];
+			float val = *(float*)&vm->code.data[i + 1];
 			tempStack.Push(val);
 			i += 4;
 		} break;
@@ -253,10 +268,10 @@ void BNVM::ExecuteInternal(const char* funcName){
 		case I_EXTERNF: {
 			int val = tempStack.Pop<int>();
 			ASSERT(val >= 0);
-			ASSERT(val < externFunctions.count);
-			ASSERT(externFunctions.data[val] != nullptr);
+			ASSERT(val < vm->externFunctions.count);
+			ASSERT(vm->externFunctions.data[val] != nullptr);
 
-			externFunctions.data[val](&tempStack);
+			vm->externFunctions.data[val](&tempStack);
 		} break;
 
 		case I_LOADG: {
@@ -273,10 +288,6 @@ void BNVM::ExecuteInternal(const char* funcName){
 
 		}
 	}
-}
-
-int GetAnInteger() {
-	return 3 + 2;
 }
 
 void BNVM::RegisterExternFunc(const char* name, ExternFunc* func){
@@ -312,7 +323,7 @@ int main(int argc, char** argv){
 	
 	vm.ExecuteInternal("main");
 	
-	ASSERT(vm.tempStack.Pop<int>() == 35);
+	ASSERT(vm.inst.tempStack.Pop<int>() == 35);
 	
 	return 0;
 }

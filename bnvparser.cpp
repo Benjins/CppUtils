@@ -1376,10 +1376,10 @@ void BNVParser::AddByteCode(BNVM& vm) {
 
 	for (int i = 0; i < globalVars.count; i++) {
 		SubString name = globalVars.data[i].name;
-		vm.globalVarRegs.Insert(name, GetGlobalVariableOffset(name));
+		vm.inst.globalVarRegs.Insert(name, GetGlobalVariableOffset(name));
 	}
 
-	vm.globalVarSize = GetGlobalVarSize();
+	vm.inst.globalVarSize = GetGlobalVarSize();
 }
 
 bool BNVParser::TypeCheck() {
@@ -1469,7 +1469,7 @@ int main(int argc, char** argv) {
 	ASSERT((vm.ExecuteTyped<Vector3VM, float>("VectorLengthSqr", Vector3VM(3.0f, 4.0f, 12.0f)) == 169.0f));
 
 	int globalIntegerOffset = -1;
-	vm.globalVarRegs.LookUp("globalInteger", &globalIntegerOffset);
+	vm.inst.globalVarRegs.LookUp("globalInteger", &globalIntegerOffset);
 
 	ASSERT(globalIntegerOffset >= 0);
 
@@ -1486,7 +1486,7 @@ int main(int argc, char** argv) {
 	}
 
 	int globalVecOffset = -1;
-	vm.globalVarRegs.LookUp("globalVec", &globalVecOffset);
+	vm.inst.globalVarRegs.LookUp("globalVec", &globalVecOffset);
 
 	ASSERT(globalVecOffset >= 0);
 
@@ -1526,6 +1526,28 @@ int main(int argc, char** argv) {
 
 		ASSERT((relVm.ExecuteTyped<int, int>("main", 17) == 3));
 	}
+
+	vm.ExecuteTyped<int>("SetGlobalInteger", 10);
+	ASSERT((vm.GetGlobalVariableValue<int>("globalInteger") == 10));
+	ASSERT((vm.inst.GetGlobalVariableValue<int>("globalInteger") == 10));
+
+	BNVMInstance otherInstance;
+	vm.InitNewInst(&otherInstance);
+
+	otherInstance.ExecuteTyped<int>("SetGlobalInteger", 99);
+	ASSERT((vm.GetGlobalVariableValue<int>("globalInteger") == 10));
+	ASSERT((vm.inst.GetGlobalVariableValue<int>("globalInteger") == 10));
+
+	ASSERT((otherInstance.GetGlobalVariableValue<int>("globalInteger") == 99));
+
+	vm.ExecuteTyped<int>("SetGlobalInteger", -56);
+	ASSERT((vm.GetGlobalVariableValue<int>("globalInteger") == -56));
+	ASSERT((otherInstance.GetGlobalVariableValue<int>("globalInteger") == 99));
+
+	ASSERT((otherInstance.ExecuteTyped<int, int>("Factorial", 5) == 120));
+	ASSERT((otherInstance.ExecuteTyped<int, int>("Factorial", 0) == 1));
+	ASSERT((otherInstance.ExecuteTyped<int, int>("IsPrime", 2) == 1));
+	ASSERT((otherInstance.ExecuteTyped<int, int>("IsPrime", 5) == 1));
 
 	return 0;
 }

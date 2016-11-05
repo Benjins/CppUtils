@@ -103,24 +103,19 @@ struct TempStack{
 
 typedef void (ExternFunc)(TempStack*);
 
-struct BNVM{
-	Vector<byte> code;
-	int pc;
-	
-	StringMap<int> functionPointers;
-	
+struct BNVM;
+
+struct BNVMInstance {
 	StringMap<int> globalVarRegs;
 	int globalVarSize;
+	int pc;
 
-	Vector<ExternFunc*> externFunctions;
-	StringMap<int> externFuncIndices;
+	BNVM* vm;
 
 	TempStack tempStack;
 	TempStack callStack;
-	
+
 	MemStack varStack;
-	
-	void RegisterExternFunc(const char* name, ExternFunc* func);
 
 	void Execute(const char* funcName);
 	void ExecuteInternal(const char* funcName);
@@ -176,6 +171,48 @@ struct BNVM{
 		ExecuteInternal(funcName);
 
 		ASSERT(tempStack.stackMem.count == 0);
+	}
+};
+
+struct BNVM {
+	Vector<byte> code;
+
+	StringMap<int> functionPointers;
+
+	BNVMInstance inst;
+
+	Vector<ExternFunc*> externFunctions;
+	StringMap<int> externFuncIndices;
+
+	BNVM() {
+		inst.vm = this;
+	}
+
+	void InitNewInst(BNVMInstance* newInst);
+
+	void RegisterExternFunc(const char* name, ExternFunc* func);
+
+	void Execute(const char* funcName);
+	void ExecuteInternal(const char* funcName);
+
+	template<typename T>
+	T GetGlobalVariableValue(const char* name) {
+		return inst.GetGlobalVariableValue<T>(name);
+	}
+
+	template<typename T>
+	T GetGlobalVariableValueByOffset(int offset) {
+		return inst.GetGlobalVariableValueByOffset<T>(offset);
+	}
+
+	template<typename Arg, typename Ret>
+	Ret ExecuteTyped(const char* funcName, const Arg& arg) {
+		return inst.ExecuteTyped<Arg, Ret>(funcName, arg);
+	}
+
+	template<typename Arg>
+	void ExecuteTyped(const char* funcName, const Arg& arg) {
+		inst.ExecuteTyped<Arg>(funcName, arg);
 	}
 };
 
