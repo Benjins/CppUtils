@@ -39,13 +39,13 @@ valgrind --quiet --leak-check=full --gen-suppressions=all --error-exitcode=12 ./
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DLEXER_TEST_MAIN lexer.cpp strings.cpp assert.cpp vector.cpp -o lex_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./lex_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DBNVPARSER_TEST_MAIN lexer.cpp strings.cpp assert.cpp hash.cpp vector.cpp bnvm.cpp bnvparser.cpp -o bnvparser_test"
+eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DBNVPARSER_TEST_MAIN lexer.cpp strings.cpp memstream.cpp assert.cpp hash.cpp vector.cpp bnvm.cpp bnvparser.cpp -o bnvparser_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./bnvparser_test
 
 ./bnvparser_test > bnvParserOut.txt
 diff bnvParserOut.txt bnvParserExpectedOut.txt
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DBNVM_TEST_MAIN lexer.cpp strings.cpp assert.cpp hash.cpp stringmap.cpp bnvm.cpp vector.cpp bnvparser.cpp -o bnvm_test"
+eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DBNVM_TEST_MAIN lexer.cpp strings.cpp assert.cpp hash.cpp memstream.cpp stringmap.cpp bnvm.cpp vector.cpp bnvparser.cpp -o bnvm_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./bnvm_test
 
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DCOMMANDLINE_TEST_MAIN commandline.cpp strings.cpp assert.cpp -o commandline_test.out"
