@@ -30,7 +30,7 @@ valgrind --quiet --leak-check=full --error-exitcode=12 ./strings_test
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DSTRINGMAP_TEST_MAIN assert.cpp strings.cpp hash.cpp stringmap.cpp -o stringmap_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./stringmap_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DMEMSTREAM_TEST_MAIN assert.cpp strings.cpp memstream.cpp -o memstream_test"
+eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DMEMSTREAM_TEST_MAIN assert.cpp strings.cpp memstream.cpp stringmap.cpp hash.cpp -o memstream_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./memstream_test
 
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DXML_TEST_MAIN strings.cpp assert.cpp hash.cpp xml.cpp -o xml_test"

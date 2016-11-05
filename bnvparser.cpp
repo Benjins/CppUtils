@@ -1549,6 +1549,22 @@ int main(int argc, char** argv) {
 	ASSERT((otherInstance.ExecuteTyped<int, int>("IsPrime", 2) == 1));
 	ASSERT((otherInstance.ExecuteTyped<int, int>("IsPrime", 5) == 1));
 
+	vm.WriteByteCodeToFile("parserTest.bnb");
+
+	BNVM otherVm;
+	otherVm.ReadByteCodeFromFile("parserTest.bnb");
+	otherVm.RegisterExternFunc("sinf", mySin);
+	otherVm.RegisterExternFunc("subtract", mySub);
+	otherVm.RegisterExternFunc("DotProductExt", myDot);
+
+	ASSERT((otherVm.ExecuteTyped<int, int>("Factorial", 5) == 120));
+	ASSERT((otherVm.ExecuteTyped<int, int>("Factorial", 0) == 1));
+	ASSERT((otherVm.ExecuteTyped<int, int>("IsPrime", 2) == 1));
+	ASSERT((otherVm.ExecuteTyped<int, int>("IsPrime", 5) == 1));
+
+	otherVm.ExecuteTyped<int>("SetGlobalInteger", 99);
+	ASSERT((otherVm.GetGlobalVariableValue<int>("globalInteger") == 99));
+
 	return 0;
 }
 

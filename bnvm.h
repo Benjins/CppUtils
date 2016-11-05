@@ -4,6 +4,7 @@
 #include "vector.h"
 #include "assert.h"
 #include "stringmap.h"
+#include "memstream.h"
 
 typedef unsigned char byte;
 
@@ -174,6 +175,39 @@ struct BNVMInstance {
 	}
 };
 
+/*
+BNVM bytecode file format (Version 1.0.0):
+
+ BNVM - 4 bytes
+ version - 4 bytes
+ globalVar size - 4 bytes
+ globalVar count - 4 bytes
+ for each globalVar:
+   4 bytes - var name offset
+   4 bytes - var name length (including null)
+   N bytes - var name (includes null)
+
+ funcDef count
+ for each funcDef:
+   4 bytes - code pointer
+   4 bytes - def name length (including null)
+   N bytes - def name (including null)
+
+
+ externFunc count
+   4 bytes - func index
+   4 bytes - func name length (including null)
+   N bytes - func name (including null)
+
+   4 bytes - code size
+   N bytes - code values
+
+  ~BNVM - 4 bytes
+
+*/
+
+#define BNVM_VERSION 100
+
 struct BNVM {
 	Vector<byte> code;
 
@@ -194,6 +228,12 @@ struct BNVM {
 
 	void Execute(const char* funcName);
 	void ExecuteInternal(const char* funcName);
+
+	void WriteByteCodeToMemStream(MemStream* stream);
+	void WriteByteCodeToFile(const char* fileName);
+
+	void ReadByteCodeFromMemStream(MemStream* stream);
+	void ReadByteCodeFromFile(const char* fileName);
 
 	template<typename T>
 	T GetGlobalVariableValue(const char* name) {

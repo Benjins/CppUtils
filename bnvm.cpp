@@ -34,6 +34,61 @@ void BNVM::InitNewInst(BNVMInstance* newInst) {
 	newInst->globalVarRegs = inst.globalVarRegs;
 }
 
+void BNVM::WriteByteCodeToMemStream(MemStream* stream) {
+	const char BNVM[] = "BNVM";
+	stream->WriteArray(BNVM, 4);
+	stream->Write(BNVM_VERSION);
+	stream->Write(inst.globalVarSize);
+
+	stream->WriteStringMap(&inst.globalVarRegs);
+	stream->WriteStringMap(&functionPointers);
+	stream->WriteStringMap(&externFuncIndices);
+
+	stream->Write(code.count);
+	stream->WriteArray(code.data, code.count);
+	stream->Write(~*(int*)BNVM);
+}
+
+void BNVM::WriteByteCodeToFile(const char* fileName) {
+	MemStream stream;
+	WriteByteCodeToMemStream(&stream);
+
+	FILE* file = fopen(fileName, "wb");
+	fwrite(stream.readHead, 1, stream.GetLength(), file);
+	fclose(file);
+}
+
+void BNVM::ReadByteCodeFromMemStream(MemStream* stream){
+	const char BNVM[] = "BNVM";
+
+	int dataTag = stream->Read<int>();
+	ASSERT(dataTag == *(int*)BNVM);
+
+	int versionNum = stream->Read<int>();
+	ASSERT(versionNum == BNVM_VERSION);
+
+	inst.globalVarSize = stream->Read<int>();
+
+	stream->ReadStringMap(&inst.globalVarRegs);
+	stream->ReadStringMap(&functionPointers);
+	stream->ReadStringMap(&externFuncIndices);
+
+	int codeSize = stream->Read<int>();
+	code.Clear();
+	code.EnsureCapacity(codeSize);
+	stream->ReadArray(code.data, codeSize);
+	code.count = codeSize;
+
+	int footer = stream->Read<int>();
+	ASSERT(footer == ~*(int*)BNVM);
+}
+
+void BNVM::ReadByteCodeFromFile(const char* fileName) {
+	MemStream stream;
+	stream.ReadInFromFile(fileName);
+	ReadByteCodeFromMemStream(&stream);
+}
+
 void BNVMInstance::Execute(const char* funcName) {
 	varStack.Increment(globalVarSize);
 	ExecuteInternal(funcName);

@@ -5,6 +5,7 @@
 
 #include "assert.h"
 #include "strings.h"
+#include "stringmap.h"
 
 #define VOID_PTR_ADD(ptr, bytes) ((void*)(((char*)(ptr))+bytes))
 
@@ -96,6 +97,32 @@ struct MemStream{
 		
 		MemCpy(outVals, readHead, sizeof(T) * count);
 		readHead = VOID_PTR_ADD(readHead, sizeof(T) * count);
+	}
+
+	template<typename T>
+	void ReadStringMap(StringMap<T>* map) {
+		int entryCount = Read<int>();
+		map->Clear();
+		map->EnsureCapacity(entryCount);
+
+		for (int i = 0; i < entryCount; i++) {
+			T value = Read<T>();
+			int varNameLen = Read<int>();
+			char* varName = ReadStringInPlace();
+			ASSERT(StrLen(varName) == varNameLen);
+
+			map->Insert(varName, value);
+		}
+	}
+
+	template<typename T>
+	void WriteStringMap(const StringMap<T>* map) {
+		Write(map->count);
+		for (int i = 0; i < map->count; i++) {
+			Write(map->values[i]);
+			Write(map->names[i].GetLength());
+			WriteString(map->names[i].string);
+		}
 	}
 	
 	~MemStream(){

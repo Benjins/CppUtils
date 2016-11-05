@@ -19,7 +19,7 @@ void MemStream::EnsureCapacity(int newCapacity){
 void MemStream::WriteString(const char* str){
 	int length = StrLen(str);
 	
-	WriteString(str, length);
+	WriteString(str, length + 1);
 }
 
 void MemStream::WriteString(const char* str, int len){
@@ -145,9 +145,10 @@ int main(int argc, char** argv){
 		
 		char buffer[512] = {0};
 		
-		str.ReadArray<char>(buffer, testStrLen);
+		str.ReadArray<char>(buffer, testStrLen + 1);
 		
-		ASSERT(StrEqualN(buffer, testStr, testStrLen));
+		ASSERT(StrEqual(buffer, testStr));
+		ASSERT(StrLen(buffer) == testStrLen);
 		
 		ASSERT(str.Read<int>() == 54321);
 		
@@ -156,6 +157,55 @@ int main(int argc, char** argv){
 		ASSERT(StrEqualN(buffer, testStr, testStrLen));
 	}
 	
+	{
+		StringMap<int> testMap;
+		
+		testMap.Insert("ABC", 125);
+
+		StringMap<int> testMap2;
+
+
+		MemStream stream;
+
+		stream.WriteStringMap(&testMap);
+		stream.ReadStringMap(&testMap2);
+
+		int val = -1;
+		testMap2.LookUp("ABC", &val);
+		ASSERT(val == 125);
+	}
+
+	{
+		StringMap<int> testMap;
+
+		testMap.Insert("ABC", 125);
+		testMap.Insert("ABC", 126);
+		testMap.Insert("G", 12);
+		testMap.Insert("This", 125);
+		testMap.Insert("Yo", 126);
+
+		StringMap<int> testMap2;
+
+
+		MemStream stream;
+
+		stream.WriteStringMap(&testMap);
+		stream.ReadStringMap(&testMap2);
+
+		int val = -1;
+		testMap2.LookUp("ABC", &val);
+		ASSERT(val == 126);
+
+		testMap2.LookUp("G", &val);
+		ASSERT(val == 12);
+
+		testMap2.LookUp("This", &val);
+		ASSERT(val == 125);
+
+		testMap2.LookUp("Yo", &val);
+		ASSERT(val == 126);
+	}
+
 	return 0;
 }
 

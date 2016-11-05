@@ -36,3 +36,4 @@
 # test files:
 bnvParserOut.txt
 unicode__out.txt
+*.bnb
