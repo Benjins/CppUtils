@@ -116,6 +116,7 @@ int GetOperatorPrecedence(const SubString& opName) {
 }
 
 BNVParser::BNVParser(){
+	generateDebugInfo = false;
 	cursor = 0;
 
 	for(int i = 0; i < BNS_ARRAY_COUNT(builtinTypes); i++){
@@ -155,7 +156,16 @@ Vector<BNVToken> BNVParser::ReadTokenizeProcessFile(String fileName) {
 	Vector<SubString> lexedTokens = LexString(str);
 
 	Vector<BNVToken> processedToks;
+	char* buffer = str.string;
+	int lineNum = 1;
 	for (int i = 0; i < lexedTokens.count; i++) {
+		while (buffer < lexedTokens.data[i].start) {
+			if (*buffer == '\n') {
+				lineNum++;
+			}
+			
+			buffer++;
+		}
 
 		if (lexedTokens.data[i] == "#") {
 			if (lexedTokens.count > (i + 2) && lexedTokens.data[i+1] == "include") {
@@ -197,6 +207,7 @@ Vector<BNVToken> BNVParser::ReadTokenizeProcessFile(String fileName) {
 		else {
 			BNVToken tok;
 			tok.file = fileName;
+			tok.line = lineNum;
 			tok.substr = lexedTokens.data[i];
 			processedToks.PushBack(tok);
 		}

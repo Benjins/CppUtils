@@ -14,7 +14,10 @@ struct BNVToken{
 	String file;
 	int line;
 
-	BNVToken() = default;
+	BNVToken() {
+		line = 0;
+	}
+
 	BNVToken(const BNVToken& orig) {
 		substr = orig.substr;
 		file = orig.file;
@@ -248,6 +251,8 @@ struct BNVParser{
 	Vector<VarDecl> globalVars;
 
 	StringMap<int> externFuncNames;
+
+	bool generateDebugInfo;
 
 	BNVParser();
 
