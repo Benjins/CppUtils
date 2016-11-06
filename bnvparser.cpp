@@ -423,10 +423,14 @@ Statement* BNVParser::ParseStatement(){
 	PushCursorFrame();
 	VarDecl decl;
 
+	int startingTokIdx = cursor;
+
 #define RETURN_STMT(stmt) \
 	if (generateDebugInfo) { \
-		stmt->file = toks.data[cursorFrames.Back()].file; \
-		stmt->line = toks.data[cursorFrames.Back()].line; \
+		BNVToken tok = toks.data[startingTokIdx];\
+		/*printf("Generating debug info for token '%.*s' on line %d\n", tok.substr.length, tok.substr.start, tok.line); */\
+		stmt->file = tok.file; \
+		stmt->line = tok.line; \
 	} \
 	return stmt
 
@@ -1647,7 +1651,7 @@ int main(int argc, char** argv) {
 		vm2.WriteByteCodeToFile("prime_dbg.bnb");
 
 		printf("----------------\n");
-		vm2.ExecuteTyped<int, int>("IsPrime", 3);
+		vm2.Execute("main");
 		printf("----------------\n");
 	}
 
