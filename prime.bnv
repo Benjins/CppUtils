@@ -13,12 +13,5 @@ int IsPrime(int val){
 }
 
 void main(){
-	int val = READI();
-	while (val > 0){
-		if (IsPrime(val)){
-			PRINTI(val);
-		}
-		
-		val = READI();
-	}
+	int r = IsPrime(13);
 }

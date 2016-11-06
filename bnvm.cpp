@@ -19,12 +19,12 @@ void MemStack::SetSize(int amt){
 	stackMem.count = amt;
 }
 
-void BNVM::Execute(const char* funcName) {
-	inst.Execute(funcName);
+BNVMReturnReason BNVM::Execute(const char* funcName) {
+	return inst.Execute(funcName);
 }
 
-void BNVM::ExecuteInternal(const char* funcName) {
-	inst.ExecuteInternal(funcName);
+BNVMReturnReason BNVM::ExecuteInternal() {
+	return inst.ExecuteInternal();
 }
 
 void BNVM::InitNewInst(BNVMInstance* newInst) {
@@ -89,13 +89,16 @@ void BNVM::ReadByteCodeFromFile(const char* fileName) {
 	ReadByteCodeFromMemStream(&stream);
 }
 
-void BNVMInstance::Execute(const char* funcName) {
+BNVMReturnReason BNVMInstance::Execute(const char* funcName) {
 	varStack.Increment(globalVarSize);
-	ExecuteInternal(funcName);
+
+	BNVMReturnReason reason = ExecuteInternalFunc(funcName);
 	tempStack.stackMem.count = 0;
+
+	return reason;
 }
 
-void BNVMInstance::ExecuteInternal(const char* funcName){
+BNVMReturnReason BNVMInstance::ExecuteInternalFunc(const char* funcName) {
 	int startPc = -1;
 	bool wasFound = vm->functionPointers.LookUp(funcName, &startPc);
 
@@ -103,10 +106,14 @@ void BNVMInstance::ExecuteInternal(const char* funcName){
 
 	pc = startPc;
 
+	return ExecuteInternal();
+}
+
+BNVMReturnReason BNVMInstance::ExecuteInternal(){
 	callStack.Push<int>(vm->code.count);
 	callStack.Push<int>(0);
 
-	for(int i = startPc; i < vm->code.count; i++){
+	for(int i = pc; i < vm->code.count; i++){
 		Instruction instr = (Instruction)vm->code.data[i];
 		switch(instr){
 		
@@ -350,6 +357,7 @@ void BNVMInstance::ExecuteInternal(const char* funcName){
 
 			String file;
 			bool found = false;
+			// TODO: Optimise this, make it just an index rather than a map to id's
 			for (int i = 0; i < vm->debugFileIndices.count; i++) {
 				if (vm->debugFileIndices.values[i] == fileIdx) {
 					file = vm->debugFileIndices.names[i];
@@ -360,10 +368,24 @@ void BNVMInstance::ExecuteInternal(const char* funcName){
 			ASSERT(found);
 			printf("'%s:%d'\n", file.string, line);
 
+			switch (debugState) {
+				case DS_Continue: {
+					// Do nothing
+				} break;
+
+				case DS_StepNext: {
+					pc = i;
+					return RR_Break;
+				}
+
+			}
+
 		} break;
 
 		}
 	}
+
+	return RR_Done;
 }
 
 void BNVM::RegisterExternFunc(const char* name, ExternFunc* func){

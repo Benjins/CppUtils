@@ -107,10 +107,22 @@ typedef void (ExternFunc)(TempStack*);
 
 struct BNVM;
 
+enum BNVMDebugState {
+	DS_Continue,
+	DS_StepNext
+};
+
+enum BNVMReturnReason {
+	RR_Done,
+	RR_Break
+};
+
 struct BNVMInstance {
 	StringMap<int> globalVarRegs;
 	int globalVarSize;
 	int pc;
+
+	BNVMDebugState debugState;
 
 	BNVM* vm;
 
@@ -119,8 +131,15 @@ struct BNVMInstance {
 
 	MemStack varStack;
 
-	void Execute(const char* funcName);
-	void ExecuteInternal(const char* funcName);
+	BNVMInstance() {
+		vm = nullptr;
+		pc = 0;
+		debugState = DS_Continue;
+	}
+
+	BNVMReturnReason Execute(const char* funcName);
+	BNVMReturnReason ExecuteInternal();
+	BNVMReturnReason ExecuteInternalFunc(const char* funcName);
 
 	template<typename T>
 	T GetGlobalVariableValue(const char* name) {
@@ -138,6 +157,7 @@ struct BNVMInstance {
 		return *globalVarLocation;
 	}
 
+	// TODO: Combine reason with return type?
 	template<typename Arg, typename Ret>
 	Ret ExecuteTyped(const char* funcName, const Arg& arg) {
 		Arg swizzled;
@@ -151,14 +171,14 @@ struct BNVMInstance {
 
 		tempStack.Push<Arg>(swizzled);
 		varStack.Increment(globalVarSize);
-		ExecuteInternal(funcName);
+		BNVMReturnReason reason = ExecuteInternalFunc(funcName);
 
 		ASSERT(tempStack.stackMem.count == sizeof(Ret));
 		return tempStack.Pop<Ret>();
 	}
 
 	template<typename Arg>
-	void ExecuteTyped(const char* funcName, const Arg& arg) {
+	BNVMReturnReason ExecuteTyped(const char* funcName, const Arg& arg) {
 		Arg swizzled;
 		const int* cursor = (const int*)(&arg);
 		int* swizCursor = (int*)&swizzled;
@@ -170,9 +190,11 @@ struct BNVMInstance {
 
 		tempStack.Push<Arg>(swizzled);
 		varStack.Increment(globalVarSize);
-		ExecuteInternal(funcName);
+		BNVMReturnReason reason = ExecuteInternalFunc(funcName);
 
 		ASSERT(tempStack.stackMem.count == 0);
+
+		return reason;
 	}
 };
 
@@ -244,8 +266,8 @@ struct BNVM {
 
 	void RegisterExternFunc(const char* name, ExternFunc* func);
 
-	void Execute(const char* funcName);
-	void ExecuteInternal(const char* funcName);
+	BNVMReturnReason Execute(const char* funcName);
+	BNVMReturnReason ExecuteInternal();
 
 	void WriteByteCodeToMemStream(MemStream* stream);
 	void WriteByteCodeToFile(const char* fileName);
@@ -269,8 +291,8 @@ struct BNVM {
 	}
 
 	template<typename Arg>
-	void ExecuteTyped(const char* funcName, const Arg& arg) {
-		inst.ExecuteTyped<Arg>(funcName, arg);
+	BNVMReturnReason ExecuteTyped(const char* funcName, const Arg& arg) {
+		return inst.ExecuteTyped<Arg>(funcName, arg);
 	}
 };
 

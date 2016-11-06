@@ -1633,7 +1633,6 @@ int main(int argc, char** argv) {
 		parser2.AddByteCode(vm2);
 
 
-		printf("Code size: %d\n", vm2.code.count);
 		vm2.WriteByteCodeToFile("prime.bnb");
 	}
 
@@ -1647,12 +1646,17 @@ int main(int argc, char** argv) {
 		parser2.AddByteCode(vm2);
 
 
-		printf("Code size: %d\n", vm2.code.count);
 		vm2.WriteByteCodeToFile("prime_dbg.bnb");
 
-		printf("----------------\n");
-		vm2.Execute("main");
-		printf("----------------\n");
+		vm2.inst.debugState = DS_StepNext;
+
+		//printf("----------------\n");
+		BNVMReturnReason reason = vm2.Execute("main");
+		while (reason != RR_Done) {
+			printf("Hit breakpoint.\n");
+			reason = vm2.ExecuteInternal();
+		}
+		//printf("----------------\n");
 	}
 
 	return 0;
