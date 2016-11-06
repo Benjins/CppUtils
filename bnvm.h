@@ -49,7 +49,8 @@ enum Instruction{
 	I_ITOF,
 	I_EXTERNF,
 	I_LOADG,
-	I_STOREG
+	I_STOREG,
+	I_LINE
 };
 
 #define DEFAULT_MAX_STACK_LIMIT 8192
@@ -208,6 +209,18 @@ BNVM bytecode file format (Version 1.0.0):
 
 #define BNVM_VERSION 100
 
+// TODO: Limits us to only 256 source files in one BNVM's code
+#define BNVM_PACK_FILE_LINE(file, line) ((((file) & 0xFF) << 24) | ((line) & 0xFFFFFF))
+#define BNVM_UNPACK_FILE(pair) ((pair) >> 24)
+#define BNVM_UNPACK_LINE(pair) ((pair) & 0xFFFFFF)
+
+// You know, sometimes C++ is alright.
+static_assert(BNVM_UNPACK_FILE(BNVM_PACK_FILE_LINE(12,   68)) == 12, "Unpack file works");
+static_assert(BNVM_UNPACK_FILE(BNVM_PACK_FILE_LINE(0, 2)) == 0, "Unpack file works");
+static_assert(BNVM_UNPACK_FILE(BNVM_PACK_FILE_LINE(0,    68)) == 0, "Unpack file works");
+static_assert(BNVM_UNPACK_LINE(BNVM_PACK_FILE_LINE(255, 228)) == 228, "Unpack line works");
+static_assert(BNVM_UNPACK_LINE(BNVM_PACK_FILE_LINE(12,   68)) == 68, "Unpack line works");
+
 struct BNVM {
 	Vector<byte> code;
 
@@ -218,8 +231,13 @@ struct BNVM {
 	Vector<ExternFunc*> externFunctions;
 	StringMap<int> externFuncIndices;
 
+	StringMap<int> debugFileIndices;
+
+	int currentFileLine;
+
 	BNVM() {
 		inst.vm = this;
+		currentFileLine = -1;
 	}
 
 	void InitNewInst(BNVMInstance* newInst);

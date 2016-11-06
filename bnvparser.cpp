@@ -150,6 +150,28 @@ BNVParser::BNVParser(){
 	}
 }
 
+void AddDebugInfo(BNVM& vm, String& file, int line) {
+	if (line > 0) {
+		int fileIndex;
+		if (!vm.debugFileIndices.LookUp(file, &fileIndex)) {
+			fileIndex = vm.debugFileIndices.count;
+			vm.debugFileIndices.Insert(file, fileIndex);
+		}
+
+		int newFileLine = BNVM_PACK_FILE_LINE(fileIndex, line);
+		if (vm.currentFileLine != newFileLine) {
+			vm.code.PushBack(I_LINE);
+
+			vm.code.PushBack(newFileLine % 256);
+			vm.code.PushBack((newFileLine >> 8) % 256);
+			vm.code.PushBack((newFileLine >> 16) % 256);
+			vm.code.PushBack(newFileLine >> 24);
+
+			vm.currentFileLine = newFileLine;
+		}
+	}
+}
+
 Vector<BNVToken> BNVParser::ReadTokenizeProcessFile(String fileName) {
 	String str = ReadStringFromFile(fileName.string);
 
@@ -400,18 +422,27 @@ bool BNVParser::ParseGlobalVar(VarDecl* outDecl) {
 Statement* BNVParser::ParseStatement(){
 	PushCursorFrame();
 	VarDecl decl;
+
+#define RETURN_STMT(stmt) \
+	if (generateDebugInfo) { \
+		stmt->file = toks.data[cursorFrames.Back()].file; \
+		stmt->line = toks.data[cursorFrames.Back()].line; \
+	} \
+	return stmt
+
 	if(ExpectAndEatVarDecl(&decl)){
 		varsInScope.PushBack(decl);
 
 		if (ExpectAndEatWord(";")) {
-			return new VariableDeclaration();
+			VariableDeclaration* varDecl = new VariableDeclaration();
+			RETURN_STMT(varDecl);
 		}
 
 		//Add variable name
 		cursor--;
 		
 		if(Assignment* assignment = ParseAssignment()){
-			return assignment;
+			RETURN_STMT(assignment);
 		}
 		else{
 			varsInScope.PopBack();
@@ -420,23 +451,23 @@ Statement* BNVParser::ParseStatement(){
 		}
 	}
 	else if(ReturnStatement* retStmt = ParseReturnStatement()){
-		return retStmt;
+		RETURN_STMT(retStmt);
 	}
 	else if(IfStatement* ifStmt = ParseIfStatement()){
-		return ifStmt;
+		RETURN_STMT(ifStmt);
 	}
 	else if(WhileStatement* whileStmt = ParseWhileStatement()){
-		return whileStmt;
+		RETURN_STMT(whileStmt);
 	}
 	else if(Scope* scope = ParseScope()){
-		return scope;
+		RETURN_STMT(scope);
 	}
 	else if (Assignment* assign = ParseAssignment()) {
-		return assign;
+		RETURN_STMT(assign);
 	}
 	else if (Value* val = ParseValue()) {
 		if (ExpectAndEatWord(";")) {
-			return val;
+			RETURN_STMT(val);
 		}
 		else {
 			BNS_SAFE_DELETE(val);
@@ -448,6 +479,8 @@ Statement* BNVParser::ParseStatement(){
 		PopCursorFrame();
 		return nullptr;
 	}
+
+#undef RETURN_STMT
 }
 
 Scope* BNVParser::ParseScope(){
@@ -831,6 +864,7 @@ TypeInfo* FloatLiteral::TypeCheck(const BNVParser& parser) {
 }
 
 void FloatLiteral::AddByteCode(BNVM& vm) {
+	AddDebugInfo(vm, file, line);
 	// Ensure that floats are aligned to 4 bytes.
 	int codeSize = vm.code.count;
 	int noopCount = 3 - (codeSize % 4);
@@ -1055,6 +1089,7 @@ bool BNVParser::ParseIdentifier(SubString* outStr){
 }
 
 void ReturnStatement::AddByteCode(BNVM& vm) {
+	AddDebugInfo(vm, file, line);
 	retVal->AddByteCode(vm);
 	vm.code.PushBack(I_RETURN);
 }
@@ -1075,6 +1110,7 @@ void Scope::AddByteCode(BNVM& vm) {
 }
 
 void IfStatement::AddByteCode(BNVM& vm) {
+	AddDebugInfo(vm, file, line);
 	check->AddByteCode(vm);
 	IntLiteral intLit;
 	intLit.value = 0;
@@ -1096,6 +1132,8 @@ IfStatement::~IfStatement(){
 
 void WhileStatement::AddByteCode(BNVM& vm) {
 	int loopTo = vm.code.count;
+	
+	AddDebugInfo(vm, file, line);
 	
 	check->AddByteCode(vm);
 	IntLiteral intLit;
@@ -1119,6 +1157,7 @@ void WhileStatement::AddByteCode(BNVM& vm) {
 }
 
 void IntLiteral::AddByteCode(BNVM& vm) {
+	AddDebugInfo(vm, file, line);
 	vm.code.PushBack(I_INTLIT);
 	vm.code.PushBack(value >> 24);
 	vm.code.PushBack((value >> 16) % 256);
@@ -1127,6 +1166,7 @@ void IntLiteral::AddByteCode(BNVM& vm) {
 }
 
 void BinaryOp::AddByteCode(BNVM& vm) {
+	AddDebugInfo(vm, file, line);
 	rVal->AddByteCode(vm);
 	if (rVal->type->typeName == "int" && lVal->type->typeName == "float") {
 		vm.code.PushBack(I_ITOF);
@@ -1172,6 +1212,7 @@ TypeInfo* BinaryOp::TypeCheck(const BNVParser& parser) {
 }
 
 void UnaryOp::AddByteCode(BNVM& vm) {
+	AddDebugInfo(vm, file, line);
 	val->AddByteCode(vm);
 	ASSERT_WARN("%s is not yet implemented.\n", __FUNCTION__);
 }
@@ -1182,6 +1223,7 @@ TypeInfo* UnaryOp::TypeCheck(const BNVParser& parser) {
 }
 
 void Assignment::AddByteCode(BNVM& vm){
+	AddDebugInfo(vm, file, line);
 	val->AddByteCode(vm);
 	for (int i = 0; i < var->type->size; i += 4) {
 		IntLiteral lit;
@@ -1219,6 +1261,7 @@ Assignment::~Assignment(){
 }
 
 void FunctionCall::AddByteCode(BNVM& vm) {
+	AddDebugInfo(vm, file, line);
 	for (int i = args.count - 1; i >= 0; i--) {
 		args.data[i]->AddByteCode(vm);
 	}
@@ -1267,6 +1310,7 @@ TypeInfo* FunctionCall::TypeCheck(const BNVParser& parser) {
 }
 
 void VariableAccess::AddByteCode(BNVM& vm) {
+	AddDebugInfo(vm, file, line);
 	for (int i = (type->size - 1) / 4 * 4; i >= 0; i -= 4) {
 		IntLiteral lit;
 		lit.value = regOffset + i;
@@ -1575,6 +1619,37 @@ int main(int argc, char** argv) {
 
 	otherVm.ExecuteTyped<int>("SetGlobalInteger", 99);
 	ASSERT((otherVm.GetGlobalVariableValue<int>("globalInteger") == 99));
+
+	{
+		BNVParser parser2;
+
+		parser2.ParseFile("prime.bnv");
+
+		BNVM vm2;
+		parser2.AddByteCode(vm2);
+
+
+		printf("Code size: %d\n", vm2.code.count);
+		vm2.WriteByteCodeToFile("prime.bnb");
+	}
+
+	{
+		BNVParser parser2;
+		parser2.generateDebugInfo = true;
+
+		parser2.ParseFile("prime.bnv");
+
+		BNVM vm2;
+		parser2.AddByteCode(vm2);
+
+
+		printf("Code size: %d\n", vm2.code.count);
+		vm2.WriteByteCodeToFile("prime_dbg.bnb");
+
+		printf("----------------\n");
+		vm2.ExecuteTyped<int, int>("IsPrime", 3);
+		printf("----------------\n");
+	}
 
 	return 0;
 }

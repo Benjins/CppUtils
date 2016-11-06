@@ -1,0 +1,13 @@
+int IsPrime(int val){
+	int counter = 2;
+	int factorCount = 0;
+	while(counter < val){
+		if ((val / counter) * counter == val){
+			factorCount = factorCount + 1;
+		}
+
+		counter = counter + 1;
+	}
+
+	return factorCount == 0;
+}

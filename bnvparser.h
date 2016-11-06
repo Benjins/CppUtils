@@ -34,6 +34,13 @@ struct FuncDef;
 #define BNS_SAFE_DELETE(x) delete (x); (x) = nullptr;
 
 struct Statement{
+	String file;
+	int line;
+
+	Statement() {
+		line = 0;
+	}
+
 	virtual void AddByteCode(BNVM& vm) = 0;
 	virtual TypeInfo* TypeCheck(const BNVParser& parser) = 0;
 
