@@ -159,7 +159,7 @@ void AddDebugInfo(BNVM& vm, String& file, int line) {
 		}
 
 		int newFileLine = BNVM_PACK_FILE_LINE(fileIndex, line);
-		if (vm.currentFileLine != newFileLine) {
+		if (vm.inst.currentFileLine != newFileLine) {
 			vm.code.PushBack(I_LINE);
 
 			vm.code.PushBack(newFileLine % 256);
@@ -167,7 +167,7 @@ void AddDebugInfo(BNVM& vm, String& file, int line) {
 			vm.code.PushBack((newFileLine >> 16) % 256);
 			vm.code.PushBack(newFileLine >> 24);
 
-			vm.currentFileLine = newFileLine;
+			vm.inst.currentFileLine = newFileLine;
 		}
 	}
 }
@@ -1453,7 +1453,7 @@ bool BNVParser::TypeCheck() {
 	return true;
 }
 
-#if defined(BNVPARSER_TEST_MAIN)
+#if defined(BNVPARSER_TEST_MAIN) || 1
 
 struct Vector3VM {
 	float x;
@@ -1489,6 +1489,24 @@ void myDot(TempStack* stk) {
 	Vector3VM b = stk->Pop<Vector3VM>();
 	float ret = a.x*b.x + a.y*b.y + a.z*b.z;
 	stk->Push(ret);
+}
+
+void ShowFileContentsAtLine(char* file, int lineNum) {
+	char* cursor = file;
+
+	int currLine = 1;
+	while (*cursor) {
+		int nextLine = FindChar(cursor, '\n');
+
+		printf("%s%3d:%.*s\n", (currLine == lineNum ? ">>>>" : "    "), currLine, (nextLine < 0 ? StrLen(cursor) : nextLine), cursor);
+
+		if (nextLine < 0) {
+			break;
+		}
+
+		cursor += (nextLine + 1);
+		currLine++;
+	}
 }
 
 int main(int argc, char** argv) {
@@ -1650,10 +1668,73 @@ int main(int argc, char** argv) {
 
 		vm2.inst.debugState = DS_StepNext;
 
+		StringMap<String> fileContentsMap;
+
 		//printf("----------------\n");
 		BNVMReturnReason reason = vm2.Execute("main");
 		while (reason != RR_Done) {
-			printf("Hit breakpoint.\n");
+			int fileIdx = BNVM_UNPACK_FILE(vm2.inst.currentFileLine);
+			int line = BNVM_UNPACK_LINE(vm2.inst.currentFileLine);
+
+			String file;
+			bool found = false;
+			// TODO: Optimise this, make it just an index rather than a map to id's
+			for (int i = 0; i < vm2.debugFileIndices.count; i++) {
+				if (vm2.debugFileIndices.values[i] == fileIdx) {
+					file = vm2.debugFileIndices.names[i];
+					found = true;
+				}
+			}
+
+			ASSERT(found);
+
+			String contents;
+			if (!fileContentsMap.LookUp(file, &contents)) {
+				contents = ReadStringFromFile(file.string);
+				fileContentsMap.Insert(file, contents);
+			}
+
+			ShowFileContentsAtLine(contents.string, line);
+
+			REPL:
+			printf("\ns - step, c - continue, q - quit v# - print val [# = stack offset] t# - print trace [# - frame]\n");
+			char response[16];
+			scanf("%10s", response);
+			if (response[0] == 'c') {
+				vm2.inst.debugState = DS_Continue;
+			}
+			else if (response[0] == 's') {
+				vm2.inst.debugState = DS_StepNext;
+			}
+			else if (response[0] == 'q') {
+				break;
+			}
+			else if (response[0] == 'v') {
+				int offset = Atoi(&response[1]);
+				int* val = vm2.inst.varStack.Access<int>(offset);
+				printf("Val at [%d]: %d\n", offset, *val);
+				goto REPL;
+			}
+			else if (response[0] == 't') {
+				int frame = Atoi(&response[1]);
+				int index = vm2.inst.callStack.stackMem.count - 8 * (frame + 1);
+				int* frameData = (int*)&vm2.inst.callStack.stackMem.data[index];
+
+				int closestPointerUnderFrame = 0;
+				char* closestFuncName = "<UNKNOWN>";
+				for (int i = 0; i < vm2.functionPointers.count; i++) {
+					int funcStart = vm2.functionPointers.values[i];
+					if (funcStart > closestPointerUnderFrame && funcStart <= *frameData) {
+						closestPointerUnderFrame = funcStart;
+						closestFuncName = vm2.functionPointers.names[i].string;
+					}
+				}
+
+				printf("Frame %d: %s+%d\n", frame, closestFuncName, *frameData - closestPointerUnderFrame);
+				goto REPL;
+			}
+
+
 			reason = vm2.ExecuteInternal();
 		}
 		//printf("----------------\n");

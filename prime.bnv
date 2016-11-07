@@ -1,17 +1,25 @@
-int IsPrime(int val){
-	int counter = 2;
-	int factorCount = 0;
-	while(counter < val){
-		if ((val / counter) * counter == val){
-			factorCount = factorCount + 1;
-		}
+int Bar(int x, int y){
+	int sum = x + y;
+	int prod = x * y;
+	
+	return prod - sum;
+}
 
+int Foo(int n){
+	int total = 1;
+	int counter = 1;
+	while (counter < n){
+		int val = Bar(total, counter);
 		counter = counter + 1;
+		total = val * total;
 	}
-
-	return factorCount == 0;
+	
+	return total;
 }
 
 void main(){
-	int r = IsPrime(13);
+	PRINTF(3.2);
+	int r = Foo(13);
+	PRINTI(r);
+	PRINTI(99);
 }

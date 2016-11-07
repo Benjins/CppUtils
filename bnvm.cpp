@@ -350,23 +350,8 @@ BNVMReturnReason BNVMInstance::ExecuteInternal(){
 
 		case I_LINE: {
 			int fileLinePair = *(int*)&vm->code.data[i + 1];
+			currentFileLine = fileLinePair;
 			i += 4;
-
-			int fileIdx = BNVM_UNPACK_FILE(fileLinePair);
-			int line = BNVM_UNPACK_LINE(fileLinePair);
-
-			String file;
-			bool found = false;
-			// TODO: Optimise this, make it just an index rather than a map to id's
-			for (int i = 0; i < vm->debugFileIndices.count; i++) {
-				if (vm->debugFileIndices.values[i] == fileIdx) {
-					file = vm->debugFileIndices.names[i];
-					found = true;
-				}
-			}
-
-			ASSERT(found);
-			printf("'%s:%d'\n", file.string, line);
 
 			switch (debugState) {
 				case DS_Continue: {

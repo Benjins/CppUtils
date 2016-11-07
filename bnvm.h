@@ -131,10 +131,13 @@ struct BNVMInstance {
 
 	MemStack varStack;
 
+	int currentFileLine;
+
 	BNVMInstance() {
 		vm = nullptr;
 		pc = 0;
 		debugState = DS_Continue;
+		currentFileLine = -1;
 	}
 
 	BNVMReturnReason Execute(const char* funcName);
@@ -255,11 +258,8 @@ struct BNVM {
 
 	StringMap<int> debugFileIndices;
 
-	int currentFileLine;
-
 	BNVM() {
 		inst.vm = this;
-		currentFileLine = -1;
 	}
 
 	void InitNewInst(BNVMInstance* newInst);
