@@ -106,13 +106,13 @@ BNVMReturnReason BNVMInstance::ExecuteInternalFunc(const char* funcName) {
 
 	pc = startPc;
 
+	callStack.Push<int>(vm->code.count);
+	callStack.Push<int>(0);
+
 	return ExecuteInternal();
 }
 
 BNVMReturnReason BNVMInstance::ExecuteInternal(){
-	callStack.Push<int>(vm->code.count);
-	callStack.Push<int>(0);
-
 	for(int i = pc; i < vm->code.count; i++){
 		Instruction instr = (Instruction)vm->code.data[i];
 		switch(instr){
