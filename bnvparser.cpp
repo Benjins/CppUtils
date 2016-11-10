@@ -1654,6 +1654,8 @@ int main(int argc, char** argv) {
 		vm2.WriteByteCodeToFile("prime.bnb");
 	}
 
+	// Debugger testing.
+	/*
 	{
 		BNVParser parser2;
 		parser2.generateDebugInfo = true;
@@ -1739,6 +1741,7 @@ int main(int argc, char** argv) {
 		}
 		//printf("----------------\n");
 	}
+	*/
 
 	return 0;
 }
