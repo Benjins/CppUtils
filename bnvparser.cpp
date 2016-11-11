@@ -1453,7 +1453,7 @@ bool BNVParser::TypeCheck() {
 	return true;
 }
 
-#if defined(BNVPARSER_TEST_MAIN) || 1
+#if defined(BNVPARSER_TEST_MAIN)
 
 struct Vector3VM {
 	float x;

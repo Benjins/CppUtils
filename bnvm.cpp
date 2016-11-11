@@ -404,7 +404,7 @@ int main(int argc, char** argv){
 	vm.code.PushBack(5);
 	vm.code.PushBack(I_MULTI);
 	
-	vm.ExecuteInternal("main");
+	vm.ExecuteInternalFunc("main");
 	
 	ASSERT(vm.inst.tempStack.Pop<int>() == 35);
 	

@@ -268,6 +268,9 @@ struct BNVM {
 
 	BNVMReturnReason Execute(const char* funcName);
 	BNVMReturnReason ExecuteInternal();
+	BNVMReturnReason ExecuteInternalFunc(const char* funcName) {
+		return inst.ExecuteInternalFunc(funcName);
+	}
 
 	void WriteByteCodeToMemStream(MemStream* stream);
 	void WriteByteCodeToFile(const char* fileName);
