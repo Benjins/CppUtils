@@ -160,6 +160,14 @@ struct BNVMInstance {
 		return *globalVarLocation;
 	}
 
+	template<typename T>
+	void SetGlobalVariableValue(const char* name, T val) {
+		int globalVarOffset = -1;
+		globalVarRegs.LookUp(name, &globalVarOffset);
+		T* globalVarLocation = (T*)&varStack.stackMem.data[globalVarOffset];
+		*globalVarLocation = val;
+	}
+
 	// TODO: Combine reason with return type?
 	template<typename Arg, typename Ret>
 	Ret ExecuteTyped(const char* funcName, const Arg& arg) {
