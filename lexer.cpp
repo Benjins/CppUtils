@@ -198,6 +198,7 @@ Vector<SubString> LexString(String string) {
 				break;
 			}
 			else if (*fileCursor == '"') {
+				currToken.start = fileCursor - 1;
 				currState = LS_ANNOTATION_STR;
 			}
 			else if (FindChar(whitespace, *fileCursor) == -1) {
