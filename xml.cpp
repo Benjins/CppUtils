@@ -24,42 +24,51 @@ XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc) {
 		
 		case PS_TAGSTART:{
 			if (tokens.Get(i) == "<") {
-				i++;
-				
-				if (tokens.Get(i) == "/") {
-					i++;
-					SubString tokenName = tokens.Get(i);
-					
-					if (elemIdStack.count <= 0) {
-						return XMLE_PARSINGERROR;
+				if (i < tokens.count - 1 && tokens.Get(i + 1) == "?xml") {
+					int j = i + 1;
+					while (j < tokens.count - 2 && (tokens.Get(j) != "?" || tokens.Get(j+1) != ">")) {
+						j++;
 					}
-					
-					XMLElement* elem = outDoc->elements.GetById(elemIdStack.data[elemIdStack.count - 1]);
-
-					if (elem == nullptr || elem->name != tokenName) {
-						return XMLE_PARSINGERROR;
-					}
-
-					elemIdStack.PopBack();
-
-					i++;
-					if (tokens.Get(i) != ">") {
-						return XMLE_PARSINGERROR;
-					}
+					i = j + 1;
 				}
 				else {
-					XMLElement* elem = outDoc->elements.CreateAndAdd();
-					elem->doc = outDoc;
-					elem->name = tokens.Get(i);
+					i++;
 
-					if (elemIdStack.count > 0) {
-						XMLElement* parentElem = outDoc->elements.GetById(elemIdStack.data[elemIdStack.count - 1]);
-						parentElem->childrenIds.PushBack(elem->id);
+					if (tokens.Get(i) == "/") {
+						i++;
+						SubString tokenName = tokens.Get(i);
+
+						if (elemIdStack.count <= 0) {
+							return XMLE_PARSINGERROR;
+						}
+
+						XMLElement* elem = outDoc->elements.GetById(elemIdStack.data[elemIdStack.count - 1]);
+
+						if (elem == nullptr || elem->name != tokenName) {
+							return XMLE_PARSINGERROR;
+						}
+
+						elemIdStack.PopBack();
+
+						i++;
+						if (tokens.Get(i) != ">") {
+							return XMLE_PARSINGERROR;
+						}
 					}
+					else {
+						XMLElement* elem = outDoc->elements.CreateAndAdd();
+						elem->doc = outDoc;
+						elem->name = tokens.Get(i);
 
-					elemIdStack.PushBack(elem->id);
+						if (elemIdStack.count > 0) {
+							XMLElement* parentElem = outDoc->elements.GetById(elemIdStack.data[elemIdStack.count - 1]);
+							parentElem->childrenIds.PushBack(elem->id);
+						}
 
-					currentState = PS_ATTRIBUTES;
+						elemIdStack.PushBack(elem->id);
+
+						currentState = PS_ATTRIBUTES;
+					}
 				}
 			}
 			else if (tokens.Get(i).start[0] == '"' || tokens.Get(i).start[0] == '\'') {
@@ -67,7 +76,26 @@ XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc) {
 				outDoc->elements.GetById(topId)->plainText = tokens.Get(i);
 			}
 			else {
-				return XMLE_PARSINGERROR;
+				int j = i;
+				while (j < tokens.count) {
+					if (tokens.Get(j) == "<") {
+						break;
+					}
+					j++;
+				}
+
+				if (j == tokens.count) {
+					return XMLE_PARSINGERROR;
+				}
+
+				char* sp = tokens.Get(i).start;
+				char* ep = tokens.Get(j - 1).start + tokens.Get(j - 1).length;
+				int idx = sp - xmlString.string;
+				int len = ep - sp;
+
+				uint32 topId = elemIdStack.data[elemIdStack.count - 1];
+				outDoc->elements.GetById(topId)->plainText = xmlString.GetSubString(idx, len);
+				i = j - 1;
 			}
 		} break;
 
@@ -228,6 +256,35 @@ XMLElement* XMLElement::GetChild(const char* name, unsigned int index /*= 0*/) {
 	return nullptr;
 }
 
+String XMLElement::GetExistingAttrValue(const char* attrName) {
+	String val;
+	bool found = attributes.LookUp(attrName, &val);
+
+	ASSERT_MSG(found, "XMLElement of type '%.*s' is missing attribute '%s'", name.length, name.start, attrName);
+
+	return val;
+}
+
+XMLElement* XMLElement::GetChildWithAttr(const char* name, const char* attrName, const char* attrValue, unsigned int index /*= 0*/) {
+	for (int i = 0; i < childrenIds.count; i++) {
+		XMLElement* child = doc->elements.GetById(childrenIds.Get(i));
+		if (child->name == name) {
+			String attrib;
+			bool foundAttr = child->attributes.LookUp(attrName, &attrib);
+			if (foundAttr && attrib == attrValue) {
+				if (index == 0) {
+					return child;
+				}
+				else {
+					index--;
+				}
+			}
+		}
+	}
+
+	return nullptr;
+}
+
 void WriteXMLElementToFile(XMLElement* elem, FILE* outFile, int indentation) {
 
 #define PRINT_INDENT(n) for(int idt = 0; idt < n; idt++){fprintf(outFile, "\t");}
@@ -240,7 +297,14 @@ void WriteXMLElementToFile(XMLElement* elem, FILE* outFile, int indentation) {
 	}
 
 	if (elem->childrenIds.count == 0) {
-		fprintf(outFile, "/>\n");
+		if (elem->plainText.length > 0) {
+			fprintf(outFile, ">");
+			fprintf(outFile, "%.*s", elem->plainText.length, elem->plainText.start);
+			fprintf(outFile, "</%.*s>\n", elem->name.length, elem->name.start);
+		}
+		else {
+			fprintf(outFile, "/>\n");
+		}
 	}
 	else {
 		fprintf(outFile, ">\n");
@@ -313,6 +377,11 @@ int main(int argc, char** argv) {
 
 	XMLDoc doc4;
 	ParseXMLString(xmmlMatStr, &doc4);
+
+	XMLElement* root = &doc4.elements.vals[0];
+	XMLElement* tintColElem = root->GetChildWithAttr("uniform", "name", "tintCol");
+	ASSERT(tintColElem != nullptr);
+	ASSERT(tintColElem->name == "uniform");
 
 	{
 		//TODO: Why isn't this working?

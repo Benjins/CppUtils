@@ -230,7 +230,22 @@ float Atof(const char* str) {
 		str++;
 	}
 
-	return sign * (val + decVal);
+	int exponent = 0;
+	if (*str == 'e') {
+		exponent = Atoi(str + 1);
+	}
+
+	if (exponent == 0) {
+		return sign * (val + decVal);
+	}
+	else {
+		float total = sign * (val + decVal);
+		for (int i = 0; i < BNS_ABS(exponent); i++) {
+			total = (exponent < 0 ? total / 10 : total * 10);
+		}
+
+		return total;
+	}
 }
 
 int StrFind(const char* haystack, const char* needle) {
@@ -472,6 +487,8 @@ int main(int argc, char** argv){
 	ASSERT(Atof("43.4") == 43.4f);
 	ASSERT(Atof("43.4556") == 43.4556f);
 	ASSERT(Atof("43.0056") == 43.0056f);
+	ASSERT(Atof("4.5e2") == 450);
+	ASSERT(Atof("5.0e-1") == 0.5f);
 
 	char stkConst1[] = "!@#$%^";
 	char stkConst2[] = "!@#$%^";
