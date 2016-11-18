@@ -26,6 +26,8 @@
 
 #else
 
+#define DEBUG_BREAK()
+
 #define ASSERT(cond)
 #define ASSERT_MSG(cond, str, ...)
 #define ASSERT_WARN(str, ...)
