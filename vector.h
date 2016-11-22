@@ -115,6 +115,7 @@ struct Vector{
 	}
 	
 	void Insert(int index, const T& elem){
+		ASSERT(index >= 0 && index <= count);
 		if(count >= capacity){
 			EnsureCapacity(capacity == 0 ? 2 : capacity * 2);
 		}
