@@ -66,7 +66,7 @@ struct MemStream{
 	}
 	
 	template<typename T>
-	void WriteArray(T* vals, int count){
+	void WriteArray(const T* vals, int count){
 		int newCapacity = capacity;
 		int neededCapacity = VOID_PTR_DIST(writeHead, base) + sizeof(T) * count;
 		while(newCapacity < neededCapacity){
