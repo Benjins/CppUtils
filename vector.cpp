@@ -126,7 +126,14 @@ int main(int argc, char** argv){
 	ASSERT(iVec3.count == 0);
 	
 	Vector<int>(39).Destroy();
-	
+	{
+		Vector<int> intVec;
+		intVec.Insert(0, 1);
+		intVec.Insert(0, 1);
+		intVec.Insert(0, 1);
+		intVec.Insert(3, 1);
+	}
+
 	Vector<int> iVec4;
 	iVec4.PushBack(23);
 	iVec4.PushBack(24);
