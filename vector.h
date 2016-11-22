@@ -119,8 +119,8 @@ struct Vector{
 			EnsureCapacity(capacity == 0 ? 2 : capacity * 2);
 		}
 		
-		unsigned char* insertLoc = (unsigned char*)&data[index];
-		for(int i = sizeof(T) * count - index - 1; i >= 0; i--){
+		char* insertLoc = (char*)&data[index];
+		for(int i = (sizeof(T) * (count - index)) - 1; i >= 0; i--){
 			insertLoc[i + sizeof(T)] = insertLoc[i];
 		}
 		
