@@ -343,11 +343,17 @@ bool String::operator!=(const SubString& other) const{
 }
 
 bool String::operator==(const char* other) const{
+	if (string == nullptr && (other == nullptr || *other == '\0')) {
+		return true;
+	}
 	int length = GetLength();
 	return StrEqualN(string, other, length);
 }
 
 bool String::operator!=(const char* other) const{
+	if (string == nullptr && (other == nullptr || *other == '\0')) {
+		return false;
+	}
 	int length = GetLength();
 	return !StrEqualN(string, other, length);
 }

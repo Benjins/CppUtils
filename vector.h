@@ -86,6 +86,10 @@ struct Vector{
 	T& Back() {
 		return data[count - 1];
 	}
+
+	const T& Back() const {
+		return data[count - 1];
+	}
 	
 	void Remove(int index){
 		ASSERT(index >= 0 && index < count);
