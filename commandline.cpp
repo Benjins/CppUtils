@@ -21,16 +21,13 @@ void CommandLineParser::InitializeFromArgcArgv(int argc, const char** argv){
 
 void CommandLineParser::InitializeFromStringNoCopy(char* string){
 	int len = StrLen(string);
-	bool startOfString = true;
 	for (int i = 0; i < len; i++){
 		if (string[i] == ' '){
 			string[i] = '\0';
-			startOfString = true;
 		}
 		else{
 			args[argCount] = &string[i];
 			argCount++;
-			startOfString = false;
 		}
 	}
 

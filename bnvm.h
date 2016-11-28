@@ -67,7 +67,7 @@ struct MemStack{
 	
 	template<typename T>
 	T* Access(int offset){
-		ASSERT(stackMem.count + offset + sizeof(T) < limit);
+		ASSERT(stackMem.count + offset + (int)sizeof(T) < limit);
 		return (T*)&stackMem.data[stackMem.count + offset];
 	}
 	
@@ -88,7 +88,7 @@ struct TempStack{
 	
 	template<typename T>
 	void Push(const T& val){
-		ASSERT(stackMem.count + sizeof(T) < limit);
+		ASSERT(stackMem.count + (int)sizeof(T) < limit);
 		
 		*(T*)(stackMem.data + stackMem.count) = val;
 		stackMem.count += sizeof(T);
@@ -96,7 +96,7 @@ struct TempStack{
 	
 	template<typename T>
 	T Pop(){
-		ASSERT(stackMem.count >= sizeof(T));
+		ASSERT(stackMem.count >= (int)sizeof(T));
 		
 		stackMem.count -= sizeof(T);
 		return *(T*)(stackMem.data + stackMem.count);

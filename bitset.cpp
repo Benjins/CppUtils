@@ -70,7 +70,7 @@ void SetBitInBitSet(int* vals, int bit, bool val){
 	int index = (bit / 32);
 	int bitNum = (bit % 32);
 
-	vals[index] = val ? (vals[index] | (1 << bit)) : (vals[index] & ~(1 << bit));
+	vals[index] = val ? (vals[index] | (1 << bitNum)) : (vals[index] & ~(1 << bitNum));
 }
 
 bool GetBitInBitSet(const int* vals, int bit){
