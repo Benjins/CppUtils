@@ -196,7 +196,8 @@ unsigned char* ReadBinaryFile(const char* fileName, int* outLength) {
 	fseek(fIn, 0, SEEK_SET);
 
 	unsigned char* data = (unsigned char*)malloc(fileLength);
-	fread(data, 1, fileLength, fIn);
+	int bytesRead = fread(data, 1, fileLength, fIn);
+	ASSERT(bytesRead == fileLength);
 
 	*outLength = fileLength;
 
@@ -217,7 +218,8 @@ char* ReadTextFile(const char* fileName, int* outLength) {
 	fseek(fIn, 0, SEEK_SET);
 
 	char* data = (char*)malloc(fileLength + 1);
-	fread(data, 1, fileLength, fIn);
+	int bytesRead = fread(data, 1, fileLength, fIn);
+	ASSERT(bytesRead == fileLength);
 	data[fileLength] = '\0';
 
 	*outLength = fileLength;

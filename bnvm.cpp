@@ -228,7 +228,10 @@ BNVMReturnReason BNVMInstance::ExecuteInternal(){
 		
 		case I_READI:{
 			int val = -1;
-			scanf("%64d", &val);
+			int retVal = scanf("%64d", &val);
+			// TODO: Some sort of error checking on return value?
+			// Now it's just to stop the warning.
+			BNS_UNUSED(retVal);
 			tempStack.Push(val);
 		} break;
 		
@@ -239,7 +242,8 @@ BNVMReturnReason BNVMInstance::ExecuteInternal(){
 		
 		case I_READF:{
 			float val = -1.2f;
-			scanf("%64f", &val);
+			int retVal = scanf("%64f", &val);
+			BNS_UNUSED(retVal);
 			tempStack.Push(val);
 		} break;
 		

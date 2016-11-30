@@ -28,7 +28,8 @@ void assertFrom(const char* cond, const char* function, const char* file, int li
 
 	while(true){
 		char response[256] = {0};
-		fgets(response, sizeof(response) - 1, stdin);
+		char* retVal = fgets(response, sizeof(response) - 1, stdin);
+		ASSERT(retVal != nullptr);
 
 		if(response[0] == 'b'){
 			DEBUG_BREAK();

@@ -66,7 +66,7 @@ struct MemStream{
 	}
 	
 	template<typename T>
-	void WriteArray(T* vals, int count){
+	void WriteArray(const T* vals, int count){
 		int newCapacity = capacity;
 		int neededCapacity = VOID_PTR_DIST(writeHead, base) + sizeof(T) * count;
 		while(newCapacity < neededCapacity){
@@ -82,7 +82,7 @@ struct MemStream{
 	template<typename T>
 	T Read(){
 		ASSERT(readHead != nullptr);
-		ASSERT(VOID_PTR_DIST(writeHead, readHead) >= sizeof(T));
+		ASSERT(VOID_PTR_DIST(writeHead, readHead) >= (int)sizeof(T));
 		
 		void* oldReadHead = readHead;
 		readHead = VOID_PTR_ADD(readHead, sizeof(T));
@@ -93,10 +93,10 @@ struct MemStream{
 	template<typename T>
 	void ReadArray(T* outVals, int count){
 		ASSERT(readHead != nullptr);
-		ASSERT(VOID_PTR_DIST(writeHead, readHead) >= sizeof(T) * count);
+		ASSERT(VOID_PTR_DIST(writeHead, readHead) >= (int)(sizeof(T) * count));
 		
 		MemCpy(outVals, readHead, sizeof(T) * count);
-		readHead = VOID_PTR_ADD(readHead, sizeof(T) * count);
+		readHead = VOID_PTR_ADD(readHead, (int)(sizeof(T) * count));
 	}
 
 	template<typename T>

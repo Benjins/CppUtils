@@ -86,6 +86,10 @@ struct Vector{
 	T& Back() {
 		return data[count - 1];
 	}
+
+	const T& Back() const {
+		return data[count - 1];
+	}
 	
 	void Remove(int index){
 		ASSERT(index >= 0 && index < count);
@@ -115,12 +119,13 @@ struct Vector{
 	}
 	
 	void Insert(int index, const T& elem){
+		ASSERT(index >= 0 && index <= count);
 		if(count >= capacity){
 			EnsureCapacity(capacity == 0 ? 2 : capacity * 2);
 		}
 		
-		unsigned char* insertLoc = (unsigned char*)&data[index];
-		for(int i = sizeof(T) * count - index - 1; i >= 0; i--){
+		char* insertLoc = (char*)&data[index];
+		for(int i = (sizeof(T) * (count - index)) - 1; i >= 0; i--){
 			insertLoc[i + sizeof(T)] = insertLoc[i];
 		}
 		

@@ -27,7 +27,10 @@ struct XMLElement : IDBase {
 		doc = other.doc;
 	}
 
+	String GetExistingAttrValue(const char* attrName);
+
 	XMLElement* GetChild(const char* name, unsigned int index = 0);
+	XMLElement* GetChildWithAttr(const char* name, const char* attrName, const char* attrValue, unsigned int index = 0);
 };
 
 struct XMLDoc {

@@ -17,7 +17,7 @@ void FixedPool::Setup(int _allocSize, int count){
 
 void* FixedPool::Allocate(){
 	for (int i = 0; i < allocTracker.bytesAlloc/4; i++){
-		if (allocTracker.values[i] != 0xFFFFFFFF){
+		if (((unsigned int)allocTracker.values[i]) != 0xFFFFFFFF){
 			for (int j = 0; j < 32; j++){
 				if ((allocTracker.values[i] & (1 << j)) == 0){
 					int index = i * 32 + j;
