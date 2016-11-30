@@ -15,6 +15,9 @@ yes b | head -n 20 | ./assert_test
 eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DHASH_TEST_MAIN assert.cpp hash.cpp -o hash_test"
 ./hash_test
 
+eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DDISC_UNION_TEST_MAIN assert.cpp vector.cpp strings.cpp disc_union.cpp -o disc_union_test"
+valgrind --quiet --leak-check=full --error--exitcode=12 ./disc_union_test
+
 eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DVECTOR_TEST_MAIN assert.cpp vector.cpp -o vector_test"
 valgrind --quiet --leak-check=full --error-exitcode=12 ./vector_test
 
