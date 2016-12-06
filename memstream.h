@@ -25,8 +25,26 @@ struct MemStream{
 		
 		capacity = 0;
 	}
+
+	MemStream(const MemStream& orig) {
+		base = nullptr;
+		readHead = nullptr;
+		writeHead = nullptr;
+		capacity = 0;
+
+		*this = orig;
+	}
+
+	MemStream& operator=(const MemStream& orig) {
+		int len = orig.GetLength();
+		EnsureCapacity(len);
+		writeHead = VOID_PTR_ADD(readHead, VOID_PTR_DIST(orig.writeHead, orig.readHead));
+		MemCpy(readHead, orig.readHead, len);
+
+		return *this;
+	}
 	
-	int GetLength(){
+	int GetLength() const{
 		return VOID_PTR_DIST(writeHead, readHead);
 	}
 	
