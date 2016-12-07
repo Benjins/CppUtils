@@ -105,6 +105,8 @@ void SetGlobalVecX(float x){
 	globalVec.x = x;
 }
 
+extern void FlipCase(string str);
+
 int main(){
 
 	Triangle myTri = MakeTriangle(
@@ -120,6 +122,18 @@ int main(){
 	xp = 31;
 	PrintTriangle(myTri);
 	PRINTI(xp);
+
+	string testStr = "This is a test.";
+	PRINTS(testStr);
+
+	PRINTS("\nsdgdgds\n");
+
+	string testStr2 = "This is another test.";
+	PRINTS(testStr2);
+
+	FlipCase(testStr2);
+	PRINTS("\nNow flipping case:\n");
+	PRINTS(testStr2);
 
 	//PRINTF(DotProduct(vec, vec2));
 

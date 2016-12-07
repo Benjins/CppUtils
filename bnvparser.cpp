@@ -1310,21 +1310,30 @@ Assignment::~Assignment(){
 
 void FunctionCall::AddByteCode(BNVM& vm) {
 	AddDebugInfo(vm, file, line);
+
+	int externFuncIndex = -1;
+	bool isExternFunc = vm.externFuncIndices.LookUp(func->name, &externFuncIndex);
+
 	for (int i = args.count - 1; i >= 0; i--) {
 		args.data[i]->AddByteCode(vm);
+
+		// HACK: If we're passing an internal string to an external function, 
+		// we convert it to a valid char*
+		if (isExternFunc && args.data[i]->type->typeName == "string") {
+			vm.code.PushBack(I_INTERNSTRTOEXTERN);
+		}
 	}
 
 	BuiltinFunc builtinFunc;
-	int externFuncIndex = -1;
-	if (FindBuiltinFunc(func->name, &builtinFunc)) {
-		vm.code.PushBack(builtinFunc.instr);
-	}
-	else if (vm.externFuncIndices.LookUp(func->name, &externFuncIndex)) {
+	if (isExternFunc) {
 		IntLiteral lit;
 		lit.value = externFuncIndex;
 		lit.AddByteCode(vm);
 
 		vm.code.PushBack(I_EXTERNF);
+	}
+	else if (FindBuiltinFunc(func->name, &builtinFunc)) {
+		vm.code.PushBack(builtinFunc.instr);
 	}
 	else {
 		int funcPtr = -1;
@@ -1478,8 +1487,30 @@ void BNVParser::AddByteCode(BNVM& vm) {
 		SubString val = stringOffsets.data[i].substr;
 		ASSERT(stringOffsets.data[i].offset == vm.code.count);
 
-		vm.code.InsertArray(vm.code.count, (byte*)val.start, val.length);
-		vm.code.PushBack('\0');
+		int goal = vm.code.count + val.length + 1;
+		vm.code.EnsureCapacity(goal);
+		for (int j = 0; j < val.length; j++) {
+			if (val.start[j] == '\\') {
+				switch (val.start[j + 1]) {
+				case '\\': { vm.code.PushBack('\\');} break;
+				case 'n':  {vm.code.PushBack('\n'); } break;
+				case 'r':  {vm.code.PushBack('\r'); } break;
+				case 't':  {vm.code.PushBack('\t'); } break;
+				case 'b':  {vm.code.PushBack('\b'); } break;
+				case '"':  {vm.code.PushBack('"');  } break;
+				default: { printf("\nWarning: Incorrect escape sequence: '%.*s'\n", 2, &val.start[j]);} break;
+				}
+
+				j++;
+			}
+			else {
+				vm.code.PushBack(val.start[j]);
+			}
+		}
+
+		for (int j = vm.code.count; j < goal; j++) {
+			vm.code.PushBack('\0');
+		}
 	}
 
 	for (int i = 0; i < funcDefs.count; i++) {
@@ -1585,17 +1616,18 @@ int main(int argc, char** argv) {
 
 	parser.ParseFile("parserTest.bnv");
 
-	ASSERT(parser.funcDefs.count == 24);
-	ASSERT(parser.funcDefs.data[23]->name == "main");
+	ASSERT(parser.funcDefs.count == 25);
+	ASSERT(parser.funcDefs.data[24]->name == "main");
 
 	BNVM vm;
 	parser.AddByteCode(vm);
 
-	vm.Execute("main");
-
 	vm.RegisterExternFunc("sinf", mySin);
 	vm.RegisterExternFunc("subtract", mySub);
 	vm.RegisterExternFunc("DotProductExt", myDot);
+	vm.RegisterExternFunc("FlipCase", FlipCase);
+
+	vm.Execute("main");
 
 	ASSERT((vm.ExecuteTyped<float, float>("sinTest", 2.3f) == sinf(2.3f)));
 	ASSERT((vm.ExecuteTyped<float, float>("subtractTest", -4.0f) == 5.0f));

@@ -384,6 +384,7 @@ BNVMReturnReason BNVMInstance::ExecuteInternal(){
 
 			int strOffset = (a << 24) | (b << 16) | (c << 8) | d;
 			tempStack.Push<int>(strOffset);
+			i += 4;
 		} break;
 
 		case I_INTERNSTRTOEXTERN: {
