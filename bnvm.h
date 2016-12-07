@@ -50,7 +50,10 @@ enum Instruction{
 	I_EXTERNF,
 	I_LOADG,
 	I_STOREG,
-	I_LINE
+	I_LINE,
+	I_PRINTS,
+	I_STRINGLIT,
+	I_INTERNSTRTOEXTERN
 };
 
 #define DEFAULT_MAX_STACK_LIMIT 8192
@@ -254,10 +257,17 @@ static_assert(BNVM_UNPACK_FILE(BNVM_PACK_FILE_LINE(0,    68)) == 0, "Unpack file
 static_assert(BNVM_UNPACK_LINE(BNVM_PACK_FILE_LINE(255, 228)) == 228, "Unpack line works");
 static_assert(BNVM_UNPACK_LINE(BNVM_PACK_FILE_LINE(12,   68)) == 68, "Unpack line works");
 
+struct StringDataHelper {
+	SubString substr;
+	int offset;
+};
+
 struct BNVM {
 	Vector<byte> code;
 
 	StringMap<int> functionPointers;
+
+	Vector<StringDataHelper> stringOffsets;
 
 	BNVMInstance inst;
 

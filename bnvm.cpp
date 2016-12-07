@@ -371,6 +371,27 @@ BNVMReturnReason BNVMInstance::ExecuteInternal(){
 
 		} break;
 
+		case I_PRINTS: {
+			int strOffset = tempStack.Pop<int>();
+			printf("%s", (const char*)&vm->code.data[strOffset]);
+		} break;
+
+		case I_STRINGLIT: {
+			int a = vm->code.data[i + 1];
+			int b = vm->code.data[i + 2];
+			int c = vm->code.data[i + 3];
+			int d = vm->code.data[i + 4];
+
+			int strOffset = (a << 24) | (b << 16) | (c << 8) | d;
+			tempStack.Push<int>(strOffset);
+		} break;
+
+		case I_INTERNSTRTOEXTERN: {
+			int strOffset = tempStack.Pop<int>();
+			char* externStr = (char*)&vm->code.data[strOffset];
+			tempStack.Push<char*>(externStr);
+		} break;
+
 		}
 	}
 
