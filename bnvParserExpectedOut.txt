@@ -21,6 +21,14 @@
 34.400002
 77
 31
+This is a test.
+sdgdgds
+This is another test.
+Now flipping case:
+tHIS IS ANOTHER TEST.
+This is @%^&% a global string.
+KV_PAIR_ONE: 2.331000
+KV_PAIR_TWO: 1.733000
 ================
 1.200000
 2.300000

@@ -105,6 +105,29 @@ void SetGlobalVecX(float x){
 	globalVec.x = x;
 }
 
+extern void FlipCase(string str);
+
+struct KeyValuePair{
+	string name;
+	float val;
+};
+
+void PrintKVPair(KeyValuePair kv){
+	PRINTS(kv.name);
+	PRINTS(": ");
+	PRINTF(kv.val);
+}
+
+KeyValuePair MakeKV(string name, float val){
+	KeyValuePair kvp;
+	kvp.name = name;
+	kvp.val = val;
+
+	return kvp;
+}
+
+string globalStr;
+
 int main(){
 
 	Triangle myTri = MakeTriangle(
@@ -113,6 +136,9 @@ int main(){
 		MakeVector3(17.7, 25.5, 34.4),
 		77);
 
+	// GAh....
+	globalStr = "\nThis is @%^&% a global string.\n";
+
 	int xp = 13;
 	PrintTriangle(myTri);
 	PRINTI(xp);
@@ -120,6 +146,25 @@ int main(){
 	xp = 31;
 	PrintTriangle(myTri);
 	PRINTI(xp);
+
+	string testStr = "This is a test.";
+	PRINTS(testStr);
+
+	PRINTS("\nsdgdgds\n");
+
+	string testStr2 = "This is another test.";
+	PRINTS(testStr2);
+
+	FlipCase(testStr2);
+	PRINTS("\nNow flipping case:\n");
+	PRINTS(testStr2);
+
+	PRINTS(globalStr);
+
+	KeyValuePair kvp = MakeKV("KV_PAIR_ONE", 2.331);
+	PrintKVPair(kvp);
+	
+	PrintKVPair(MakeKV("KV_PAIR_TWO", 1.733));
 
 	//PRINTF(DotProduct(vec, vec2));
 
