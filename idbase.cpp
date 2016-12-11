@@ -47,9 +47,11 @@ int main(int argc, char** argv){
 		}
 		
 		for(int i = 0; i < 10; i++){
-			ASSERT(ents.GetById(i) != nullptr);
-			ents.RemoveById(i);
-			ASSERT(ents.GetById(i) == nullptr);
+			ASSERT(ents.GetByIdNum(i) != nullptr);
+			ASSERT(ents.GetById(IDHandle<TestEntity>(i)) != nullptr);
+			ents.RemoveByIdNum(i);
+			ASSERT(ents.GetByIdNum(i) == nullptr);
+			ASSERT(ents.GetById(IDHandle<TestEntity>(i)) == nullptr);
 		}
 		
 		for(int i = 0; i < 10; i++){
@@ -57,6 +59,8 @@ int main(int argc, char** argv){
 			ASSERT(add != nullptr);
 		}
 		
+		ASSERT(ents.currentCount == 20);
+
 		for(int i = 0; i < 20; i++){
 			for(int j = i+1; j < 20; j++){
 				ASSERT(ents.vals[i].id != ents.vals[j].id);
@@ -64,9 +68,9 @@ int main(int argc, char** argv){
 		}
 		
 		for(int i = 10; i < 20; i++){
-			ASSERT(ents.GetById(i) != nullptr);
-			ents.RemoveById(i);
-			ASSERT(ents.GetById(i) == nullptr);
+			ASSERT(ents.GetByIdNum(i) != nullptr);
+			ents.RemoveById(IDHandle<TestEntity>(i));
+			ASSERT(ents.GetByIdNum(i) == nullptr);
 		}
 	}
 

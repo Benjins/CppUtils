@@ -16,7 +16,7 @@ struct XMLElement : IDBase {
 	SubString plainText;
 	StringMap<String> attributes;
 
-	Vector<uint32> childrenIds;
+	Vector<IDHandle<XMLElement>> childrenIds;
 
 	XMLElement() {
 		doc = nullptr;

@@ -17,7 +17,7 @@ XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc) {
 
 	ParseState currentState = PS_TAGSTART;
 
-	Vector<uint32> elemIdStack;
+	Vector<IDHandle<XMLElement>> elemIdStack;
 
 	for (int i = 0; i < tokens.count; i++) {
 		switch (currentState) {
@@ -62,17 +62,17 @@ XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc) {
 
 						if (elemIdStack.count > 0) {
 							XMLElement* parentElem = outDoc->elements.GetById(elemIdStack.data[elemIdStack.count - 1]);
-							parentElem->childrenIds.PushBack(elem->id);
+							parentElem->childrenIds.PushBack(IDHandle<XMLElement>(elem->id));
 						}
 
-						elemIdStack.PushBack(elem->id);
+						elemIdStack.PushBack(IDHandle<XMLElement>(elem->id));
 
 						currentState = PS_ATTRIBUTES;
 					}
 				}
 			}
 			else if (tokens.Get(i).start[0] == '"' || tokens.Get(i).start[0] == '\'') {
-				uint32 topId = elemIdStack.data[elemIdStack.count - 1];
+				IDHandle<XMLElement> topId = elemIdStack.data[elemIdStack.count - 1];
 				outDoc->elements.GetById(topId)->plainText = tokens.Get(i);
 			}
 			else {
@@ -93,7 +93,7 @@ XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc) {
 				int idx = sp - xmlString.string;
 				int len = ep - sp;
 
-				uint32 topId = elemIdStack.data[elemIdStack.count - 1];
+				IDHandle<XMLElement> topId = elemIdStack.data[elemIdStack.count - 1];
 				outDoc->elements.GetById(topId)->plainText = xmlString.GetSubString(idx, len);
 				i = j - 1;
 			}
@@ -117,7 +117,7 @@ XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc) {
 				value.start++;
 				value.length -= 2;
 
-				uint32 topId = elemIdStack.data[elemIdStack.count - 1];
+				IDHandle<XMLElement> topId = elemIdStack.data[elemIdStack.count - 1];
 				outDoc->elements.GetById(topId)->attributes.Insert(tokens.Get(i), value);
 
 				i += 2;
@@ -310,7 +310,7 @@ void WriteXMLElementToFile(XMLElement* elem, FILE* outFile, int indentation) {
 		fprintf(outFile, ">\n");
 
 		for (int i = 0; i < elem->childrenIds.count; i++) {
-			uint32 childId = elem->childrenIds.Get(i);
+			IDHandle<XMLElement> childId = elem->childrenIds.Get(i);
 			XMLElement* childElem = elem->doc->elements.GetById(childId);
 			WriteXMLElementToFile(childElem, outFile, indentation + 1);
 		}
@@ -361,9 +361,9 @@ int main(int argc, char** argv) {
 
 	ASSERT(doc3.elements.currentCount == 2);
 
-	ASSERT(doc3.elements.GetById(0)->childrenIds.count == 1);
+	ASSERT(doc3.elements.GetByIdNum(0)->childrenIds.count == 1);
 
-	uint32 childId = doc3.elements.GetById(0)->childrenIds.Get(0);
+	IDHandle<XMLElement> childId = doc3.elements.GetByIdNum(0)->childrenIds.Get(0);
 	ASSERT(doc3.elements.GetById(childId) != nullptr);
 	ASSERT(doc3.elements.GetById(childId)->name == "flur");
 	String attrVal;
@@ -389,20 +389,20 @@ int main(int argc, char** argv) {
 		//ParseXMLStringFromFile("test1.xml", &doc5);
 	}
 
-	ASSERT(doc4.elements.GetById(0)->attributes.count == 2);
-	ASSERT(doc4.elements.GetById(0)->childrenIds.count == 2);
+	ASSERT(doc4.elements.GetByIdNum(0)->attributes.count == 2);
+	ASSERT(doc4.elements.GetByIdNum(0)->childrenIds.count == 2);
 	String vsVal;
-	ASSERT(doc4.elements.GetById(0)->attributes.LookUp("vs", &vsVal) && vsVal == "posCol.vs");
+	ASSERT(doc4.elements.GetByIdNum(0)->attributes.LookUp("vs", &vsVal) && vsVal == "posCol.vs");
 	String fsVal;
-	ASSERT(doc4.elements.GetById(0)->attributes.LookUp("fs", &fsVal) && fsVal == "texCol.fs");
+	ASSERT(doc4.elements.GetByIdNum(0)->attributes.LookUp("fs", &fsVal) && fsVal == "texCol.fs");
 
-	uint32 uniformId = doc4.elements.GetById(0)->childrenIds.Get(0);
+	IDHandle<XMLElement> uniformId = doc4.elements.GetByIdNum(0)->childrenIds.Get(0);
 	ASSERT(doc4.elements.GetById(uniformId)->attributes.count == 3);
 
 	String typeVal;
 	ASSERT(doc4.elements.GetById(uniformId)->attributes.LookUp("type", &typeVal) && typeVal == "tex2D");
 
-	uint32 uniformId2 = doc4.elements.GetById(0)->childrenIds.Get(1);
+	IDHandle<XMLElement> uniformId2 = doc4.elements.GetByIdNum(0)->childrenIds.Get(1);
 	ASSERT(doc4.elements.GetById(uniformId2)->attributes.count == 3);
 
 	String typeVal2;
