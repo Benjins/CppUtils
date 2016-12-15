@@ -5,7 +5,8 @@
 
 #if defined(_MSC_VER)
 #include <Windows.h>
-#define THREAD_RET_TYPE DWORD WINAPI
+#define THREAD_RET_TYPE DWORD __stdcall
+typedef DWORD (__stdcall *ThreadFunc) (void* arg);
 
 #elif defined(__APPLE__)
 #error "Apple thread primitives not supported"
@@ -13,14 +14,13 @@
 #else
 #include <pthread.h>
 #define THREAD_RET_TYPE void*
+typedef void* (*ThreadFunc) (void* arg);
 
 #endif
 
-typedef THREAD_RET_TYPE (ThreadFunc)(void* arg);
-
 struct ThreadID{
 #if defined(_MSC_VER)
-	Handle handle;
+	HANDLE handle;
 	DWORD threadId;
 #elif defined(__APPLE__)
 	// Apple specific stuff
@@ -34,9 +34,9 @@ ThreadID CreateThreadSimple(ThreadFunc* func, void* arg);
 
 void JoinThread(ThreadID thread);
 
-int IncrementAtomic32(int* i);
-int AddAtomic32(int* i, int val);
-int CompareAndSwap32(int* i, int oldVal, int newVal);
+unsigned int IncrementAtomic32(volatile unsigned int* i);
+int AddAtomic32(volatile int* i, int val);
+int CompareAndSwap32(volatile int* i, int oldVal, int newVal);
 
 // TODO: cross-platform 64-bit int type?
 //void IncrementAtomic64(int* i);
@@ -45,7 +45,7 @@ int CompareAndSwap32(int* i, int oldVal, int newVal);
 
 struct Mutex{
 #if defined(_MSC_VER)
-	Handle mutx;
+	HANDLE handle;
 #elif defined(__APPLE__)
 	// Apple specific stuff
 #else

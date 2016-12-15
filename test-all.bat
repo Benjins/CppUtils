@@ -24,6 +24,12 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 vector_test.exe
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
+cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DTHREADS_TEST_MAIN assert.cpp threads.cpp /Fethreads_test
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
+threads_test.exe
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
 cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DDISC_UNION_TEST_MAIN assert.cpp vector.cpp strings.cpp disc_union.cpp /Fedisc_union_test
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
