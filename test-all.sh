@@ -27,6 +27,9 @@ valgrind $VAGRIND_FLAGS ./vector_test
 eval "$CXX $CXX_TEST_FLAGS -DFILESYS_TEST_MAIN assert.cpp filesys.cpp -o filesys_test"
 ./filesys_test
 
+eval "$CXX $CXX_TEST_FLAGS -DTHREADS_TEST_MAIN assert.cpp threads.cpp -lpthread -o threads_test"
+./threads_test
+
 eval "$CXX $CXX_TEST_FLAGS -DIDBASE_TEST_MAIN assert.cpp idbase.cpp -o idbase_test"
 valgrind $VAGRIND_FLAGS ./idbase_test
 
