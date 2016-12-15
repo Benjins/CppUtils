@@ -202,6 +202,33 @@ bool Socket::SendData(const void* buffer, int buffLength, int* bytesSent){
 		printf("failed to send packet (err: %d)\n", lastErr);
 #else
 		printf("failed to send packet.\n");
+		BNS_SOCKET_ERROR();
+#endif
+		return false;
+	}
+
+	*bytesSent = sentBytes;
+
+	return true;
+}
+
+bool Socket::StreamDataTo(const void* buffer, int buffLength, int* bytesSent, IPV4Addr dst){
+	if (protocol != SP_UDP){
+		printf("\nError: Trying to stream data on a TCP socket, stopping.\n");
+		return false;
+	}
+
+	sockaddr_in address = dst.ToSockAddr();
+	
+	int sentBytes = sendto(handle, (const char*)buffer, buffLength, 0, (sockaddr*)&address, sizeof(sockaddr_in));
+
+		if (sentBytes != buffLength){
+#if defined(_WIN32)
+		int lastErr = WSAGetLastError();
+		printf("failed to send packet (err: %d)\n", lastErr);
+#else
+		printf("failed to send packet.\n");
+		BNS_SOCKET_ERROR();
 #endif
 		return false;
 	}
@@ -298,7 +325,7 @@ bool ShutdownSocketSystem(){
 
 int main(int argc, char** argv){
 	
-	if(StartUpSocketSystem()){
+	if(!StartUpSocketSystem()){
 		printf("Failed to init socket system, exiting.\n");
 		return -1;
 	}

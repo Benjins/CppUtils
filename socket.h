@@ -34,6 +34,10 @@ struct IPV4Addr{
 	IPV4Addr(unsigned char a, unsigned char b, unsigned char c, unsigned char d, short _port);
 	IPV4Addr(const char* hostName, int _port);
 
+	bool operator==(const IPV4Addr& param){
+		return addr == param.addr && port == param.port;
+	}
+
 	void WriteToString(char* buffer, int bufferSize);
 
 	sockaddr_in ToSockAddr();
@@ -57,6 +61,10 @@ struct Socket{
 	IPV4Addr source;
 	IPV4Addr destination;
 
+	Socket(){
+		handle = -1;
+	}
+
 	bool Create(SocketProtocol _protocol, SocketBlockingType _blockingType);
 	bool Bind(int port = 0);
 
@@ -68,6 +76,7 @@ struct Socket{
 	bool SetBlocking(SocketBlockingType bt);
 
 	bool SendData(const void* buffer, int buffLength, int* bytesSent);
+	bool StreamDataTo(const void* buffer, int buffLength, int* bytesSent, IPV4Addr dst);
 	bool ReceiveData(void* buffer, int buffLength, int* bytesReceived, IPV4Addr* outAddr);
 
 	bool Destroy();
