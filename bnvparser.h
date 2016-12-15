@@ -42,7 +42,7 @@ struct Statement{
 	}
 
 	virtual void AddByteCode(BNVM& vm) = 0;
-	virtual TypeInfo* TypeCheck(const BNVParser& parser) = 0;
+	virtual TypeInfo* TypeCheck(BNVParser& parser) = 0;
 
 	virtual ~Statement(){}
 };
@@ -51,7 +51,7 @@ struct VariableDeclaration : Statement{
 	virtual void AddByteCode(BNVM& vm) {
 
 	}
-	virtual TypeInfo* TypeCheck(const BNVParser& parser) {
+	virtual TypeInfo* TypeCheck(BNVParser& parser) {
 		BNS_UNUSED(parser);
 		return nullptr;
 	}
@@ -62,7 +62,7 @@ struct VariableDeclaration : Statement{
 struct ReturnStatement : Statement{
 	Value* retVal;
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~ReturnStatement();
 };
@@ -71,7 +71,7 @@ struct Scope : Statement{
 	Vector<Statement*> statements;
 
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~Scope(){
 		for(int i = 0; i < statements.count; i++){
@@ -84,7 +84,7 @@ struct IfStatement : Scope{
 	Value* check;
 
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~IfStatement();
 };
@@ -99,7 +99,7 @@ struct WhileStatement : IfStatement{
 struct Value : Statement{
 	TypeInfo* type;
 	virtual void AddByteCode(BNVM& vm) = 0;
-	virtual TypeInfo* TypeCheck(const BNVParser& parser) = 0;
+	virtual TypeInfo* TypeCheck(BNVParser& parser) = 0;
 
 	virtual ~Value(){}
 };
@@ -108,7 +108,7 @@ struct IntLiteral : Value {
 	int value;
 
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~IntLiteral(){}
 };
@@ -117,14 +117,23 @@ struct FloatLiteral : Value {
 	float value;
 
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~FloatLiteral(){}
 };
 
+struct StringLiteral : Value {
+	SubString value;
+
+	virtual void AddByteCode(BNVM& vm);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
+
+	virtual ~StringLiteral() {}
+};
+
 struct VoidLiteral : Value {
 	virtual void AddByteCode(BNVM& vm) {BNS_UNUSED(vm);}
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 	virtual ~VoidLiteral(){}
 };
 
@@ -134,7 +143,7 @@ struct BinaryOp : Value{
 	SubString op;
 
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~BinaryOp(){BNS_SAFE_DELETE(lVal); BNS_SAFE_DELETE(rVal);}
 };
@@ -144,7 +153,7 @@ struct UnaryOp : Value{
 	SubString op;
 
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~UnaryOp(){BNS_SAFE_DELETE(val);}
 };
@@ -155,7 +164,7 @@ struct Assignment : Statement{
 	VariableAccess* var;
 	Value* val;
 
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 	virtual void AddByteCode(BNVM& vm);
 	virtual ~Assignment();
 };
@@ -167,7 +176,7 @@ struct FunctionCall : Value{
 	Vector<Value*> args;
 
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~FunctionCall(){for(int i = 0; i < args.count; i++){BNS_SAFE_DELETE(args.data[i]);}}
 };
@@ -183,7 +192,7 @@ struct VariableAccess : Value {
 	}
 
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~VariableAccess(){}
 };
@@ -193,7 +202,7 @@ struct FieldAccess : VariableAccess {
 	SubString fieldName;
 
 	//virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	virtual ~FieldAccess(){BNS_SAFE_DELETE(var);}
 };
@@ -205,7 +214,7 @@ struct VarDecl{
 
 struct FuncDef : Scope{
 	virtual void AddByteCode(BNVM& vm);
-	virtual TypeInfo* TypeCheck(const BNVParser& parser);
+	virtual TypeInfo* TypeCheck(BNVParser& parser);
 
 	SubString name;
 	Vector<VarDecl> params;
@@ -216,7 +225,7 @@ struct FuncDef : Scope{
 
 struct ExternFuncDef : FuncDef {
 	virtual void AddByteCode(BNVM& vm) override{}
-	virtual TypeInfo* TypeCheck(const BNVParser& parser) override {
+	virtual TypeInfo* TypeCheck(BNVParser& parser) override {
 		BNS_UNUSED(parser);
 		return nullptr;
 	}
@@ -242,10 +251,17 @@ struct StructDef{
 	}
 };
 
+struct StringDataHelper;
+
+int FindOffsetForString(const char* str, const Vector<StringDataHelper>& offsets);
+
 struct BNVParser{
 	Vector<BNVToken> toks;
 	int cursor;
 	Vector<int> cursorFrames;
+
+	Vector<StringDataHelper> stringOffsets;
+	int currentStringOffset;
 
 	StringMap<TypeInfo*> definedTypes;
 

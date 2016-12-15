@@ -33,6 +33,7 @@ struct BuiltinFunc{
 BuiltinFunc builtinFuncs[] = {
 	{ "PRINTI", "void",{ "int" }, I_PRINTI },
 	{ "PRINTF", "void",{ "float" }, I_PRINTF },
+	{ "PRINTS", "void",{ "string" }, I_PRINTS },
 	{ "READI", "int", {}, I_READI },
 	{ "READF", "float", {}, I_READF }
 };
@@ -67,6 +68,7 @@ struct BuiltinType {
 BuiltinType builtinTypes[] = {
 	{ "int", 4 },
 	{ "float", 4 },
+	{ "string", 4 },
 	{ "void", 0 }
 };
 
@@ -115,9 +117,21 @@ int GetOperatorPrecedence(const SubString& opName) {
 	return prec;
 }
 
+int FindOffsetForString(const char* str, const Vector<StringDataHelper>& offsets) {
+	for (int i = 0; i < offsets.count; i++) {
+		// Compare by pointer value, since it's really just a key
+		if (offsets.data[i].substr.start == str) {
+			return offsets.data[i].offset;
+		}
+	}
+
+	return -1;
+}
+
 BNVParser::BNVParser(){
 	generateDebugInfo = false;
 	cursor = 0;
+	currentStringOffset = 0;
 
 	for(int i = 0; i < BNS_ARRAY_COUNT(builtinTypes); i++){
 		TypeInfo* builtinType = new TypeInfo();
@@ -857,13 +871,25 @@ bool BNVParser::ShuntingYard(const Vector<BNVToken>& inToks, Vector<BNVToken>& o
 	return true;
 }
 
-TypeInfo* IntLiteral::TypeCheck(const BNVParser& parser) {
+TypeInfo* IntLiteral::TypeCheck(BNVParser& parser) {
 	parser.definedTypes.LookUp("int", &type);
 	return type;
 }
 
-TypeInfo* FloatLiteral::TypeCheck(const BNVParser& parser) {
+TypeInfo* FloatLiteral::TypeCheck(BNVParser& parser) {
 	parser.definedTypes.LookUp("float", &type);
+	return type;
+}
+
+TypeInfo* StringLiteral::TypeCheck(BNVParser& parser) {
+	parser.definedTypes.LookUp("string", &type);
+
+	StringDataHelper helper;
+	helper.substr = value;
+	helper.offset = parser.currentStringOffset;
+	parser.stringOffsets.PushBack(helper);
+	parser.currentStringOffset += (value.length + 1);
+
 	return type;
 }
 
@@ -886,7 +912,7 @@ void FloatLiteral::AddByteCode(BNVM& vm) {
 	*(float*)&vm.code.data[litCursor] = value;
 }
 
-TypeInfo* VoidLiteral::TypeCheck(const BNVParser& parser){
+TypeInfo* VoidLiteral::TypeCheck(BNVParser& parser){
 	TypeInfo* info;
 	parser.definedTypes.LookUp("void", &info);
 	return info;
@@ -984,6 +1010,13 @@ Value* BNVParser::ParseValue(){
 					intLit->value = val;
 					vals.PushBack(intLit);
 				}
+			}
+			else if (tokStr.start[0] == '"') {
+				StringLiteral* strLit = new StringLiteral();
+				strLit->value = tokStr;
+				strLit->value.start++;
+				strLit->value.length -= 2;
+				vals.PushBack(strLit);
 			}
 			else {
 				OperatorArity arity;
@@ -1102,7 +1135,7 @@ ReturnStatement::~ReturnStatement(){
 	BNS_SAFE_DELETE(retVal);
 }
 
-TypeInfo* ReturnStatement::TypeCheck(const BNVParser& parser) {
+TypeInfo* ReturnStatement::TypeCheck(BNVParser& parser) {
 	TypeInfo* retType = retVal->TypeCheck(parser);
 	return retType;
 }
@@ -1169,6 +1202,17 @@ void IntLiteral::AddByteCode(BNVM& vm) {
 	vm.code.PushBack(value % 256);
 }
 
+void StringLiteral::AddByteCode(BNVM& vm) {
+	AddDebugInfo(vm, file, line);
+	vm.code.PushBack(I_STRINGLIT);
+
+	int offset = FindOffsetForString(value.start, vm.stringOffsets);
+	vm.code.PushBack(offset >> 24);
+	vm.code.PushBack((offset >> 16) % 256);
+	vm.code.PushBack((offset >> 8) % 256);
+	vm.code.PushBack(offset % 256);
+}
+
 void BinaryOp::AddByteCode(BNVM& vm) {
 	AddDebugInfo(vm, file, line);
 	rVal->AddByteCode(vm);
@@ -1192,7 +1236,7 @@ void BinaryOp::AddByteCode(BNVM& vm) {
 	
 }
 
-TypeInfo* BinaryOp::TypeCheck(const BNVParser& parser) {
+TypeInfo* BinaryOp::TypeCheck(BNVParser& parser) {
 	TypeInfo* rInfo = rVal->TypeCheck(parser);
 	TypeInfo* lInfo = lVal->TypeCheck(parser);
 
@@ -1221,7 +1265,7 @@ void UnaryOp::AddByteCode(BNVM& vm) {
 	ASSERT_WARN("%s is not yet implemented.\n", __FUNCTION__);
 }
 
-TypeInfo* UnaryOp::TypeCheck(const BNVParser& parser) {
+TypeInfo* UnaryOp::TypeCheck(BNVParser& parser) {
 	type = val->TypeCheck(parser);
 	return type;
 }
@@ -1243,7 +1287,7 @@ void Assignment::AddByteCode(BNVM& vm){
 	}
 }
 
-TypeInfo* Assignment::TypeCheck(const BNVParser& parser) {
+TypeInfo* Assignment::TypeCheck(BNVParser& parser) {
 	TypeInfo* varInfo = val->TypeCheck(parser);
 	if (varInfo == (TypeInfo*)0x01) {
 		return (TypeInfo*)0x01;
@@ -1266,21 +1310,31 @@ Assignment::~Assignment(){
 
 void FunctionCall::AddByteCode(BNVM& vm) {
 	AddDebugInfo(vm, file, line);
+
+	int externFuncIndex = -1;
+	bool isExternFunc = vm.externFuncIndices.LookUp(func->name, &externFuncIndex);
+
 	for (int i = args.count - 1; i >= 0; i--) {
 		args.data[i]->AddByteCode(vm);
+
+		// HACK: If we're passing an internal string to an external function, 
+		// we convert it to a valid char*
+		// TODO: This doesn't work for strings in structs...
+		if (isExternFunc && args.data[i]->type->typeName == "string") {
+			vm.code.PushBack(I_INTERNSTRTOEXTERN);
+		}
 	}
 
 	BuiltinFunc builtinFunc;
-	int externFuncIndex = -1;
-	if (FindBuiltinFunc(func->name, &builtinFunc)) {
-		vm.code.PushBack(builtinFunc.instr);
-	}
-	else if (vm.externFuncIndices.LookUp(func->name, &externFuncIndex)) {
+	if (isExternFunc) {
 		IntLiteral lit;
 		lit.value = externFuncIndex;
 		lit.AddByteCode(vm);
 
 		vm.code.PushBack(I_EXTERNF);
+	}
+	else if (FindBuiltinFunc(func->name, &builtinFunc)) {
+		vm.code.PushBack(builtinFunc.instr);
 	}
 	else {
 		int funcPtr = -1;
@@ -1296,7 +1350,7 @@ void FunctionCall::AddByteCode(BNVM& vm) {
 	}
 }
 
-TypeInfo* FunctionCall::TypeCheck(const BNVParser& parser) {
+TypeInfo* FunctionCall::TypeCheck(BNVParser& parser) {
 	if (func->params.count != args.count){
 		return (TypeInfo*)0x01;
 	}
@@ -1328,7 +1382,7 @@ void VariableAccess::AddByteCode(BNVM& vm) {
 	}
 }
 
-TypeInfo* VariableAccess::TypeCheck(const BNVParser& parser) {
+TypeInfo* VariableAccess::TypeCheck(BNVParser& parser) {
 	if (regOffset == -1) {
 		if (TypeInfo* varType = parser.GetVariableType(varName)) {
 			type = varType;
@@ -1352,7 +1406,7 @@ TypeInfo* VariableAccess::TypeCheck(const BNVParser& parser) {
 	}
 }
 
-TypeInfo* FieldAccess::TypeCheck(const BNVParser& parser) {
+TypeInfo* FieldAccess::TypeCheck(BNVParser& parser) {
 	TypeInfo* info = var->TypeCheck(parser);
 
 	if (info == (TypeInfo*)0x01) {
@@ -1399,11 +1453,11 @@ void FuncDef::AddByteCode(BNVM& vm) {
 	Scope::AddByteCode(vm);
 }
 
-TypeInfo* FuncDef::TypeCheck(const BNVParser& parser) {
+TypeInfo* FuncDef::TypeCheck(BNVParser& parser) {
 	return Scope::TypeCheck(parser);
 }
 
-TypeInfo* Scope::TypeCheck(const BNVParser& parser) {
+TypeInfo* Scope::TypeCheck(BNVParser& parser) {
 	for (int i = 0; i < statements.count; i++) {
 		if (statements.data[i]->TypeCheck(parser) == (TypeInfo*)0x01) {
 			return (TypeInfo*)0x01;
@@ -1413,7 +1467,7 @@ TypeInfo* Scope::TypeCheck(const BNVParser& parser) {
 	return nullptr;
 }
 
-TypeInfo* IfStatement::TypeCheck(const BNVParser& parser) {
+TypeInfo* IfStatement::TypeCheck(BNVParser& parser) {
 	TypeInfo* intInfo;
 	parser.definedTypes.LookUp("int", &intInfo);
 	if (check->TypeCheck(parser) != intInfo) {
@@ -1425,6 +1479,40 @@ TypeInfo* IfStatement::TypeCheck(const BNVParser& parser) {
 
 void BNVParser::AddByteCode(BNVM& vm) {
 	vm.externFuncIndices = externFuncNames;
+
+	// TODO: This really shouldnt be a run-time thing
+	// Modify AddByteCode to also take a pointer to this BNVParser?
+	vm.stringOffsets = stringOffsets;
+
+	for (int i = 0; i < stringOffsets.count; i++) {
+		SubString val = stringOffsets.data[i].substr;
+		ASSERT(stringOffsets.data[i].offset == vm.code.count);
+
+		int goal = vm.code.count + val.length + 1;
+		vm.code.EnsureCapacity(goal);
+		for (int j = 0; j < val.length; j++) {
+			if (val.start[j] == '\\') {
+				switch (val.start[j + 1]) {
+				case '\\': { vm.code.PushBack('\\');} break;
+				case 'n':  {vm.code.PushBack('\n'); } break;
+				case 'r':  {vm.code.PushBack('\r'); } break;
+				case 't':  {vm.code.PushBack('\t'); } break;
+				case 'b':  {vm.code.PushBack('\b'); } break;
+				case '"':  {vm.code.PushBack('"');  } break;
+				default: { printf("\nWarning: Incorrect escape sequence: '%.*s'\n", 2, &val.start[j]);} break;
+				}
+
+				j++;
+			}
+			else {
+				vm.code.PushBack(val.start[j]);
+			}
+		}
+
+		for (int j = vm.code.count; j < goal; j++) {
+			vm.code.PushBack('\0');
+		}
+	}
 
 	for (int i = 0; i < funcDefs.count; i++) {
 		BuiltinFunc builtinFunc;
@@ -1491,6 +1579,18 @@ void myDot(TempStack* stk) {
 	stk->Push(ret);
 }
 
+void FlipCase(TempStack* stk) {
+	char* str = stk->Pop<char*>();
+	while (*str) {
+		if ((*str >= 'a' && *str <= 'z' )
+		 || (*str >= 'A' && *str <= 'Z')) {
+			*str ^= ('A' ^ 'a');
+		}
+
+		str++;
+	}
+}
+
 void ShowFileContentsAtLine(char* file, int lineNum) {
 	char* cursor = file;
 
@@ -1517,17 +1617,19 @@ int main(int argc, char** argv) {
 
 	parser.ParseFile("parserTest.bnv");
 
-	ASSERT(parser.funcDefs.count == 23);
-	ASSERT(parser.funcDefs.data[22]->name == "main");
+	// These ended up just being noise...
+	//ASSERT(parser.funcDefs.count == 25);
+	//ASSERT(parser.funcDefs.data[24]->name == "main");
 
 	BNVM vm;
 	parser.AddByteCode(vm);
 
-	vm.Execute("main");
-
 	vm.RegisterExternFunc("sinf", mySin);
 	vm.RegisterExternFunc("subtract", mySub);
 	vm.RegisterExternFunc("DotProductExt", myDot);
+	vm.RegisterExternFunc("FlipCase", FlipCase);
+
+	vm.Execute("main");
 
 	ASSERT((vm.ExecuteTyped<float, float>("sinTest", 2.3f) == sinf(2.3f)));
 	ASSERT((vm.ExecuteTyped<float, float>("subtractTest", -4.0f) == 5.0f));

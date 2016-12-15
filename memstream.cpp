@@ -207,6 +207,39 @@ int main(int argc, char** argv){
 		ASSERT(val == 126);
 	}
 
+	{
+		MemStream str2;
+
+		{
+			MemStream str;
+			str.Write<int>(12);
+			str.Write<int>(12);
+			str.Write<int>(12);
+
+			str2 = str;
+		}
+
+		ASSERT(str2.Read<int>() == 12);
+		ASSERT(str2.Read<int>() == 12);
+		ASSERT(str2.Read<int>() == 12);
+		ASSERT(str2.GetLength() == 0);
+	}
+
+	{
+		MemStream str;
+		str.Write(12);
+		str.Write(24);
+
+		{
+			MemStream str2 = str;
+			ASSERT(str2.Read<int>() == 12);
+			ASSERT(str2.Read<int>() == 24);
+		}
+
+		ASSERT(str.Read<int>() == 12);
+		ASSERT(str.Read<int>() == 24);
+	}
+
 	return 0;
 }
 

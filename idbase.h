@@ -14,6 +14,28 @@ struct IDBase{
 };
 
 template<typename T>
+struct IDHandle {
+	uint32 id;
+
+	explicit IDHandle(uint32 _id = 0xFFFFFFFF) {
+		id = _id;
+	}
+
+	IDHandle(const IDHandle<T>& orig) {
+		id = orig.id;
+	}
+
+	IDHandle& operator=(const IDHandle<T> orig) {
+		id = orig.id;
+		return *this;
+	}
+
+	bool operator==(const IDHandle<T> orig) const {
+		return orig.id == id;
+	}
+};
+
+template<typename T>
 struct IDTracker{
 	T* vals;
 	int maxCount;
@@ -110,8 +132,8 @@ struct IDTracker{
 
 		return ptr;
 	}
-	
-	T* GetById(uint32 id) {
+
+	T* GetByIdNum(uint32 id) {
 		for(int i = 0; i < currentCount; i++){
 			if(vals[i].id == id){
 				return &vals[i];
@@ -121,7 +143,11 @@ struct IDTracker{
 		return nullptr;
 	}
 	
-	void RemoveById(uint32 id){
+	T* GetById(IDHandle<T> id) {
+		return GetByIdNum(id.id);
+	}
+
+	void RemoveByIdNum(uint32 id){
 		for(int i = 0; i < currentCount; i++){
 			if(vals[i].id == id){
 				vals[i].~T();
@@ -130,6 +156,10 @@ struct IDTracker{
 				break;
 			}
 		}
+	}
+
+	void RemoveById(IDHandle<T> id) {
+		RemoveByIdNum(id.id);
 	}
 	
 	~IDTracker(){

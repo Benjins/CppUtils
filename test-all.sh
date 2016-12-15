@@ -5,57 +5,63 @@ if [ -z "$CXX" ]; then
 	CXX="g++"
 fi
 
-eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DREF_TEST_MAIN assert.cpp ref.cpp -o ref_test"
+VAGRIND_FLAGS="--quiet --leak-check=full --error-exitcode=12"
+CXX_TEST_FLAGS="-Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT"
+
+eval "$CXX $CXX_TEST_FLAGS -DREF_TEST_MAIN assert.cpp ref.cpp -o ref_test"
 ./ref_test
-valgrind --quiet --leak-check=full --error-exitcode=12 ./ref_test
+valgrind $VAGRIND_FLAGS ./ref_test
 
 eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test"
 yes b | head -n 20 | ./assert_test
 
-eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DHASH_TEST_MAIN assert.cpp hash.cpp -o hash_test"
+eval "$CXX $CXX_TEST_FLAGS -DHASH_TEST_MAIN assert.cpp hash.cpp -o hash_test"
 ./hash_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DVECTOR_TEST_MAIN assert.cpp vector.cpp -o vector_test"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./vector_test
+eval "$CXX $CXX_TEST_FLAGS -DDISC_UNION_TEST_MAIN assert.cpp vector.cpp strings.cpp disc_union.cpp -o disc_union_test"
+valgrind $VAGRIND_FLAGS ./disc_union_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DFILESYS_TEST_MAIN assert.cpp filesys.cpp -o filesys_test"
+eval "$CXX $CXX_TEST_FLAGS -DVECTOR_TEST_MAIN assert.cpp vector.cpp -o vector_test"
+valgrind $VAGRIND_FLAGS ./vector_test
+
+eval "$CXX $CXX_TEST_FLAGS -DFILESYS_TEST_MAIN assert.cpp filesys.cpp -o filesys_test"
 ./filesys_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DIDBASE_TEST_MAIN assert.cpp idbase.cpp -o idbase_test"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./idbase_test
+eval "$CXX $CXX_TEST_FLAGS -DIDBASE_TEST_MAIN assert.cpp idbase.cpp -o idbase_test"
+valgrind $VAGRIND_FLAGS ./idbase_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DSTRINGS_TEST_MAIN assert.cpp strings.cpp -o strings_test"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./strings_test
+eval "$CXX $CXX_TEST_FLAGS -DSTRINGS_TEST_MAIN assert.cpp strings.cpp -o strings_test"
+valgrind $VAGRIND_FLAGS ./strings_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DSTRINGMAP_TEST_MAIN assert.cpp strings.cpp hash.cpp stringmap.cpp -o stringmap_test"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./stringmap_test
+eval "$CXX $CXX_TEST_FLAGS -DSTRINGMAP_TEST_MAIN assert.cpp strings.cpp hash.cpp stringmap.cpp -o stringmap_test"
+valgrind $VAGRIND_FLAGS ./stringmap_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DMEMSTREAM_TEST_MAIN assert.cpp strings.cpp memstream.cpp stringmap.cpp hash.cpp -o memstream_test"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./memstream_test
+eval "$CXX $CXX_TEST_FLAGS -DMEMSTREAM_TEST_MAIN assert.cpp strings.cpp memstream.cpp stringmap.cpp hash.cpp -o memstream_test"
+valgrind $VAGRIND_FLAGS ./memstream_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DXML_TEST_MAIN strings.cpp assert.cpp hash.cpp xml.cpp -o xml_test"
-valgrind --quiet --leak-check=full --gen-suppressions=all --error-exitcode=12 ./xml_test
+eval "$CXX $CXX_TEST_FLAGS -DXML_TEST_MAIN strings.cpp assert.cpp hash.cpp xml.cpp -o xml_test"
+valgrind $VAGRIND_FLAGS ./xml_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DLEXER_TEST_MAIN lexer.cpp strings.cpp assert.cpp vector.cpp -o lex_test"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./lex_test
+eval "$CXX $CXX_TEST_FLAGS -DLEXER_TEST_MAIN lexer.cpp strings.cpp assert.cpp vector.cpp -o lex_test"
+valgrind $VAGRIND_FLAGS ./lex_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DBNVPARSER_TEST_MAIN lexer.cpp strings.cpp memstream.cpp assert.cpp hash.cpp vector.cpp bnvm.cpp bnvparser.cpp -o bnvparser_test"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./bnvparser_test
+eval "$CXX $CXX_TEST_FLAGS -DBNVPARSER_TEST_MAIN lexer.cpp strings.cpp memstream.cpp assert.cpp hash.cpp vector.cpp bnvm.cpp bnvparser.cpp -o bnvparser_test"
+valgrind $VAGRIND_FLAGS ./bnvparser_test
 
 ./bnvparser_test > bnvParserOut.txt
 diff bnvParserOut.txt bnvParserExpectedOut.txt
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DBNVM_TEST_MAIN lexer.cpp strings.cpp assert.cpp hash.cpp memstream.cpp stringmap.cpp bnvm.cpp vector.cpp bnvparser.cpp -o bnvm_test"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./bnvm_test
+eval "$CXX $CXX_TEST_FLAGS -DBNVM_TEST_MAIN lexer.cpp strings.cpp assert.cpp hash.cpp memstream.cpp stringmap.cpp bnvm.cpp vector.cpp bnvparser.cpp -o bnvm_test"
+valgrind $VAGRIND_FLAGS ./bnvm_test
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DCOMMANDLINE_TEST_MAIN commandline.cpp strings.cpp assert.cpp -o commandline_test.out"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./commandline_test.out
+eval "$CXX $CXX_TEST_FLAGS -DCOMMANDLINE_TEST_MAIN commandline.cpp strings.cpp assert.cpp -o commandline_test.out"
+valgrind $VAGRIND_FLAGS ./commandline_test.out
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DUNICODE_TEST_MAIN unicode.cpp strings.cpp filesys.cpp assert.cpp -o unicode_test.out"
-valgrind --quiet --leak-check=full --error-exitcode=12 ./unicode_test.out
+eval "$CXX $CXX_TEST_FLAGS -DUNICODE_TEST_MAIN unicode.cpp strings.cpp filesys.cpp assert.cpp -o unicode_test.out"
+valgrind $VAGRIND_FLAGS ./unicode_test.out
 diff unicode_test.txt unicode__out.txt
 
-eval "$CXX -Wall -Wextra -g -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DSOCKET_TEST_MAIN socket.cpp assert.cpp -o socket_test.out"
+eval "$CXX $CXX_TEST_FLAGS -DSOCKET_TEST_MAIN socket.cpp assert.cpp -o socket_test.out"
 
 cd Coroutines
 chmod +x ./coroutine-test.sh
