@@ -15,7 +15,7 @@ struct IDBase{
 
 template<typename T>
 struct IDHandle {
-	uint32 id;
+	int id;
 
 	explicit IDHandle(uint32 _id = 0xFFFFFFFF) {
 		id = _id;
@@ -34,6 +34,11 @@ struct IDHandle {
 		return orig.id == id;
 	}
 };
+
+static_assert(sizeof(IDHandle<int>) == sizeof(int), "IDHandle must be the proper size.");
+
+#define GET_HANDLE(obj) IDHandle<decltype(obj)>((obj).id)
+#define GET_PTR_HANDLE(obj) IDHandle<std::remove_reference<decltype(*(obj))>::type>((obj)->id)
 
 template<typename T>
 struct IDTracker{
@@ -119,16 +124,31 @@ struct IDTracker{
 	}
 
 	T* AddWithId(uint32 id) {
-		ASSERT(id >= currentMaxId);
+		ASSERT(GetByIdNum(id) == nullptr);
 
 		if (currentCount >= maxCount) {
 			SetSize(maxCount > 0 ? maxCount * 2 : 2);
 		}
 
-		T* ptr = new(&vals[currentCount]) T();
-		vals[currentCount].id = id;
-		currentCount++;
-		currentMaxId = id + 1;
+		T* ptr;
+		if (id >= currentMaxId) {
+			ptr = new(&vals[currentCount]) T();
+			vals[currentCount].id = id;
+			currentCount++;
+			currentMaxId = id + 1;
+		}
+		else {
+			for (int i = 0; i < currentCount; i++) {
+				if (vals[i].id > id) {
+					memmove(&vals[i + 1], &vals[i], (currentCount - i) * sizeof(T));
+					ptr = new(&vals[i]) T();
+					vals[i].id = id;
+					currentCount++;
+
+					break;
+				}
+			}
+		}
 
 		return ptr;
 	}

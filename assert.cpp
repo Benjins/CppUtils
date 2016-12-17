@@ -1,7 +1,7 @@
 #include "assert.h"
 
 #if defined(_MSC_VER)
-#include <Windows.h>
+//#include <Windows.h>
 #endif
 
 void assertFrom(const char* cond, const char* function, const char* file, int line, const char* msg){
