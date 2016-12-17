@@ -49,7 +49,7 @@ int CompareAndSwap32(volatile int* i, int oldVal, int newVal){
 	// Apple specific stuff
 #else
 	
-ThreadID CreateThreadSimple(ThreadFunc* func, void* arg){
+ThreadID CreateThreadSimple(ThreadFunc func, void* arg){
 	ThreadID tid = {};
     int err = pthread_create(&tid.id, NULL, func, arg);
 	return tid;
@@ -72,19 +72,19 @@ void UnlockMutex(Mutex* mutx){
 }
 
 void DestroyMutex(Mutex* mutx){
-	pthread_mutex_destroy(&mutx->mutx, NULL);
+	pthread_mutex_destroy(&mutx->mutx);
 }
 
-int IncrementAtomic32(volatile int* i){
-	
+unsigned int IncrementAtomic32(volatile unsigned int* i){
+	return __sync_fetch_and_add(i, 1);
 }
 
 int AddAtomic32(volatile int* i, int val){
-	
+	return __sync_fetch_and_add(i, val); 
 }
 
 int CompareAndSwap32(volatile int* i, int oldVal, int newVal){
-	
+	return __sync_val_compare_and_swap(i, oldVal, newVal);
 }
 
 #endif
@@ -97,14 +97,14 @@ int val1 = 0;
 int val2 = 0;
 
 THREAD_RET_TYPE ThreadFunc1(void* arg){
-	int val = (int)arg;
+	int val = (int)(size_t)arg;
 	val1 = val;
 	
 	return 0;
 }
 
 THREAD_RET_TYPE ThreadFunc2(void* arg){
-	int val = (int)arg;
+	int val = (int)(size_t)arg;
 	val2 = val;
 	
 	return 0;
