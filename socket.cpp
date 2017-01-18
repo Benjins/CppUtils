@@ -113,7 +113,7 @@ bool Socket::Bind(int _port /*= 0*/){
 
 	source.addr = htonl((127 << 24) | 1);
 
-	int retVal = bind(handle, (const sockaddr*) &address, sizeof(sockaddr_in));
+	int retVal = ::bind(handle, (const sockaddr*) &address, sizeof(sockaddr_in));
 
 	if (retVal < 0 ){
 		printf( "failed to bind socket\n" );

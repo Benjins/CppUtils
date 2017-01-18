@@ -3,13 +3,13 @@
 
 #if defined(_MSC_VER)
 
-ThreadID CreateThreadSimple(ThreadFunc func, void* arg){
-	ThreadID id ={};
+BNS_ThreadID CreateThreadSimple(ThreadFunc func, void* arg){
+	BNS_ThreadID id ={};
 	id.handle = CreateThread(NULL, 0, func, arg, 0, &id.threadId);
 	return id;
 }
 
-void JoinThread(ThreadID thread){
+void JoinThread(BNS_ThreadID thread){
 	WaitForSingleObject(thread.handle, INFINITE);
 }
 
@@ -44,18 +44,15 @@ int CompareAndSwap32(volatile int* i, int oldVal, int newVal){
 	return InterlockedCompareExchange((volatile LONG*)i, oldVal, newVal);
 }
 
-
-#elif defined(__APPLE__)
-	// Apple specific stuff
 #else
 	
-ThreadID CreateThreadSimple(ThreadFunc func, void* arg){
-	ThreadID tid = {};
+BNS_ThreadID CreateThreadSimple(ThreadFunc func, void* arg){
+	BNS_ThreadID tid = {};
     int err = pthread_create(&tid.id, NULL, func, arg);
 	return tid;
 }
 
-void JoinThread(ThreadID thread){
+void JoinThread(BNS_ThreadID thread){
 	pthread_join(thread.id, NULL);
 }
 
@@ -127,8 +124,8 @@ int main(){
 	ASSERT(val1 == 0);
 	ASSERT(val2 == 0);
 	
-	ThreadID id1 = CreateThreadSimple(ThreadFunc1, (void*)4);
-	ThreadID id2 = CreateThreadSimple(ThreadFunc2, (void*)7);
+	BNS_ThreadID id1 = CreateThreadSimple(ThreadFunc1, (void*)4);
+	BNS_ThreadID id2 = CreateThreadSimple(ThreadFunc2, (void*)7);
 	
 	JoinThread(id1);
 	JoinThread(id2);
@@ -137,7 +134,7 @@ int main(){
 	ASSERT(val2 == 7);
 	
 	ASSERT(counter == 0);
-	ThreadID tids[] = 
+	BNS_ThreadID tids[] = 
 	{
 		CreateThreadSimple(ThreadCounterFunc, NULL),
 		CreateThreadSimple(ThreadCounterFunc, NULL),

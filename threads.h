@@ -8,9 +8,6 @@
 #define THREAD_RET_TYPE DWORD __stdcall
 typedef DWORD (__stdcall *ThreadFunc) (void* arg);
 
-#elif defined(__APPLE__)
-#error "Apple thread primitives not supported"
-
 #else
 #include <pthread.h>
 #define THREAD_RET_TYPE void*
@@ -18,21 +15,19 @@ typedef void* (*ThreadFunc) (void* arg);
 
 #endif
 
-struct ThreadID{
+struct BNS_ThreadID{
 #if defined(_MSC_VER)
 	HANDLE handle;
 	DWORD threadId;
-#elif defined(__APPLE__)
-	// Apple specific stuff
 #else
 	pthread_t id;
 #endif
 	
 };
 
-ThreadID CreateThreadSimple(ThreadFunc* func, void* arg);
+BNS_ThreadID CreateThreadSimple(ThreadFunc* func, void* arg);
 
-void JoinThread(ThreadID thread);
+void JoinThread(BNS_ThreadID thread);
 
 unsigned int IncrementAtomic32(volatile unsigned int* i);
 int AddAtomic32(volatile int* i, int val);
@@ -46,8 +41,6 @@ int CompareAndSwap32(volatile int* i, int oldVal, int newVal);
 struct Mutex{
 #if defined(_MSC_VER)
 	HANDLE handle;
-#elif defined(__APPLE__)
-	// Apple specific stuff
 #else
 	pthread_mutex_t mutx;
 #endif
