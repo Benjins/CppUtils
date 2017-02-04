@@ -10,3 +10,5 @@
 #define BNS_ABS(x) (((x) < 0) ? -(x) : (x))
 
 #define BNS_MEMCPY(dst, src, size) for(int i = 0; i < (int)(size); i++){((char*)dst)[i] = ((const char*)src)[i];}
+
+#define BNS_OFFSET_OF(type, field) (int)(size_t)(&((type*)0)->field)
