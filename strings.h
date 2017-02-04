@@ -207,6 +207,8 @@ struct SubString{
 	void Release();
 };
 
+#define BNS_LEN_START(substr) substr .length, substr .start
+
 struct ConstSubString{
 	const char* start;
 	int length;
