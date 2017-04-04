@@ -101,13 +101,15 @@ struct Vector{
 	// Inclusive: RemoveRange(5, 6) removes 2 elements: 5 and 6
 	// RemoveRange(4, 4) removes 1 element
 	void RemoveRange(int lIdx, int hIdx) {
-		ASSERT(lIdx >= 0 && lIdx < count && lIdx <= hIdx);
+		ASSERT(lIdx >= 0 && lIdx < count);
 		ASSERT(hIdx >= 0 && hIdx < count);
-		for (int i = lIdx; i <= hIdx; i++) {
-			data[i].~T();
+		if (lIdx <= hIdx) {
+			for (int i = lIdx; i <= hIdx; i++) {
+				data[i].~T();
+			}
+			memmove(&data[lIdx], &data[hIdx + 1], sizeof(T)*(count - hIdx - 1));
+			count -= (hIdx - lIdx + 1);
 		}
-		memmove(&data[lIdx], &data[hIdx + 1], sizeof(T)*(count - hIdx - 1));
-		count -= (hIdx - lIdx + 1);
 	}
 	
 	void PushBack(const T& elem){
