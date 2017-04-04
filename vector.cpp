@@ -534,24 +534,35 @@ int main(int argc, char** argv){
 	{
 		Vector<int> nums = { 1, 2, 3, 4 };
 		nums.RemoveRange(3, 3);
-		ASSERT(nums.count == 3);
+		ASSERT(nums.count == 4);
 		ASSERT(nums.data[0] == 1);
 		ASSERT(nums.data[1] == 2);
 		ASSERT(nums.data[2] == 3);
+		ASSERT(nums.data[3] == 4);
 	}
 
 	{
 		Vector<int> nums = { 1, 2, 3, 4 };
-		nums.RemoveRange(0, 3);
+		nums.RemoveRange(0, 4);
 		ASSERT(nums.count == 0);
 	}
 
 	{
 		Vector<int> nums = { 1, 2, 3, 4 };
 		nums.RemoveRange(2, 3);
-		ASSERT(nums.count == 2);
+		ASSERT(nums.count == 3);
 		ASSERT(nums.data[0] == 1);
 		ASSERT(nums.data[1] == 2);
+		ASSERT(nums.data[2] == 4);
+	}
+
+	{
+		Vector<int> nums = { 0, 1, 2, 3, 4, 5 };
+		nums.RemoveRange(2, 5);
+		ASSERT(nums.count == 3);
+		ASSERT(nums.data[0] == 0);
+		ASSERT(nums.data[1] == 1);
+		ASSERT(nums.data[2] == 5);
 	}
 
 	ASSERT(fakeAllocCount == 0);
@@ -565,7 +576,8 @@ int main(int argc, char** argv){
 		}
 
 		rVec.RemoveRange(0, 0);
-		rVec.RemoveRange(12, 12);
+		rVec.RemoveRange(12, 13);
+		rVec.RemoveRange(12, 15);
 		rVec.RemoveRange(5, 10);
 
 	}
