@@ -97,6 +97,18 @@ struct Vector{
 		memmove(&data[index], &data[index+1], sizeof(T)*(count - index - 1));
 		count--;
 	}
+
+	// Inclusive: RemoveRange(5, 6) removes 2 elements: 5 and 6
+	// RemoveRange(4, 4) removes 1 element
+	void RemoveRange(int lIdx, int hIdx) {
+		ASSERT(lIdx >= 0 && lIdx < count && lIdx <= hIdx);
+		ASSERT(hIdx >= 0 && hIdx < count);
+		for (int i = lIdx; i <= hIdx; i++) {
+			data[i].~T();
+		}
+		memmove(&data[lIdx], &data[hIdx + 1], sizeof(T)*(count - hIdx - 1));
+		count -= (hIdx - lIdx + 1);
+	}
 	
 	void PushBack(const T& elem){
 		if(count >= capacity){
@@ -237,5 +249,8 @@ struct Vector{
 			(good).PushBack(item); \
 		}\
 	}
+
+#define BNS_VEC_FOREACH_NAME(vec, varName) for (auto varName = &(vec).data[0]; varName != &(vec).data[(vec).count]; varName++)
+#define BNS_VEC_FOREACH(vec) BNS_VEC_FOREACH_NAME(vec, ptr)
 
 #endif

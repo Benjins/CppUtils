@@ -522,6 +522,56 @@ int main(int argc, char** argv){
 		ASSERT(evenNums.data[1] == 0);
 	}
 
+	{
+		Vector<int> nums = { 1, 2, 3, 4 };
+		int ctr = 0;
+		BNS_VEC_FOREACH(nums) {
+			ASSERT(*ptr == ctr + 1);
+			ctr++;
+		}
+	}
+
+	{
+		Vector<int> nums = { 1, 2, 3, 4 };
+		nums.RemoveRange(3, 3);
+		ASSERT(nums.count == 3);
+		ASSERT(nums.data[0] == 1);
+		ASSERT(nums.data[1] == 2);
+		ASSERT(nums.data[2] == 3);
+	}
+
+	{
+		Vector<int> nums = { 1, 2, 3, 4 };
+		nums.RemoveRange(0, 3);
+		ASSERT(nums.count == 0);
+	}
+
+	{
+		Vector<int> nums = { 1, 2, 3, 4 };
+		nums.RemoveRange(2, 3);
+		ASSERT(nums.count == 2);
+		ASSERT(nums.data[0] == 1);
+		ASSERT(nums.data[1] == 2);
+	}
+
+	ASSERT(fakeAllocCount == 0);
+
+	{
+		Vector<Resource> rVec;
+
+		for (int i = 0; i < 20; i++) {
+			Resource r;
+			rVec.PushBack(r);
+		}
+
+		rVec.RemoveRange(0, 0);
+		rVec.RemoveRange(12, 12);
+		rVec.RemoveRange(5, 10);
+
+	}
+
+	ASSERT(fakeAllocCount == 0);
+
 	return 0;
 }
 
