@@ -18,6 +18,9 @@ yes b | head -n 20 | ./assert_test
 eval "$CXX $CXX_TEST_FLAGS -DHASH_TEST_MAIN assert.cpp hash.cpp -o hash_test"
 ./hash_test
 
+eval "$CXX $CXX_TEST_FLAGS -DMACROS_TEST_MAIN macros_test.cpp assert.cpp strings.cpp -o macros_test"
+./macros_test
+
 eval "$CXX $CXX_TEST_FLAGS -DDISC_UNION_TEST_MAIN assert.cpp vector.cpp strings.cpp disc_union.cpp -o disc_union_test"
 valgrind $VAGRIND_FLAGS ./disc_union_test
 
