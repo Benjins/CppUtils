@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 	}
 
 	{
-		// Ideally, these would be static asserts, but clang trips up on them...:\
+		// Ideally, these would be static asserts, but clang trips up on them...:\...
 		ASSERT(BNS_OFFSET_OF(testStruct, x) == 0);
 
 		//possible packing issue?
