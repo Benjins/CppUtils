@@ -12,8 +12,11 @@ struct testStruct {
 	int y;
 };
 
-static_assert(BNS_OFFSET_OF(testStruct, x) == 0, "check BNS_OFFSET_OF macro");
-static_assert(BNS_OFFSET_OF(testStruct, y) == 4, "check BNS_OFFSET_OF macro (possibly packing issue?)");
+const int testStruct_x_off = BNS_OFFSET_OF(testStruct, x);
+const int testStruct_y_off = BNS_OFFSET_OF(testStruct, y);
+
+static_assert(testStruct_x_off == 0, "check BNS_OFFSET_OF macro");
+static_assert(testStruct_y_off == 4, "check BNS_OFFSET_OF macro (possibly packing issue?)");
 
 int main(int argc, char** argv) {
 
