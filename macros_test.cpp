@@ -12,12 +12,6 @@ struct testStruct {
 	int y;
 };
 
-const int testStruct_x_off = BNS_OFFSET_OF(testStruct, x);
-const int testStruct_y_off = BNS_OFFSET_OF(testStruct, y);
-
-static_assert(testStruct_x_off == 0, "check BNS_OFFSET_OF macro");
-static_assert(testStruct_y_off == 4, "check BNS_OFFSET_OF macro (possibly packing issue?)");
-
 int main(int argc, char** argv) {
 
 	{
@@ -29,6 +23,14 @@ int main(int argc, char** argv) {
 		}
 
 		ASSERT(counter == 1);
+	}
+
+	{
+		// Ideally, these would be static asserts, but clang trips up on them...:\
+		ASSERT(BNS_OFFSET_OF(testStruct, x) == 0);
+
+		//possible packing issue?
+		ASSERT(BNS_OFFSET_OF(testStruct, y) == 4);
 	}
 
 	{
