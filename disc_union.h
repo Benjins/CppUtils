@@ -27,7 +27,7 @@ str & operator=(const str & orig){ \
 }
 
 #define DISC_CPY_CONSTRUCTOR(str) \
-case UE_ ## str : { *(str*) str ## _data = *(str*) orig. str ## _data; } break;
+case UE_ ## str : { new (str ## _data) str ( *(str*) orig. str ## _data ); } break;
 
 #define DEFINE_DISCRIMINATED_UNION(name, macro) \
 struct name { \
