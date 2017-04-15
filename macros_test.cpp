@@ -2,7 +2,7 @@
 
 
 
-#if defined(MACROS_TEST_MAIN) || 1
+#if defined(MACROS_TEST_MAIN)
 
 #include "assert.h"
 #include "strings.h"
