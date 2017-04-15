@@ -101,7 +101,7 @@ struct Vector{
 	// Lower-Inclusive, Upper-Exclusive: RemoveRange(5, 6) removes 1 element: 5
 	// RemoveRange(4, 4) does nothing
 	void RemoveRange(int lIdx, int hIdx) {
-		ASSERT(lIdx >= 0 && lIdx <  count);
+		ASSERT(lIdx >= 0 && lIdx <= count);
 		ASSERT(hIdx >= 0 && hIdx <= count);
 		if (lIdx < hIdx) {
 			for (int i = lIdx; i < hIdx; i++) {

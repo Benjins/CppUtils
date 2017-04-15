@@ -533,7 +533,15 @@ int main(int argc, char** argv){
 
 	{
 		Vector<int> nums = { 1, 2, 3, 4 };
+
 		nums.RemoveRange(3, 3);
+		ASSERT(nums.count == 4);
+		ASSERT(nums.data[0] == 1);
+		ASSERT(nums.data[1] == 2);
+		ASSERT(nums.data[2] == 3);
+		ASSERT(nums.data[3] == 4);
+
+		nums.RemoveRange(4, 4);
 		ASSERT(nums.count == 4);
 		ASSERT(nums.data[0] == 1);
 		ASSERT(nums.data[1] == 2);
