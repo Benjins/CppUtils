@@ -26,6 +26,11 @@ str & operator=(const str & orig){ \
 	return *(str *) str ## _data;\
 }
 
+#define DISC_AS_METHOD(str) \
+str & As ## str (){     \
+	return *(str *) str ## _data;  \
+}
+
 #define DISC_CPY_CONSTRUCTOR(str) \
 case UE_ ## str : { new (str ## _data) str ( *(str*) orig. str ## _data ); } break;
 
@@ -54,8 +59,9 @@ struct name { \
 			case UE_CountPlus1: { } break;\
 		}\
 	}\
-	macro(DISC_ASSGN) \
-	macro(DISC_ASSGN_OP)\
+	macro(DISC_ASSGN)  \
+	macro(DISC_ASSGN_OP) \
+	macro(DISC_AS_METHOD) \
 	void TearDown(){\
 		switch (type){\
 			case UE_None: { } break;\

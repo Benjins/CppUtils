@@ -67,6 +67,7 @@ int main(int argc, char** argv){
 	ASSERT(str1.GetRef() == 1);
 	un = str1;
 	ASSERT(un.type == MyUnion::UE_String);
+	ASSERT(un.AsString() == str1);
 	ASSERT(str1.GetRef() == 2);
 
 	un = mc2;
