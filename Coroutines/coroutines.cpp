@@ -299,7 +299,7 @@ int ParseCoroutineFuncDef(const Vector<SubString>& tokens, int startingIndex, Me
 		}
 		else {
 			while (index < endIndex) {
-				if (tokens.Get(index) == ";") {
+				if (tokens.Get(index) == ";" || tokens.Get(index) == "{") {
 					index++;
 					break;
 				}
@@ -319,7 +319,7 @@ int ParseCoroutineFuncDef(const Vector<SubString>& tokens, int startingIndex, Me
 	outFuncDef->bodyStartIndex = funcBodyStartIndex;
 	outFuncDef->endIndex = endIndex;
 
-	ParseFunctionsFromTokensSubVec(&tokens, funcBodyStartIndex, endIndex, &outFuncDef->localFuncDefs);
+	//ParseFunctionsFromTokensSubVec(&tokens, funcBodyStartIndex, endIndex, &outFuncDef->localFuncDefs);
 
 	for (int i = 0; i < outFuncDef->localFuncDefs.count; i++) {
 		for (int j = 0; j < outFuncDef->localVars.count; j++) {

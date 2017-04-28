@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "../vector.h"
+#include "../memstream.h"
 
 #include "coroutine_runtime.h"
 
@@ -44,7 +45,34 @@ void PatrolPath(const Vector<PatrolPoint>* path){
 	}
 }
 
+/*[Coroutine]*/
+void ParseData(MemStream* mems) {
+	int val = mems->Read<int>();
+
+	for (int i = 0; i < val; i++) {
+		const char* strr = mems->Read<const char*>();
+		printf("grabbed '%s'\n", strr);
+		BNS_YIELD();
+	}
+}
+
+/*[Coroutine]*/
+void ChainData(int argc, const char** argv) {
+	MemStream mem;
+	mem.Write(argc);
+	for (int i = 0; i < argc; i++) {
+		mem.Write(argv[i]);
+	}
+
+	printf("Chain------\n");
+	BNS_YIELD_FROM_ARGS(ParseData, &mem);
+	printf("------Chain\n");
+}
+
 #if defined(COROUTINE_TEST_MAIN)
+
+#include "../memstream.cpp"
+#include "../strings.cpp"
 
 #include "coroutine_gen.h"
 
@@ -81,6 +109,12 @@ int main(int argc, char** argv) {
 	START_CR_ARGS(pat_inst, PatrolPath, &patrolPoints);
 	while (pat_inst.Next()) {
 		printf("---End frame---\n");
+	}
+
+	START_CR_ARGS(chain_data_inst, ChainData, argc, (const char**)argv);
+
+	while (chain_data_inst.Next()) {
+		printf("chain data do.\n");
 	}
 
 	return 0;
