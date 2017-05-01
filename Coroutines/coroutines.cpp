@@ -136,7 +136,7 @@ int ParseTypeName(const Vector<SubString>& tokens, int startingIndex, MetaTypeIn
 int ParseVarDecl(const Vector<SubString>& tokens, int startingIndex, MetaVarDecl* outVar) {
 	int index = ParseTypeName(tokens, startingIndex, &outVar->type);
 
-	if (index < tokens.count) {
+	if (index < tokens.count && IsIdentifier(tokens.Get(index))) {
 		outVar->name = tokens.Get(index);
 		outVar->tokenIndex = index;
 		index++;

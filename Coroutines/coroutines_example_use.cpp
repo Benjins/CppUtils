@@ -69,6 +69,18 @@ void ChainData(int argc, const char** argv) {
 	printf("------Chain\n");
 }
 
+int counterVar = 0;
+
+/*[Coroutine]*/
+void CountUp(int count, int period) {
+	for (int i = 0; i < count; i++) {
+		counterVar++;
+		if (i % period == (period - 1)) {
+			BNS_YIELD();
+		}
+	}
+}
+
 #if defined(COROUTINE_TEST_MAIN)
 
 #include "../memstream.cpp"
@@ -116,6 +128,22 @@ int main(int argc, char** argv) {
 	while (chain_data_inst.Next()) {
 		printf("chain data do.\n");
 	}
+
+	ASSERT(counterVar == 0);
+	START_CR_ARGS(count_inst, CountUp, 12, 5);
+	ASSERT(counterVar == 0);
+
+	bool more = count_inst.Next();
+	ASSERT(more);
+	ASSERT(counterVar == 5);
+
+	more = count_inst.Next();
+	ASSERT(more);
+	ASSERT(counterVar == 10);
+
+	more = count_inst.Next();
+	ASSERT(!more);
+	ASSERT(counterVar == 12);
 
 	return 0;
 }
