@@ -146,7 +146,7 @@ struct String{
 	
 	int GetLength() const;
 	
-	SubString GetSubString(int index, int length);
+	SubString GetSubString(int index, int length) const;
 	
 	String Insert(const char* str, int index) const;
 	String Insert(char c, int index) const;
@@ -207,8 +207,8 @@ struct SubString{
 	void Release();
 };
 
-#define BNS_LEN_START(substr) substr .length, substr .start
-#define BNS_START_LEN(substr) substr .start, substr .length
+#define BNS_LEN_START(substr) (substr) .length, (substr) .start
+#define BNS_START_LEN(substr) (substr) .start, (substr) .length
 
 struct ConstSubString{
 	const char* start;

@@ -39,6 +39,9 @@ valgrind $VAGRIND_FLAGS ./idbase_test
 eval "$CXX $CXX_TEST_FLAGS -DSTRINGS_TEST_MAIN assert.cpp strings.cpp -o strings_test"
 valgrind $VAGRIND_FLAGS ./strings_test
 
+eval "$CXX $CXX_TEST_FLAGS -DBNSEXPR_TEST_MAIN assert.cpp strings.cpp vector.cpp sexpr.cpp -o sexpr_test"
+valgrind $VAGRIND_FLAGS ./sexpr_test
+
 eval "$CXX $CXX_TEST_FLAGS -DSTRINGMAP_TEST_MAIN assert.cpp strings.cpp hash.cpp stringmap.cpp -o stringmap_test"
 valgrind $VAGRIND_FLAGS ./stringmap_test
 

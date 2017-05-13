@@ -60,6 +60,12 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 strings_test.exe
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
+cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DBNSEXPR_TEST_MAIN assert.cpp strings.cpp vector.cpp sexpr.cpp /Fesexpr_test
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
+sexpr_test.exe
+if %ERRORLEVEL% NEQ 0 goto somethingbad
+
 cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DSTRINGMAP_TEST_MAIN assert.cpp hash.cpp strings.cpp stringmap.cpp /Festringmap_test
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 

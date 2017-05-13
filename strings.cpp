@@ -60,7 +60,7 @@ int String::GetLength() const{
 	return *(int*)(string - 4);
 }
 
-SubString String::GetSubString(int index, int length){
+SubString String::GetSubString(int index, int length) const{
 	ASSERT(string != nullptr);
 	ASSERT(GetLength() >= index + length);
 	
