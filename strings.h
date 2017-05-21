@@ -19,6 +19,7 @@ void MemSet(void* dst, int val, int bytes);
 bool StrEqual(const char* s1, const char* s2);
 bool StrEqualN(const char* s1, const char* s2, unsigned int len);
 int Atoi(const char* str);
+unsigned int HexAtoi(const char* str);
 float Atof(const char* str);
 
 char* StrDup(const char* str);

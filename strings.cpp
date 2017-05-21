@@ -200,6 +200,28 @@ int Atoi(const char* str){
 	return val*sign;
 }
 
+unsigned int HexAtoi(const char* str) {
+	ASSERT(str != nullptr);
+
+	if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
+		str += 2;
+	}
+
+	unsigned int val = 0;
+	while (true) {
+		unsigned int digit = 0;
+		if (*str >= '0' && *str <= '9') { digit = *str - '0'; }
+		else if (*str >= 'a' && *str <= 'f') { digit = 10 + (*str - 'a'); }
+		else if (*str >= 'A' && *str <= 'F') { digit = 10 + (*str - 'A'); }
+		else { break; }
+
+		val = (val * 16) + digit;
+		str++;
+	}
+
+	return val;
+}
+
 float Atof(const char* str) {
 	ASSERT(str != nullptr);
 
@@ -482,6 +504,23 @@ int main(int argc, char** argv){
 	CHECK_NUM(1003200);
 	
 	#undef CHECK_NUM
+
+	#define CHECK_HEX_NUM(num) ASSERT(HexAtoi(#num) == num)
+	CHECK_HEX_NUM(0x0);
+	CHECK_HEX_NUM(0);
+	CHECK_HEX_NUM(0x11);
+	CHECK_HEX_NUM(0x01);
+	CHECK_HEX_NUM(0x21);
+	CHECK_HEX_NUM(0x21);
+	CHECK_HEX_NUM(0x81);
+	CHECK_HEX_NUM(0xA1);
+	CHECK_HEX_NUM(0xFFF1);
+	CHECK_HEX_NUM(0x0F00);
+	CHECK_HEX_NUM(0x0F001);
+	CHECK_HEX_NUM(0X0F001);
+	CHECK_HEX_NUM(0X0f001);
+	CHECK_HEX_NUM(0X0fbdeE01);
+	#undef CHECK_HEX_NUM
 	
 	ASSERT(Atoi("0123") == 123);
 	ASSERT(Atoi("0123000") == 123000);
