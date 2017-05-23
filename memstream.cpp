@@ -47,7 +47,7 @@ void MemStream::ReadInFromFile(const char* fileName){
 	fseek(fIn, 0, SEEK_SET);
 	
 	base = malloc(fileSize);
-	int bytesRead = fread(base, 1, fileSize, fIn);
+	int bytesRead = (int)fread(base, 1, fileSize, fIn);
 	ASSERT(bytesRead == fileSize);
 	writeHead = VOID_PTR_ADD(base, fileSize);
 	readHead = base;

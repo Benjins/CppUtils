@@ -1,6 +1,6 @@
 #include "sexpr.h"
 
-enum LexerState {
+enum SexprLexerState {
 	LS_DoubleQuote,
 	LS_SingleQuote,
 	LS_WhiteSpace,
@@ -18,7 +18,7 @@ inline bool IsDigit(char c) {
 Vector<SubString> BNSexprLexTokens(const String& toParse) {
 	const char* cursor = toParse.string;
 	const char* tokStart = cursor;
-	LexerState state = LS_WhiteSpace;
+	SexprLexerState state = LS_WhiteSpace;
 	Vector<SubString> tokens;
 #define EMIT_TOKEN() do { \
 	int start = tokStart - toParse.string; \

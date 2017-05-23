@@ -428,7 +428,7 @@ String ReadStringFromFile(const char* fileName) {
 	fseek(fIn, 0, SEEK_SET);
 
 	str.SetSize(fileLength);
-	int bytesRead = fread(str.string, 1, fileLength, fIn);
+	int bytesRead = (int)fread(str.string, 1, fileLength, fIn);
 	ASSERT(bytesRead == fileLength);
 	str.string[fileLength] = '\0';
 

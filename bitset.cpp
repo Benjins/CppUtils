@@ -77,5 +77,5 @@ bool GetBitInBitSet(const int* vals, int bit){
 	int index = (bit / 32);
 	int bitNum = (bit % 32);
 
-	return vals[index] & (1 << bitNum);
+	return (vals[index] & (1 << bitNum)) != 0;
 }
