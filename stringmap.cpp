@@ -72,7 +72,10 @@ int main(int argc, char** argv){
 
 		int outVal = -11;
 		ASSERT(!phoneNumbers.LookUp("Marek", &outVal));
+		ASSERT(!phoneNumbers.LookUp(String("Marek"), &outVal));
 		ASSERT(phoneNumbers.LookUp("Benji", &outVal) && outVal == 666);
+		outVal = -11;
+		ASSERT(phoneNumbers.LookUp(String("Benji"), &outVal) && outVal == 666);
 		ASSERT(phoneNumbers.count == 3);
 		phoneNumbers.Insert("Marek", 666);
 		ASSERT(phoneNumbers.count == 4);

@@ -139,16 +139,15 @@ struct StringMap{
 
 	}
 
-	bool LookUp(const String& name, T* out) const{
-		Hash hash = ComputeHash(name.string);
-		
+	bool LookUpByHashAndName(Hash hash, const char* str, int len, T* out) const {
 		int low = 0;
 		for ( ; low < count && hash > hashes[low]; low++) {
 		}
 
 		if(low < count && hashes[low] == hash){
 			for(int i = low; i < count; i++){
-				if(names[i] == name){
+				if((*str == '\0' && names[i].string == nullptr) ||
+				   (names[i].GetLength() == len && StrEqualN(names[i].string, str, len))){
 					*out = values[i];
 					return true;
 				}
@@ -159,6 +158,21 @@ struct StringMap{
 		}
 
 		return false;
+	}
+
+	bool LookUp(const String& name, T* out) const {
+		Hash hash = ComputeHash(name.string);
+		return LookUpByHashAndName(hash, name.string, name.GetLength(), out);
+	}
+
+	bool LookUp(const SubString& name, T* out) const {
+		Hash hash = ComputeHash(name.start, name.length);
+		return LookUpByHashAndName(hash, name.start, name.length, out);
+	}
+
+	bool LookUp(const char* name, T* out) const {
+		Hash hash = ComputeHash(name);
+		return LookUpByHashAndName(hash, name, StrLen(name), out);
 	}
 	
 	//Internal use

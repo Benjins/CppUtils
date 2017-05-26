@@ -47,15 +47,27 @@ int main(int argc, char** argv){
 
 	MyUnion un;
 	ASSERT(un.type == MyUnion::UE_None);
+	ASSERT(!un.IsMyClass());
+	ASSERT(!un.IsMyOtherClass());
+	ASSERT(!un.IsString());
 	
 	un = mc;
 	ASSERT(un.type == MyUnion::UE_MyClass);
+	ASSERT(un.IsMyClass());
+	ASSERT(!un.IsMyOtherClass());
+	ASSERT(!un.IsString());
 
 	un = moc;
 	ASSERT(un.type == MyUnion::UE_MyOtherClass);
+	ASSERT(!un.IsMyClass());
+	ASSERT(un.IsMyOtherClass());
+	ASSERT(!un.IsString());
 
 	un = mc;
 	ASSERT(un.type == MyUnion::UE_MyClass);
+	ASSERT(un.IsMyClass());
+	ASSERT(!un.IsMyOtherClass());
+	ASSERT(!un.IsString());
 
 	un = mc2;
 	ASSERT(un.type == MyUnion::UE_MyClass);
