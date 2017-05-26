@@ -23,11 +23,18 @@ struct Vector{
 	}
 	
 	void Assign(const Vector& other){
-		data = (T*)malloc(other.capacity*sizeof(T));
-		count = other.count;
-		capacity = other.capacity;
-		for(int i = 0; i < other.count; i++){
-			new(&data[i]) T(other.data[i]);
+		if (other.count > 0) {
+			data = (T*)malloc(other.count*sizeof(T));
+			count = other.count;
+			capacity = other.count;
+			for (int i = 0; i < other.count; i++) {
+				new(&data[i]) T(other.data[i]);
+			}
+		}
+		else {
+			data = nullptr;
+			count = 0;
+			capacity = 0;
 		}
 	}
 	
@@ -47,8 +54,10 @@ struct Vector{
 	void EnsureCapacity(int newCapacity){
 		if(newCapacity > capacity){
 			T* newData = (T*)malloc(newCapacity*sizeof(T));
-			BNS_MEMCPY(newData, data, count*sizeof(T));
-			free(data);
+			if (data != nullptr) {
+				BNS_MEMCPY(newData, data, count*sizeof(T));
+				free(data);
+			}
 			
 			data = newData;
 			capacity = newCapacity;

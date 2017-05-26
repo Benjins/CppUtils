@@ -592,6 +592,44 @@ int main(int argc, char** argv){
 
 	ASSERT(fakeAllocCount == 0);
 
+	{
+		Vector<int> c;
+		Vector<int> d = c;
+		ASSERT(c.data == nullptr);
+		ASSERT(c.count == 0);
+		ASSERT(c.capacity == 0);
+		ASSERT(d.data == nullptr);
+		ASSERT(d.count == 0);
+		ASSERT(d.capacity == 0);
+		c = d;
+		ASSERT(c.data == nullptr);
+		ASSERT(d.data == nullptr);
+		Vector<int> e;
+		e = c;
+		ASSERT(e.data == nullptr);
+		ASSERT(e.count == 0);
+		ASSERT(e.capacity == 0);
+
+		e.EnsureCapacity(10);
+		ASSERT(e.data != nullptr);
+		ASSERT(e.count == 0);
+		ASSERT(e.capacity == 10);
+		c = e;
+
+		ASSERT(c.data == nullptr);
+		ASSERT(c.count == 0);
+		ASSERT(c.capacity == 0);
+
+		e.PushBack(10);
+		e.PushBack(77);
+		ASSERT(e.count == 2);
+		ASSERT(e.capacity == 10);
+		d = e;
+		ASSERT(d.data != nullptr);
+		ASSERT(d.count == 2);
+		ASSERT(d.capacity == 2);
+	}
+
 	return 0;
 }
 
