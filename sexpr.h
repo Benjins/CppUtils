@@ -26,6 +26,11 @@ struct BNSexprNumber {
 		double fValue;
 	};
 
+	BNSexprNumber(int _iValue) {
+		iValue = _iValue;
+		isFloat = false;
+	}
+
 	BNSexprNumber(long long int _iValue) {
 		iValue = _iValue;
 		isFloat = false;
@@ -37,6 +42,11 @@ struct BNSexprNumber {
 	}
 
 	void operator=(long long int _iValue) {
+		iValue = _iValue;
+		isFloat = false;
+	}
+
+	void operator=(int _iValue) {
 		iValue = _iValue;
 		isFloat = false;
 	}
