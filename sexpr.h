@@ -35,6 +35,20 @@ struct BNSexprNumber {
 		fValue = _fValue;
 		isFloat = true;
 	}
+
+	void operator=(long long int _iValue) {
+		iValue = _iValue;
+		isFloat = false;
+	}
+
+	void operator=(double _fValue) {
+		fValue = _fValue;
+		isFloat = true;
+	}
+
+	double CoerceDouble() {
+		return isFloat ? fValue : (double)iValue;
+	}
 };
 
 struct BNSexprIdentifier {
