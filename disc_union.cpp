@@ -85,7 +85,23 @@ int main(int argc, char** argv){
 	un = mc2;
 	ASSERT(un.type == MyUnion::UE_MyClass);
 	ASSERT(str1.GetRef() == 1);
-	
+
+	un = str1;
+
+	ASSERT(str1.GetRef() == 2);
+
+	{
+		MyUnion un2 = un;
+		ASSERT(un2.type == MyUnion::UE_String);
+		ASSERT(str1.GetRef() == 3);
+		MyUnion un3;
+		un3 = un2;
+		ASSERT(un3.type == MyUnion::UE_String);
+		ASSERT(str1.GetRef() == 4);
+	}
+
+	ASSERT(str1.GetRef() == 2);
+
 	return 0;
 }
 #endif
