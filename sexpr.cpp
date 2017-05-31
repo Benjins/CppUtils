@@ -136,7 +136,7 @@ bool ParseSexprNum(BNSexpr* outSexpr, const Vector<SubString>& tokens, int* inde
 	bool isNum = true;
 	bool isFloat = false;
 	int i = 0;
-	if (tok.start[i] == '-') {
+	if (tok.start[i] == '-' || tok.start[i] == '.') {
 		if (tok.length == 1) { return false; }
 		else { i++; }
 	}
@@ -338,6 +338,14 @@ int main(int argc, char** argv) {
 	{
 		Vector<BNSexpr> sexprs;
 		ParseSexprs(&sexprs, "-");
+
+		ASSERT(sexprs.count == 1);
+		ASSERT(sexprs.data[0].type == BNSexpr::UE_BNSexprIdentifier);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, ".");
 
 		ASSERT(sexprs.count == 1);
 		ASSERT(sexprs.data[0].type == BNSexpr::UE_BNSexprIdentifier);
