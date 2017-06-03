@@ -69,7 +69,9 @@ Vector<SubString> BNSexprLexTokens(const String& toParse) {
 		cursor++;
 	}
 
-	EMIT_TOKEN();
+	if (state != LS_WhiteSpace) {
+		EMIT_TOKEN();
+	}
 
 #undef EMIT_TOKEN
 
@@ -374,6 +376,31 @@ int main(int argc, char** argv) {
 
 	{
 		Vector<SubString> toks = BNSexprLexTokens("()");
+
+		ASSERT(toks.count == 2);
+		ASSERT(toks.data[0] == "(");
+		ASSERT(toks.data[1] == ")");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("() ");
+
+		ASSERT(toks.count == 2);
+		ASSERT(toks.data[0] == "(");
+		ASSERT(toks.data[1] == ")");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("()  \"\" ");
+
+		ASSERT(toks.count == 3);
+		ASSERT(toks.data[0] == "(");
+		ASSERT(toks.data[1] == ")");
+		ASSERT(toks.data[2] == "\"\"");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("(   \t\t  \n\r\n)\n\r\t  \t\n");
 
 		ASSERT(toks.count == 2);
 		ASSERT(toks.data[0] == "(");
