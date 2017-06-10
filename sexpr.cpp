@@ -363,7 +363,7 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 	}
 }
 
-#if defined(BNSEXPR_TEST_MAIN) || 1
+#if defined(BNSEXPR_TEST_MAIN)
 
 int main(int argc, char** argv) {
 
