@@ -254,18 +254,13 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 	else if (matchSexpr->IsBNSexprIdentifier()) {
 		SubString specialMatchClause;
 		if (IdentifierIsSpecialMatchClause(matchSexpr->AsBNSexprIdentifier().identifier, &specialMatchClause)) {
+#define DO_MATCH() do { BNSexpr* matched = args.Get(*index); (*index)++; *matched = *sexpr; return true; } while(0)
 			if (specialMatchClause == "") {
-				BNSexpr* matched = args.Get(*index);
-				(*index)++;
-				*matched = *sexpr;
-				return true;
+				DO_MATCH();
 			}
 			else if (specialMatchClause == "num") {
 				if (sexpr->IsBNSexprNumber()) {
-					BNSexpr* matched = args.Get(*index);
-					(*index)++;
-					*matched = *sexpr;
-					return true;
+					DO_MATCH();
 				}
 				else {
 					return false;
@@ -273,11 +268,7 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 			}
 			else if (specialMatchClause == "id") {
 				if (sexpr->IsBNSexprIdentifier()) {
-					BNSexpr* matched = args.Get(*index);
-					(*index)++;
-					index++;
-					*matched = *sexpr;
-					return true;
+					DO_MATCH();
 				}
 				else {
 					return false;
@@ -285,11 +276,7 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 			}
 			else if (specialMatchClause == "str") {
 				if (sexpr->IsBNSexprString()) {
-					BNSexpr* matched = args.Get(*index);
-					(*index)++;
-					index++;
-					*matched = *sexpr;
-					return true;
+					DO_MATCH();
 				}
 				else {
 					return false;
@@ -299,6 +286,7 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 				ASSERT(false);
 				return false;
 			}
+#undef DO_MATCH
 		}
 		else {
 			return sexpr->IsBNSexprIdentifier()
@@ -307,11 +295,53 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 	}
 	else if (matchSexpr->IsBNSexprParenList()) {
 		if (sexpr->IsBNSexprParenList()) {
-			if (sexpr->AsBNSexprParenList().children.count == matchSexpr->AsBNSexprParenList().children.count) {
+			Vector<BNSexpr>& matchChildren = matchSexpr->AsBNSexprParenList().children;
+			Vector<BNSexpr>& sexprChildren = sexpr->AsBNSexprParenList().children;
+			if (matchChildren.count > 0
+			 && matchChildren.Back().IsBNSexprIdentifier()
+			 && matchChildren.Back().AsBNSexprIdentifier().identifier == "@{...}") {
+				if (sexprChildren.count >= matchChildren.count - 2) {
+					bool allMatch = true;
+					for (int i = 0; i < matchChildren.count - 2; i++) {
+						BNSexpr* sepxrChild = &sexprChildren.data[i];
+						BNSexpr* matchChild = &matchChildren.data[i];
+						if (!MatchSexpr(sepxrChild, matchChild, args, index)) {
+							allMatch = false;
+							break;
+						}
+					}
+
+					BNSexprParenList matchRest;
+					BNSexpr* matchChild = &matchChildren.data[matchChildren.count - 2];
+					for (int i = matchChildren.count - 2; i < sexprChildren.count; i++) {
+						BNSexpr* sepxrChild = &sexprChildren.data[i];
+						if (!MatchSexpr(sepxrChild, matchChild, args, index)) {
+							allMatch = false;
+						}
+						else {
+							(*index)--;
+							matchRest.children.PushBack(*args.Get(*index));
+						}
+					}
+
+					if (allMatch) {
+						(*index)++;
+						(*args.Back()) = matchRest;
+						return true;
+					}
+					else {
+						return false;
+					}
+				}
+				else {
+					return false;
+				}
+			}
+			else if (sexprChildren.count == matchChildren.count) {
 				bool allMatch = true;
-				for (int i = 0; i < sexpr->AsBNSexprParenList().children.count; i++) {
-					BNSexpr* sepxrChild = &sexpr->AsBNSexprParenList().children.data[i];
-					BNSexpr* matchChild = &matchSexpr->AsBNSexprParenList().children.data[i];
+				for (int i = 0; i < sexprChildren.count; i++) {
+					BNSexpr* sepxrChild = &sexprChildren.data[i];
+					BNSexpr* matchChild = &matchChildren.data[i];
 					if (!MatchSexpr(sepxrChild, matchChild, args, index)) {
 						allMatch = false;
 						break;
@@ -764,6 +794,92 @@ int main(int argc, char** argv) {
 
 		bool res = MatchSexpr(&sexprs.data[0], "(+ (* 2 3) (* 6 5))", {});
 		ASSERT(res == true);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(+ 2 3 4 5)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(+ @{num} @{...})", { &nums });
+		ASSERT(res == true);
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 4);
+		for (int i = 0; i < 4; i++) {
+			ASSERT(nums.AsBNSexprParenList().children.data[i].IsBNSexprNumber());
+			ASSERT(nums.AsBNSexprParenList().children.data[i].AsBNSexprNumber() == i + 2);
+		}
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(state my-name (option 'yo' => high) (option \"no\" => low) (option 'what' => unknown))");
+
+		BNSexpr stateName, options;
+		bool res = MatchSexpr(&sexprs.data[0], "(state @{id} @{} @{...})", { &stateName, &options });
+		ASSERT(res == true);
+		ASSERT(stateName.IsBNSexprIdentifier());
+		ASSERT(stateName.AsBNSexprIdentifier().identifier == "my-name");
+		ASSERT(options.IsBNSexprParenList());
+		ASSERT(options.AsBNSexprParenList().children.count == 3);
+
+		const char* diags[3] = { "'yo'", "\"no\"", "'what'" };
+		const char* newStates[3] = {"high", "low", "unknown"};
+		for (int i = 0; i < 3; i++) {
+			BNSexpr str, newState;
+			BNSexpr* subSexpr = &options.AsBNSexprParenList().children.data[i];
+			bool subRes = MatchSexpr(subSexpr, "(option @{str} => @{id})", {&str, &newState});
+			ASSERT(subRes == true);
+			ASSERT(str.IsBNSexprString());
+			ASSERT(str.AsBNSexprString().value == diags[i]);
+			ASSERT(newState.IsBNSexprIdentifier());
+			ASSERT(newState.AsBNSexprIdentifier().identifier == newStates[i]);
+		}
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum @{num} @{...})", { &nums });
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 0);
+	}
+
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum the nums)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum the nums @{num} @{...})", { &nums });
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 0);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum 3)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum @{num} @{...})", { &nums });
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 1);
+		ASSERT(nums.AsBNSexprParenList().children.data[0].IsBNSexprNumber());
+		ASSERT(nums.AsBNSexprParenList().children.data[0].AsBNSexprNumber() == 3);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum the nums 3)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum the nums @{num} @{...})", { &nums });
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 1);
+		ASSERT(nums.AsBNSexprParenList().children.data[0].IsBNSexprNumber());
+		ASSERT(nums.AsBNSexprParenList().children.data[0].AsBNSexprNumber() == 3);
 	}
 
 	return 0;
