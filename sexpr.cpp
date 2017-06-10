@@ -87,7 +87,10 @@ bool ParseSexprParenList(BNSexpr* outSexpr, const Vector<SubString>& tokens, int
 		Vector<BNSexpr> children;
 		while (true) {
 			BNSexpr sexpr;
-			if (tokens.data[*index] == ")") {
+			if (*index >= tokens.count) {
+				break;
+			}
+			else if (tokens.data[*index] == ")") {
 				(*index)++;
 				BNSexprParenList parent;
 				// TODO: avoid copy
@@ -121,7 +124,8 @@ bool ParseSexprString(BNSexpr* outSexpr, const Vector<SubString>& tokens, int* i
 }
 
 bool ParseSexprIdentifer(BNSexpr* outSexpr, const Vector<SubString>& tokens, int* index) {
-	if (tokens.data[*index].start[0] != '"' && tokens.data[*index].start[0] != '\'') {
+	if (tokens.data[*index].start[0] != '"' && tokens.data[*index].start[0] != '\''
+	&& tokens.data[*index] != "(" && tokens.data[*index] != ")") {
 		BNSexprIdentifier ident;
 		ident.identifier = tokens.data[*index];
 		*outSexpr = ident;
@@ -521,6 +525,30 @@ int main(int argc, char** argv) {
 		ASSERT(sexprs.data[0].AsBNSexprParenList().children.data[1].type == BNSexpr::UE_BNSexprString);
 		ASSERT(sexprs.data[0].AsBNSexprParenList().children.data[1].AsBNSexprString().value == "'hello'");
 	}
+	
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(yo 'hello')");
+		ASSERT(res == BNSexpr_Success);
+	}
+	
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(yo 'hello'))");
+		ASSERT(res == BNSexpr_Error);
+	}
+	
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(yo 'hello'");
+		ASSERT(res == BNSexpr_Error);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, ")(");
+		ASSERT(res == BNSexpr_Error);
+	}
 
 	{
 		Vector<BNSexpr> sexprs;
@@ -750,6 +778,23 @@ int main(int argc, char** argv) {
 		ASSERT(paren.IsBNSexprParenList());
 		ASSERT(paren.AsBNSexprParenList().children.count == 0);
 	}
+	
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "('yes' 'no')");
+
+		bool res = MatchSexpr(&sexprs.data[0], "('yes' 'no')", {});
+		ASSERT(res == true);
+	}
+	
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "('yes' 5)");
+
+		BNSexpr str;
+		bool res = MatchSexpr(&sexprs.data[0], "('yes' @{str})", {&str});
+		ASSERT(res == false);
+	}
 
 	{
 		Vector<BNSexpr> sexprs;
@@ -882,6 +927,60 @@ int main(int argc, char** argv) {
 		ASSERT(nums.AsBNSexprParenList().children.data[0].AsBNSexprNumber() == 3);
 	}
 
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum the)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum the nums @{num} @{...})", { &nums });
+		ASSERT(res == false);
+	}
+	
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum the nums 0 3 4 er 5)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum the nums @{num} @{...})", { &nums });
+		ASSERT(res == false);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum the nums 0 3 4 (4 5 3) 5)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum the nums @{num} @{...})", { &nums });
+		ASSERT(res == false);
+	}
+	
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum the nums 0 3 4 '34' 5)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum the nums @{num} @{...})", { &nums });
+		ASSERT(res == false);
+	}
+	
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum YES nums 0 3 4 5)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum the nums @{num} @{...})", { &nums });
+		ASSERT(res == false);
+	}
+	
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(sum YES nums 0 3 4 5)");
+
+		BNSexpr nums;
+		bool res = MatchSexpr(&sexprs.data[0], "(sum the nums @{num} @{...})", { &nums });
+		ASSERT(res == false);
+	}
+	
 	return 0;
 }
 
