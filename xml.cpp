@@ -408,6 +408,39 @@ int main(int argc, char** argv) {
 	String typeVal2;
 	ASSERT(doc4.elements.GetById(uniformId2)->attributes.LookUp("type", &typeVal2) && typeVal2 == "vec4");
 
+	{
+		String xmlStr = "<tr> <td c='3'></td> <td c='4'></td> </tr>";
+		XMLDoc xmlDoc;
+		ParseXMLString(xmlStr, &xmlDoc);
+
+		XMLElement* root = &xmlDoc.elements.vals[0];
+		ASSERT(root->GetChild("td") != nullptr);
+		ASSERT(root->GetChild("td", 1) != nullptr);
+		ASSERT(root->GetChild("td", 2) == nullptr);
+		ASSERT(root->GetChildWithAttr("td", "c", "3") != nullptr);
+		ASSERT(root->GetChildWithAttr("td", "c", "4") != nullptr);
+		ASSERT(root->GetChildWithAttr("td", "c", "9") == nullptr);
+		ASSERT(root->GetChildWithAttr("td", "d", "3") == nullptr);
+
+		ASSERT(root->GetChild("td")->GetExistingAttrValue("c") == "3");
+	}
+
+	{
+		String xmlStr = "<tr fre='\\\\'></tr>";
+		XMLDoc xmlDoc;
+		ParseXMLString(xmlStr, &xmlDoc);
+		XMLElement* root = &xmlDoc.elements.vals[0];
+		ASSERT(root->GetExistingAttrValue("fre") == "\\\\")
+	}
+
+	{
+		String xmlStr = "<tr fre='\\''></tr>";
+		XMLDoc xmlDoc;
+		ParseXMLString(xmlStr, &xmlDoc);
+		XMLElement* root = &xmlDoc.elements.vals[0];
+		ASSERT(root->GetExistingAttrValue("fre") == "\\\'")
+	}
+
 	return 0;
 }
 
