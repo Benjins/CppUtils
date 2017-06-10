@@ -188,7 +188,7 @@ Vector<SubString> LexString(String string) {
 
 		case LS_ANNOTATION_WS: {
 			if (*fileCursor == ']') {
-				tokens.PushBack(string.GetSubString((int)(fileCursor - string.string + 1), 3));
+				tokens.PushBack(string.GetSubString((int)(fileCursor - string.string), 3));
 				currState = LS_BLOCKCOMMENT;
 				break;
 			}
@@ -209,8 +209,8 @@ Vector<SubString> LexString(String string) {
 		case LS_BLOCKCOMMENT: {
 			if (fileCursor - string.string < fileSize - 2 && fileCursor[0] == '*' && fileCursor[1] == '/') {
 				currState = LS_WHITESPACE;
-				fileCursor += 2;
-				currToken.start += 2;
+				fileCursor += 1;
+				currToken.start += 1;
 			}
 			else if (*fileCursor == '[' && *(fileCursor - 1) == '*' && *(fileCursor - 2) == '/') {
 				tokens.PushBack(string.GetSubString((int)(fileCursor - string.string - 2), 3));
@@ -327,6 +327,89 @@ int main(int argc, char** argv) {
 		for (int i = 0; i < actualToks.count; i++) {
 			ASSERT(actualToks.data[i] == expectedToks[i]);
 		}
+	}
+	
+	{
+		const char* string = "1.234+2.345";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 3);
+		ASSERT(actualToks.data[0] == "1.234");
+		ASSERT(actualToks.data[1] == "+");
+		ASSERT(actualToks.data[2] == "2.345");
+	}
+
+	{
+		const char* string = "1.234*2.345+4";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 5);
+		ASSERT(actualToks.data[0] == "1.234");
+		ASSERT(actualToks.data[1] == "*");
+		ASSERT(actualToks.data[2] == "2.345");
+		ASSERT(actualToks.data[3] == "+");
+		ASSERT(actualToks.data[4] == "4");
+	}
+	
+	{
+		const char* string = "/*24*/5";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 1);
+		ASSERT(actualToks.data[0] == "5");
+	}
+	
+	{
+		const char* string = "/*24*/5//45\n6";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 2);
+		ASSERT(actualToks.data[0] == "5");
+		ASSERT(actualToks.data[1] == "6");
+	}
+	
+	{
+		const char* string = "/*[Arr]*///45\n6";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 4);
+		ASSERT(actualToks.data[0] == "/*[");
+		ASSERT(actualToks.data[1] == "Arr");
+		ASSERT(actualToks.data[2] == "]*/");
+		ASSERT(actualToks.data[3] == "6");
+	}
+
+	{
+		const char* string = "/*[Arr]*/56//45\n6";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 5);
+		ASSERT(actualToks.data[0] == "/*[");
+		ASSERT(actualToks.data[1] == "Arr");
+		ASSERT(actualToks.data[2] == "]*/");
+		ASSERT(actualToks.data[3] == "56");
+		ASSERT(actualToks.data[4] == "6");
+	}
+
+	{
+		const char* string = "/*[Arr()]*/56//45\n6";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 7);
+		ASSERT(actualToks.data[0] == "/*[");
+		ASSERT(actualToks.data[1] == "Arr");
+		ASSERT(actualToks.data[2] == "(");
+		ASSERT(actualToks.data[3] == ")");
+		ASSERT(actualToks.data[4] == "]*/");
+		ASSERT(actualToks.data[5] == "56");
+		ASSERT(actualToks.data[6] == "6");
+	}
+
+	{
+		const char* string = "/*[Arr(\"gge\")]*/56//45\n6";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 8);
+		ASSERT(actualToks.data[0] == "/*[");
+		ASSERT(actualToks.data[1] == "Arr");
+		ASSERT(actualToks.data[2] == "(");
+		ASSERT(actualToks.data[3] == "\"gge\"");
+		ASSERT(actualToks.data[4] == ")");
+		ASSERT(actualToks.data[5] == "]*/");
+		ASSERT(actualToks.data[6] == "56");
+		ASSERT(actualToks.data[7] == "6");
 	}
 
 	return 0;
