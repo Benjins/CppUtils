@@ -269,7 +269,7 @@ Vector<SubString> LexString(String string) {
 		fileCursor++;
 	}
 
-	if (currState != LS_WHITESPACE) {
+	if (currState != LS_WHITESPACE && currState != LS_BLOCKCOMMENT && currState != LS_LINECOMMENT) {
 		fileCursor--;
 		EMIT_TOKEN();
 		fileCursor++;
@@ -410,6 +410,111 @@ int main(int argc, char** argv) {
 		ASSERT(actualToks.data[5] == "]*/");
 		ASSERT(actualToks.data[6] == "56");
 		ASSERT(actualToks.data[7] == "6");
+	}
+
+	{
+		const char* string = "23/*24*/5";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 2);
+		ASSERT(actualToks.data[0] == "23");
+		ASSERT(actualToks.data[1] == "5");
+	}
+
+	{
+		const char* string = "023/*24*/5";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 2);
+		ASSERT(actualToks.data[0] == "023");
+		ASSERT(actualToks.data[1] == "5");
+	}
+
+	{
+		const char* string = "0x23/*24*/5";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 2);
+		ASSERT(actualToks.data[0] == "0x23");
+		ASSERT(actualToks.data[1] == "5");
+	}
+
+	{
+		const char* string = "0X23/*24*/5";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 2);
+		ASSERT(actualToks.data[0] == "0X23");
+		ASSERT(actualToks.data[1] == "5");
+	}
+
+	{
+		const char* string = "0X2DEADBEEF3/*24*/5";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 2);
+		ASSERT(actualToks.data[0] == "0X2DEADBEEF3");
+		ASSERT(actualToks.data[1] == "5");
+	}
+
+	{
+		const char* string = "0X2deadbeef3/*24*/5";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 2);
+		ASSERT(actualToks.data[0] == "0X2deadbeef3");
+		ASSERT(actualToks.data[1] == "5");
+	}
+
+	{
+		const char* string = "23\"er\"45";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 3);
+		ASSERT(actualToks.data[0] == "23");
+		ASSERT(actualToks.data[1] == "\"er\"");
+		ASSERT(actualToks.data[2] == "45");
+	}
+
+	{
+		const char* string = "23\"er\"//45";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 2);
+		ASSERT(actualToks.data[0] == "23");
+		ASSERT(actualToks.data[1] == "\"er\"");
+	}
+
+	{
+		const char* string = "23\"er\"//45\n34";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 3);
+		ASSERT(actualToks.data[0] == "23");
+		ASSERT(actualToks.data[1] == "\"er\"");
+		ASSERT(actualToks.data[2] == "34");
+	}
+
+	{
+		const char* string = "23\"er\\\"\"//45";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 2);
+		ASSERT(actualToks.data[0] == "23");
+		ASSERT(actualToks.data[1] == "\"er\\\"\"");
+	}
+
+	{
+		const char* string = "'e'";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 1);
+		ASSERT(actualToks.data[0] == "'e'");
+	}
+
+	{
+		const char* string = "'\\''";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 1);
+		ASSERT(actualToks.data[0] == "'\\''");
+	}
+
+	{
+		const char* string = "'A'5//er\n4";
+		Vector<SubString> actualToks = LexString(string);
+		ASSERT(actualToks.count == 3);
+		ASSERT(actualToks.data[0] == "'A'");
+		ASSERT(actualToks.data[1] == "5");
+		ASSERT(actualToks.data[2] == "4");
 	}
 
 	return 0;
