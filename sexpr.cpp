@@ -143,17 +143,22 @@ bool ParseSexprNum(BNSexpr* outSexpr, const Vector<SubString>& tokens, int* inde
 		else { i++; }
 	}
 
+	bool atLeastOneDigit = false;
+
 	for (;  i < tok.length; i++) {
-		if (!IsDigit(tok.start[i]) && tok.start[i] != '.') {
-			isNum = false;
-			break;
+		if (IsDigit(tok.start[i])){
+			atLeastOneDigit = true;
 		}
 		else if (tok.start[i] == '.') {
 			isFloat = true;
 		}
+		else {
+			isNum = false;
+			break;
+		}
 	}
 
-	if (isNum) {
+	if (atLeastOneDigit && isNum) {
 		(*index)++;
 		if (isFloat) {
 			BNSexprNumber num = BNSexprNumber(Atof(tok.start));
@@ -347,7 +352,23 @@ int main(int argc, char** argv) {
 
 	{
 		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "---");
+
+		ASSERT(sexprs.count == 1);
+		ASSERT(sexprs.data[0].type == BNSexpr::UE_BNSexprIdentifier);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
 		ParseSexprs(&sexprs, ".");
+
+		ASSERT(sexprs.count == 1);
+		ASSERT(sexprs.data[0].type == BNSexpr::UE_BNSexprIdentifier);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "...");
 
 		ASSERT(sexprs.count == 1);
 		ASSERT(sexprs.data[0].type == BNSexpr::UE_BNSexprIdentifier);
