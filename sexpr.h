@@ -56,7 +56,16 @@ struct BNSexprNumber {
 		isFloat = true;
 	}
 
-	double CoerceDouble() {
+	bool operator==(const BNSexprNumber& other) {
+		if (!isFloat && !other.isFloat) {
+			return iValue == other.iValue;
+		}
+		else {
+			return CoerceDouble() == other.CoerceDouble();
+		}
+	}
+		
+	double CoerceDouble() const {
 		return isFloat ? fValue : (double)iValue;
 	}
 };
@@ -92,5 +101,7 @@ enum BNSexprParseResult {
 };
 
 BNSexprParseResult ParseSexprs(Vector<BNSexpr>* outSexprs, const String& str);
+
+bool MatchSexpr(BNSexpr* sexpr, const char* format, const Vector<BNSexpr*>& args);
 
 #endif

@@ -710,6 +710,15 @@ int main(int argc, char** argv){
 		ASSERT(substr.GetRef() == 1);
 		
 	}
+
+	{
+		String str1 = "THE ONLY";
+
+		for (int i = 0; i < str1.GetLength(); i++) {
+			SubString substr = str1.GetSubString(i, 0);
+			ASSERT(substr == "");
+		}
+	}
 	
 	{
 		char str1B[] = "ABCDEFGHIJ";

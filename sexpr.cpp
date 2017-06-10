@@ -209,10 +209,220 @@ BNSexprParseResult ParseSexprs(Vector<BNSexpr>* outSexprs, const String& str) {
 	return BNSexpr_Success;
 }
 
-#if defined(BNSEXPR_TEST_MAIN)
+bool IdentifierIsSpecialMatchClause(const SubString& name, SubString* outClause) {
+	if (name.length >= 3) {
+		if (name.start[0] == '@' && name.start[1] == '{') {
+			if (name.start[name.length - 1] == '}') {
+				*outClause = name;
+				outClause->start += 2;
+				outClause->length -= 3;
+
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& args, int* index);
+
+bool MatchSexpr(BNSexpr* sexpr, const char* format, const Vector<BNSexpr*>& args) {
+	Vector<BNSexpr> sexprs;
+	BNSexprParseResult res = ParseSexprs(&sexprs, format);
+	ASSERT(res == BNSexpr_Success);
+	ASSERT(sexprs.count == 1);
+
+	BNSexpr* matchSexpr = &sexprs.data[0];
+	int idx = 0;
+	bool isMatch = MatchSexpr(sexpr, matchSexpr, args, &idx);
+
+	if (isMatch) {
+		ASSERT(idx == args.count);
+	}
+
+	return isMatch;
+}
+
+bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& args, int* index) {
+	if (matchSexpr->IsBNSexprString()) {
+		return sexpr->IsBNSexprString() && sexpr->AsBNSexprString().value == matchSexpr->AsBNSexprString().value;
+	}
+	else if (matchSexpr->IsBNSexprNumber()) {
+		return sexpr->IsBNSexprNumber() && sexpr->AsBNSexprNumber() == matchSexpr->AsBNSexprNumber();
+	}
+	else if (matchSexpr->IsBNSexprIdentifier()) {
+		SubString specialMatchClause;
+		if (IdentifierIsSpecialMatchClause(matchSexpr->AsBNSexprIdentifier().identifier, &specialMatchClause)) {
+			if (specialMatchClause == "") {
+				BNSexpr* matched = args.Get(*index);
+				(*index)++;
+				*matched = *sexpr;
+				return true;
+			}
+			else if (specialMatchClause == "num") {
+				if (sexpr->IsBNSexprNumber()) {
+					BNSexpr* matched = args.Get(*index);
+					(*index)++;
+					*matched = *sexpr;
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else if (specialMatchClause == "id") {
+				if (sexpr->IsBNSexprIdentifier()) {
+					BNSexpr* matched = args.Get(*index);
+					(*index)++;
+					index++;
+					*matched = *sexpr;
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else if (specialMatchClause == "str") {
+				if (sexpr->IsBNSexprString()) {
+					BNSexpr* matched = args.Get(*index);
+					(*index)++;
+					index++;
+					*matched = *sexpr;
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else {
+				ASSERT(false);
+				return false;
+			}
+		}
+		else {
+			return sexpr->IsBNSexprIdentifier()
+				&& sexpr->AsBNSexprIdentifier().identifier == matchSexpr->AsBNSexprIdentifier().identifier;
+		}
+	}
+	else if (matchSexpr->IsBNSexprParenList()) {
+		if (sexpr->IsBNSexprParenList()) {
+			if (sexpr->AsBNSexprParenList().children.count == matchSexpr->AsBNSexprParenList().children.count) {
+				bool allMatch = true;
+				for (int i = 0; i < sexpr->AsBNSexprParenList().children.count; i++) {
+					BNSexpr* sepxrChild = &sexpr->AsBNSexprParenList().children.data[i];
+					BNSexpr* matchChild = &matchSexpr->AsBNSexprParenList().children.data[i];
+					if (!MatchSexpr(sepxrChild, matchChild, args, index)) {
+						allMatch = false;
+						break;
+					}
+				}
+
+				return allMatch;
+			}
+		}
+		return false;
+	}
+	else {
+		ASSERT(false);
+		return false;
+	}
+}
+
+#if defined(BNSEXPR_TEST_MAIN) || 1
 
 int main(int argc, char** argv) {
 
+	// Test Sexpr lexing
+	{
+		Vector<SubString> toks = BNSexprLexTokens("((()))");
+		ASSERT(toks.count == 6);
+		for (int i = 0; i < 3; i++) { ASSERT(toks.data[i] == "("); }
+		for (int i = 3; i < 6; i++) { ASSERT(toks.data[i] == ")"); }
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("(this is (1.232)\"meeee\")");
+
+		ASSERT(toks.count == 8);
+		ASSERT(toks.data[0] == "(");
+		ASSERT(toks.data[1] == "this");
+		ASSERT(toks.data[2] == "is");
+		ASSERT(toks.data[3] == "(");
+		ASSERT(toks.data[4] == "1.232");
+		ASSERT(toks.data[5] == ")");
+		ASSERT(toks.data[6] == "\"meeee\"");
+		ASSERT(toks.data[7] == ")");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("()");
+
+		ASSERT(toks.count == 2);
+		ASSERT(toks.data[0] == "(");
+		ASSERT(toks.data[1] == ")");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("() ");
+
+		ASSERT(toks.count == 2);
+		ASSERT(toks.data[0] == "(");
+		ASSERT(toks.data[1] == ")");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("()  \"\" ");
+
+		ASSERT(toks.count == 3);
+		ASSERT(toks.data[0] == "(");
+		ASSERT(toks.data[1] == ")");
+		ASSERT(toks.data[2] == "\"\"");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("(   \t\t  \n\r\n)\n\r\t  \t\n");
+
+		ASSERT(toks.count == 2);
+		ASSERT(toks.data[0] == "(");
+		ASSERT(toks.data[1] == ")");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("helllo");
+
+		ASSERT(toks.count == 1);
+		ASSERT(toks.data[0] == "helllo");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("\"\"\"\"");
+
+		ASSERT(toks.count == 2);
+		ASSERT(toks.data[0] == "\"\"");
+		ASSERT(toks.data[1] == "\"\"");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("\"aa\"\"bb\"");
+
+		ASSERT(toks.count == 2);
+		ASSERT(toks.data[0] == "\"aa\"");
+		ASSERT(toks.data[1] == "\"bb\"");
+	}
+
+	{
+		Vector<SubString> toks = BNSexprLexTokens("\"aa\"(1.2\"\")");
+
+		ASSERT(toks.count == 5);
+		ASSERT(toks.data[0] == "\"aa\"");
+		ASSERT(toks.data[1] == "(");
+		ASSERT(toks.data[2] == "1.2");
+		ASSERT(toks.data[3] == "\"\"");
+		ASSERT(toks.data[4] == ")");
+	}
+
+	// Test Sexpr parsing
 	{
 		Vector<BNSexpr> sexprs;
 		ParseSexprs(&sexprs, "(this is me)");
@@ -374,92 +584,186 @@ int main(int argc, char** argv) {
 		ASSERT(sexprs.data[0].type == BNSexpr::UE_BNSexprIdentifier);
 	}
 
+	// Test Sexpr matching
 	{
-		Vector<SubString> toks = BNSexprLexTokens("((()))");
-		ASSERT(toks.count == 6);
-		for (int i = 0; i < 3; i++) { ASSERT(toks.data[i] == "("); }
-		for (int i = 3; i < 6; i++) { ASSERT(toks.data[i] == ")"); }
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(this is me)");	
+
+		BNSexpr id1, id2, id3;
+		bool res = MatchSexpr(&sexprs.data[0], "(@{id} @{id} @{id})", { &id1, &id2, &id3 } );
+
+		ASSERT(res == true);
+		ASSERT(id1.IsBNSexprIdentifier());
+		ASSERT(id2.IsBNSexprIdentifier());
+		ASSERT(id3.IsBNSexprIdentifier());
+		ASSERT(id1.AsBNSexprIdentifier().identifier == "this");
+		ASSERT(id2.AsBNSexprIdentifier().identifier == "is");
+		ASSERT(id3.AsBNSexprIdentifier().identifier == "me");
 	}
 
 	{
-		Vector<SubString> toks = BNSexprLexTokens("(this is (1.232)\"meeee\")");
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "'yo'");
 
-		ASSERT(toks.count == 8);
-		ASSERT(toks.data[0] == "(");
-		ASSERT(toks.data[1] == "this");
-		ASSERT(toks.data[2] == "is");
-		ASSERT(toks.data[3] == "(");
-		ASSERT(toks.data[4] == "1.232");
-		ASSERT(toks.data[5] == ")");
-		ASSERT(toks.data[6] == "\"meeee\"");
-		ASSERT(toks.data[7] == ")");
+		BNSexpr str;
+		bool res = MatchSexpr(&sexprs.data[0], "@{str}", { &str });
+		ASSERT(res == true);
+		ASSERT(str.IsBNSexprString());
+		ASSERT(str.AsBNSexprString().value == "'yo'");
 	}
 
 	{
-		Vector<SubString> toks = BNSexprLexTokens("()");
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "'yo'");
 
-		ASSERT(toks.count == 2);
-		ASSERT(toks.data[0] == "(");
-		ASSERT(toks.data[1] == ")");
+		BNSexpr str;
+		bool res = MatchSexpr(&sexprs.data[0], "@{}", { &str });
+		ASSERT(res == true);
+		ASSERT(str.IsBNSexprString());
+		ASSERT(str.AsBNSexprString().value == "'yo'");
 	}
 
 	{
-		Vector<SubString> toks = BNSexprLexTokens("() ");
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "'yo'");
 
-		ASSERT(toks.count == 2);
-		ASSERT(toks.data[0] == "(");
-		ASSERT(toks.data[1] == ")");
+		BNSexpr str;
+		bool res = MatchSexpr(&sexprs.data[0], "@{id}", { &str });
+		ASSERT(res == false);
 	}
 
 	{
-		Vector<SubString> toks = BNSexprLexTokens("()  \"\" ");
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "'yo'");
 
-		ASSERT(toks.count == 3);
-		ASSERT(toks.data[0] == "(");
-		ASSERT(toks.data[1] == ")");
-		ASSERT(toks.data[2] == "\"\"");
+		BNSexpr str;
+		bool res = MatchSexpr(&sexprs.data[0], "@{num}", { &str });
+		ASSERT(res == false);
 	}
 
 	{
-		Vector<SubString> toks = BNSexprLexTokens("(   \t\t  \n\r\n)\n\r\t  \t\n");
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "4561");
 
-		ASSERT(toks.count == 2);
-		ASSERT(toks.data[0] == "(");
-		ASSERT(toks.data[1] == ")");
+		BNSexpr num;
+		bool res = MatchSexpr(&sexprs.data[0], "@{num}", { &num });
+		ASSERT(res == true);
+		ASSERT(num.IsBNSexprNumber());
+		ASSERT(!num.AsBNSexprNumber().isFloat);
+		ASSERT(num.AsBNSexprNumber().iValue == 4561);
 	}
 
 	{
-		Vector<SubString> toks = BNSexprLexTokens("helllo");
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(hello (blah 23 45) 'erg')");
 
-		ASSERT(toks.count == 1);
-		ASSERT(toks.data[0] == "helllo");
+		BNSexpr num1, num2, str;
+		bool res = MatchSexpr(&sexprs.data[0], "(hello (blah @{num} @{num}) @{str})", { &num1, &num2, &str });
+		ASSERT(res == true);
+		ASSERT(num1.IsBNSexprNumber());
+		ASSERT(num2.IsBNSexprNumber());
+		ASSERT(num1.AsBNSexprNumber() == 23);
+		ASSERT(num2.AsBNSexprNumber() == 45);
+		ASSERT(str.IsBNSexprString());
+		ASSERT(str.AsBNSexprString().value == "'erg'");
 	}
 
 	{
-		Vector<SubString> toks = BNSexprLexTokens("\"\"\"\"");
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(hello (blah 23 45) 'erg')");
 
-		ASSERT(toks.count == 2);
-		ASSERT(toks.data[0] == "\"\"");
-		ASSERT(toks.data[1] == "\"\"");
+		BNSexpr num1, num2, str;
+		bool res = MatchSexpr(&sexprs.data[0], "(hello (blah @{} @{}) @{})", { &num1, &num2, &str });
+		ASSERT(res == true);
+		ASSERT(num1.IsBNSexprNumber());
+		ASSERT(num2.IsBNSexprNumber());
+		ASSERT(num1.AsBNSexprNumber() == 23);
+		ASSERT(num2.AsBNSexprNumber() == 45);
+		ASSERT(str.IsBNSexprString());
+		ASSERT(str.AsBNSexprString().value == "'erg'");
 	}
 
 	{
-		Vector<SubString> toks = BNSexprLexTokens("\"aa\"\"bb\"");
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(hello (blah 23 45) 'erg')");
 
-		ASSERT(toks.count == 2);
-		ASSERT(toks.data[0] == "\"aa\"");
-		ASSERT(toks.data[1] == "\"bb\"");
+		BNSexpr num1, num2, str;
+		bool res = MatchSexpr(&sexprs.data[0], "(hello (blah @{id} @{num}) @{str})", { &num1, &num2, &str });
+		ASSERT(res == false);
 	}
 
 	{
-		Vector<SubString> toks = BNSexprLexTokens("\"aa\"(1.2\"\")");
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(hello (blah 23 45) 'erg')");
 
-		ASSERT(toks.count == 5);
-		ASSERT(toks.data[0] == "\"aa\"");
-		ASSERT(toks.data[1] == "(");
-		ASSERT(toks.data[2] == "1.2");
-		ASSERT(toks.data[3] == "\"\"");
-		ASSERT(toks.data[4] == ")");
+		BNSexpr num1, num2, str;
+		bool res = MatchSexpr(&sexprs.data[0], "(hello (blah (@{num}) @{num}) @{str})", { &num1, &num2, &str });
+		ASSERT(res == false);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(hello (blah 23 45) 'erg')");
+
+		BNSexpr num1, num2, str;
+		bool res = MatchSexpr(&sexprs.data[0], "(hello (@{num} blah @{num}) @{str})", { &num1, &num2, &str });
+		ASSERT(res == false);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "()");
+
+		BNSexpr paren;
+		bool res = MatchSexpr(&sexprs.data[0], "@{}", { &paren });
+		ASSERT(res == true);
+		ASSERT(paren.IsBNSexprParenList());
+		ASSERT(paren.AsBNSexprParenList().children.count == 0);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(+ (* 2 3) (* 6 5))");
+
+		int expected[4] = { 2, 3, 6, 5 };
+		BNSexpr nums[4];
+		bool res = MatchSexpr(&sexprs.data[0], "(+ (* @{num} @{num}) (* @{num} @{num}))", 
+								{ &nums[0], &nums[1], &nums[2], &nums[3] });
+		ASSERT(res == true);
+		for (int i = 0; i < 4; i++) {
+			ASSERT(nums[i].IsBNSexprNumber());
+			ASSERT(!nums[i].AsBNSexprNumber().isFloat);
+			ASSERT(nums[i].AsBNSexprNumber().iValue == expected[i]);
+		}
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(+ (* 2 3) (* 6 5))");
+
+		BNSexpr subExpr, num1, num2;
+		bool res = MatchSexpr(&sexprs.data[0], "(+ @{} (* @{num} @{num}))", { &subExpr, &num1, &num2});
+		ASSERT(res == true);
+		ASSERT(subExpr.IsBNSexprParenList());
+		ASSERT(subExpr.AsBNSexprParenList().children.count == 3);
+		ASSERT(num1.IsBNSexprNumber());
+		ASSERT(num2.IsBNSexprNumber());
+		ASSERT(num1.AsBNSexprNumber() == 6);
+		ASSERT(num2.AsBNSexprNumber() == 5);
+
+		BNSexpr subNum;
+		bool res2 = MatchSexpr(&subExpr, "(* @{num} 3)", { &subNum });
+		ASSERT(res2 == true);
+		ASSERT(subNum.IsBNSexprNumber());
+		ASSERT(subNum.AsBNSexprNumber() == 2);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(+ (* 2 3) (* 6 5))");
+
+		bool res = MatchSexpr(&sexprs.data[0], "(+ (* 2 3) (* 6 5))", {});
+		ASSERT(res == true);
 	}
 
 	return 0;
