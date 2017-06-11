@@ -330,7 +330,7 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 
 					if (allMatch) {
 						(*index)++;
-						(*args.Back()) = matchRest;
+						*(args.data[(*index) - 1]) = matchRest;
 						return true;
 					}
 					else {
@@ -981,6 +981,61 @@ int main(int argc, char** argv) {
 		ASSERT(res == false);
 	}
 	
+	{
+		const char* sexprText =
+		"(row (name r1)                               \
+			(padding 10)                              \
+			(spacing 20)                              \
+			(elements b1 b2 b3)                       \
+			(height (* 2 (height h)))                 \
+			(width (- (width page) (/ (* 3 (x h)) 2))))";
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, sexprText);
+		ASSERT(sexprs.count == 1);
+		BNSexpr name, padding, spacing, elems, heightExpr, widthExpr;
+		bool res = MatchSexpr(&sexprs.data[0], 
+				"(row (name @{id}) (padding @{num}) (spacing @{num}) (elements @{id} @{...}) (height @{}) (width @{}))", 
+				{ &name, &padding, &spacing, &elems, &heightExpr, &widthExpr });
+
+		ASSERT(res == true);
+		ASSERT(name.IsBNSexprIdentifier());
+		ASSERT(name.AsBNSexprIdentifier().identifier == "r1");
+		ASSERT(padding.IsBNSexprNumber());
+		ASSERT(padding.AsBNSexprNumber() == 10);
+		ASSERT(spacing.IsBNSexprNumber());
+		ASSERT(spacing.AsBNSexprNumber() == 20);
+		ASSERT(elems.IsBNSexprParenList());
+		ASSERT(elems.AsBNSexprParenList().children.count == 3);
+		const char* expectedIds[3] = { "b1", "b2", "b3" };
+		for (int i = 0; i < 3; i++) {
+			ASSERT(elems.AsBNSexprParenList().children.data[i].IsBNSexprIdentifier());
+			ASSERT(elems.AsBNSexprParenList().children.data[i].AsBNSexprIdentifier().identifier == expectedIds[i]);
+		}
+		ASSERT(heightExpr.IsBNSexprParenList());
+		ASSERT(widthExpr.IsBNSexprParenList());
+		ASSERT(heightExpr.AsBNSexprParenList().children.count == 3);
+		ASSERT(widthExpr.AsBNSexprParenList().children.count == 3);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		ParseSexprs(&sexprs, "(blah x y z)");
+		ASSERT(sexprs.count == 1);
+
+		BNSexpr func, args;
+		bool res = MatchSexpr(&sexprs.data[0], "(@{id} @{id} @{...})", {&func, &args});
+		ASSERT(res == true);
+		ASSERT(func.IsBNSexprIdentifier());
+		ASSERT(func.AsBNSexprIdentifier().identifier == "blah");
+		ASSERT(args.IsBNSexprParenList());
+		ASSERT(args.AsBNSexprParenList().children.count == 3);
+		const char* expectedIds[3] = { "x", "y", "z" };
+		for (int i = 0; i < 3; i++) {
+			ASSERT(args.AsBNSexprParenList().children.data[i].IsBNSexprIdentifier());
+			ASSERT(args.AsBNSexprParenList().children.data[i].AsBNSexprIdentifier().identifier == expectedIds[i]);
+		}
+	}
+
 	return 0;
 }
 
