@@ -363,6 +363,39 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 	}
 }
 
+void PrintSexpr(BNSexpr* sexpr, FILE* outFile /*= stdout*/) {
+	if (sexpr->IsBNSexprNumber()) {
+		if (sexpr->AsBNSexprNumber().isFloat) {
+			fprintf(outFile, "%lf", sexpr->AsBNSexprNumber().fValue);
+		}
+		else {
+			fprintf(outFile, "%lld", sexpr->AsBNSexprNumber().iValue);
+		}
+	}
+	else if (sexpr->IsBNSexprString()) {
+		fprintf(outFile, "'%.*s'", BNS_LEN_START(sexpr->AsBNSexprString().value));
+	}
+	else if (sexpr->IsBNSexprIdentifier()) {
+		fprintf(outFile, "%.*s", BNS_LEN_START(sexpr->AsBNSexprIdentifier().identifier));
+	}
+	else if (sexpr->IsBNSexprParenList()) {
+		fprintf(outFile, "(");
+		bool isFirst = true;
+		BNS_VEC_FOREACH(sexpr->AsBNSexprParenList().children) {
+			if (!isFirst) {
+				fprintf(outFile, " ");
+			}
+			PrintSexpr(ptr);
+
+			isFirst = false;
+		}
+		fprintf(outFile, ")");
+	}
+	else {
+		ASSERT(false);
+	}
+}
+
 #if defined(BNSEXPR_TEST_MAIN)
 
 int main(int argc, char** argv) {

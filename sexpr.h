@@ -104,4 +104,6 @@ BNSexprParseResult ParseSexprs(Vector<BNSexpr>* outSexprs, const String& str);
 
 bool MatchSexpr(BNSexpr* sexpr, const char* format, const Vector<BNSexpr*>& args);
 
+void PrintSexpr(BNSexpr* sexpr, FILE* outFile = stdout);
+
 #endif
