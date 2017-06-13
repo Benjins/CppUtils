@@ -93,6 +93,7 @@ struct Vector{
 	}
 
 	T& Back() {
+		ASSERT(count > 0);
 		return data[count - 1];
 	}
 
