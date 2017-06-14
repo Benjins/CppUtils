@@ -47,19 +47,6 @@ bool Is ## str () const {     \
 #define DISC_CPY_CONSTRUCTOR(str) \
 case UE_ ## str : { new (str ## _data) str ( *(str*) orig. str ## _data ); } break;
 
-// We use a typedef to define implicit constructors here
-// to make using the discriminated unions easier.
-// seems to work w/ MSVC + gcc
-#if !defined(BNS_FORCE_NO_IMPLICIT_DISC_CONSTRUCTOR)
-#define DISC_IMPL_CONSTRUCTOR(str) \
-	_BNS_DiscriminatedUnion(const str & orig){ \
-		 new (str ## _data) str(orig); \
-		type = UE_ ## str ; \
-	}
-#else
-#define DISC_IMPL_CONSTRUCTOR(str)
-#endif
-
 #define DEFINE_DISCRIMINATED_UNION(name, macro) \
 const char* BNS_GLUE_TOKS(name, _typeNames)[] = {\
 	"None",\
@@ -78,6 +65,8 @@ struct name { \
 		macro(DISC_FIELDS) \
 	}; \
 	name () {type = UE_None;}\
+	template<typename T> \
+	name(const T& param) { type = UE_None; Assign(param);  }\
 	void operator= ( const name & orig ){ \
 		if (type == orig.type) { \
 			switch(type){ \
@@ -99,7 +88,6 @@ struct name { \
 			case UE_CountPlus1: { } break;\
 		}\
 	}\
-	macro(DISC_IMPL_CONSTRUCTOR) \
 	macro(DISC_ASSGN)  \
 	macro(DISC_ASSGN_OP) \
 	macro(DISC_AS_METHOD) \
