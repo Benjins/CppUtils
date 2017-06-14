@@ -114,6 +114,12 @@ int main(int argc, char** argv){
 		const MyUnion& un2_ref = un2;
 		ASSERT(un2_ref.IsString());
 		ASSERT(un2_ref.AsString().GetRef() == 3);
+		un2 = MyUnion();
+		ASSERT(!un2_ref.IsString());
+
+		ASSERT(str1.GetRef() == 2);
+		un2 = str1;
+		ASSERT(str1.GetRef() == 3);
 	}
 
 	ASSERT(str1.GetRef() == 2);
