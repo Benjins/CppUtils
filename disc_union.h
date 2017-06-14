@@ -47,20 +47,22 @@ bool Is ## str () const {     \
 #define DISC_CPY_CONSTRUCTOR(str) \
 case UE_ ## str : { new (str ## _data) str ( *(str*) orig. str ## _data ); } break;
 
+#define DISC_UNION_GLUE_TOKS_(a, b) a ## b
+#define DISC_UNION_GLUE_TOKS(a, b) DISC_UNION_GLUE_TOKS_(a, b)
+
 #define DEFINE_DISCRIMINATED_UNION(name, macro) \
-const char* BNS_GLUE_TOKS(name, _typeNames)[] = {\
+const char* DISC_UNION_GLUE_TOKS(name, _typeNames)[] = {\
 	"None",\
 	macro(DISC_TYPE_STRINGIFY)\
 };\
 struct name { \
-	typedef name _BNS_DiscriminatedUnion; \
 	enum UnionEnum{ \
 		UE_None,\
 		macro(DISC_ENUM) \
 		UE_CountPlus1, \
 		UE_Count = UE_CountPlus1 - 1\
 	}; \
-	const char* GetCurrentTypeName(){return BNS_GLUE_TOKS(name, _typeNames)[type];}\
+	const char* GetCurrentTypeName(){return DISC_UNION_GLUE_TOKS(name, _typeNames)[type];}\
 	union {\
 		macro(DISC_FIELDS) \
 	}; \
