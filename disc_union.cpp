@@ -36,6 +36,9 @@ DEFINE_DISCRIMINATED_UNION(MyUnion, DISC_LIST)
 // We don't need to undef it, but it's a good idea
 #undef DISC_LIST
 
+void DoSomething(const MyUnion& mu) {
+	ASSERT(mu.IsString());
+}
 
 int main(int argc, char** argv){
 	
@@ -98,6 +101,19 @@ int main(int argc, char** argv){
 		un3 = un2;
 		ASSERT(un3.type == MyUnion::UE_String);
 		ASSERT(str1.GetRef() == 4);
+	}
+
+	ASSERT(str1.GetRef() == 2);
+
+	{
+		MyUnion un2 = str1;
+		ASSERT(str1.GetRef() == 3);
+		DoSomething(str1);
+		ASSERT(str1.GetRef() == 3);
+		ASSERT(un2.IsString());
+		const MyUnion& un2_ref = un2;
+		ASSERT(un2_ref.IsString());
+		ASSERT(un2_ref.AsString().GetRef() == 3);
 	}
 
 	ASSERT(str1.GetRef() == 2);

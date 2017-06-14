@@ -34,13 +34,31 @@ str & As ## str (){     \
 	return *(str *) str ## _data;  \
 }
 
+#define DISC_CONST_AS_METHOD(str) \
+const str & As ## str () const{     \
+	return *(const str *) str ## _data;  \
+}
+
 #define DISC_IS_METHOD(str) \
-bool Is ## str (){     \
+bool Is ## str () const {     \
 	return type == UE_ ## str; \
 }
 
 #define DISC_CPY_CONSTRUCTOR(str) \
 case UE_ ## str : { new (str ## _data) str ( *(str*) orig. str ## _data ); } break;
+
+// We use a typedef to define implicit constructors here
+// to make using the discriminated unions easier.
+// seems to work w/ MSVC + gcc
+#if !defined(BNS_FORCE_NO_IMPLICIT_DISC_CONSTRUCTOR)
+#define DISC_IMPL_CONSTRUCTOR(str) \
+	_BNS_DiscriminatedUnion(const str & orig){ \
+		 new (str ## _data) str(orig); \
+		type = UE_ ## str ; \
+	}
+#else
+#define DISC_IMPL_CONSTRUCTOR(str)
+#endif
 
 #define DEFINE_DISCRIMINATED_UNION(name, macro) \
 const char* BNS_GLUE_TOKS(name, _typeNames)[] = {\
@@ -48,6 +66,7 @@ const char* BNS_GLUE_TOKS(name, _typeNames)[] = {\
 	macro(DISC_TYPE_STRINGIFY)\
 };\
 struct name { \
+	typedef name _BNS_DiscriminatedUnion; \
 	enum UnionEnum{ \
 		UE_None,\
 		macro(DISC_ENUM) \
@@ -80,9 +99,11 @@ struct name { \
 			case UE_CountPlus1: { } break;\
 		}\
 	}\
+	macro(DISC_IMPL_CONSTRUCTOR) \
 	macro(DISC_ASSGN)  \
 	macro(DISC_ASSGN_OP) \
 	macro(DISC_AS_METHOD) \
+	macro(DISC_CONST_AS_METHOD) \
 	macro(DISC_IS_METHOD) \
 	void TearDown(){\
 		switch (type){\
