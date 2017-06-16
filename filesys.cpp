@@ -194,10 +194,20 @@ unsigned char* ReadBinaryFile(const char* fileName, int* outLength) {
 	fseek(fIn, 0, SEEK_END);
 	int fileLength = ftell(fIn);
 	fseek(fIn, 0, SEEK_SET);
-
-	unsigned char* data = (unsigned char*)malloc(fileLength);
-	int bytesRead = (int)fread(data, 1, fileLength, fIn);
-	ASSERT(bytesRead == fileLength);
+	
+	unsigned char* data;
+	if (fileLength == 0){
+		// Not great, but it won't cause errors when we free it, etc.
+		// We could also return nullptr, but that would change the API between
+		// this and text files.  Also, file IO should be rare enough that this isn't a huge issue.
+		// However, there's almost certainly a better solution
+		data = (unsigned char*)malloc(1);
+	}
+	else{
+		data = (unsigned char*)malloc(fileLength);
+		int bytesRead = (int)fread(data, 1, fileLength, fIn);
+		ASSERT(bytesRead == fileLength);
+	}
 
 	*outLength = fileLength;
 
@@ -263,6 +273,25 @@ int main(int argc, char** argv){
 	
 	ASSERT(f.Find("dir1_c")->parent == &f);
 	ASSERT(f.Find("dir1_c/dir1_c2/test.html.txt")->parent == f.Find("dir1_c/dir1_c2"));
+	
+	{
+		int fileLength;
+		unsigned char* binFile = ReadBinaryFile("dir2/empty_file.txt", &fileLength);
+		ASSERT(fileLength == 0);
+		ASSERT(binFile != nullptr);
+		free(binFile);
+	}
+	
+	{
+		int fileLength;
+		unsigned char* binFile = ReadBinaryFile("dir2/non_empty_file.txt", &fileLength);
+		ASSERT(fileLength == 3);
+		ASSERT(binFile != nullptr);
+		ASSERT(binFile[0] == 'G');
+		ASSERT(binFile[1] == 'H');
+		ASSERT(binFile[2] == 'T');
+		free(binFile);
+	}
 	
 	return 0;
 }

@@ -46,11 +46,18 @@ void MemStream::ReadInFromFile(const char* fileName){
 	int fileSize = ftell(fIn);
 	fseek(fIn, 0, SEEK_SET);
 	
-	base = malloc(fileSize);
-	int bytesRead = (int)fread(base, 1, fileSize, fIn);
-	ASSERT(bytesRead == fileSize);
-	writeHead = VOID_PTR_ADD(base, fileSize);
-	readHead = base;
+	if (fileSize > 0){
+		base = malloc(fileSize);
+		int bytesRead = (int)fread(base, 1, fileSize, fIn);
+		ASSERT(bytesRead == fileSize);
+		writeHead = VOID_PTR_ADD(base, fileSize);
+		readHead = base;
+	}
+	else{
+		base = nullptr;
+		readHead = nullptr;
+		writeHead = nullptr;
+	}
 	
 	fclose(fIn);
 }
@@ -238,6 +245,35 @@ int main(int argc, char** argv){
 
 		ASSERT(str.Read<int>() == 12);
 		ASSERT(str.Read<int>() == 24);
+	}
+	
+	{
+		MemStream str;
+		str.ReadInFromFile("dir2/empty_file.txt");
+	}
+	
+	{
+		MemStream str;
+		str.ReadInFromFile("dir2/empty_file.txt");
+		str.Write(22);
+		ASSERT(str.Read<int>() == 22);
+	}
+	
+	{
+		MemStream str;
+		str.ReadInFromFile("dir2/non_empty_file.txt");
+	}
+	
+	{
+		MemStream str;
+		str.ReadInFromFile("dir2/non_empty_file.txt");
+		str.Write(22);
+		char arr[4] = {};
+		str.ReadArray<char>(arr, 3);
+		ASSERT(arr[0] == 'G');
+		ASSERT(arr[1] == 'H');
+		ASSERT(arr[2] == 'T');
+		ASSERT(str.Read<int>() == 22);
 	}
 
 	return 0;

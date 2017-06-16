@@ -32,6 +32,7 @@
 .vs/
 *.ilk
 *.pdb
+*.nativecodeanalysis.xml
 
 # test files:
 bnvParserOut.txt
