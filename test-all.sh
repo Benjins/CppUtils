@@ -41,7 +41,7 @@ valgrind $VAGRIND_FLAGS ./sexpr_test.out
 eval "$CXX $CXX_TEST_FLAGS -DSTRINGMAP_TEST_MAIN stringmap.cpp -o stringmap_test.out"
 valgrind $VAGRIND_FLAGS ./stringmap_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DMEMSTREAM_TEST_MAINmemstream.cpp -o memstream_test.out"
+eval "$CXX $CXX_TEST_FLAGS -DMEMSTREAM_TEST_MAIN memstream.cpp -o memstream_test.out"
 valgrind $VAGRIND_FLAGS ./memstream_test.out
 
 eval "$CXX $CXX_TEST_FLAGS -DXML_TEST_MAIN xml.cpp -o xml_test.out"
