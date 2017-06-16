@@ -618,9 +618,9 @@ int main(int argc, char** argv){
 		ASSERT(e.capacity == 10);
 		c = e;
 
-		ASSERT(c.data == nullptr);
+		ASSERT(c.data != nullptr);
 		ASSERT(c.count == 0);
-		ASSERT(c.capacity == 0);
+		ASSERT(c.capacity == 10);
 
 		e.PushBack(10);
 		e.PushBack(77);
@@ -629,7 +629,7 @@ int main(int argc, char** argv){
 		d = e;
 		ASSERT(d.data != nullptr);
 		ASSERT(d.count == 2);
-		ASSERT(d.capacity == 2);
+		ASSERT(d.capacity == 10);
 	}
 
 	return 0;

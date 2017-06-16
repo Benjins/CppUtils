@@ -1736,6 +1736,20 @@ int main(int argc, char** argv) {
 	ASSERT((otherInstance.ExecuteTyped<int, int>("IsPrime", 2) == 1));
 	ASSERT((otherInstance.ExecuteTyped<int, int>("IsPrime", 5) == 1));
 
+	{
+		BNVMInstance thirdInstance = otherInstance;
+		vm.InitNewInst(&thirdInstance);
+		thirdInstance.ExecuteTyped<int>("SetGlobalInteger", 88);
+		ASSERT((vm.GetGlobalVariableValue<int>("globalInteger") == -56));
+		ASSERT((otherInstance.GetGlobalVariableValue<int>("globalInteger") == 99));
+		ASSERT((thirdInstance.GetGlobalVariableValue<int>("globalInteger") == 88));
+
+		ASSERT((thirdInstance.ExecuteTyped<int, int>("Factorial", 5) == 120));
+		ASSERT((thirdInstance.ExecuteTyped<int, int>("Factorial", 0) == 1));
+		ASSERT((thirdInstance.ExecuteTyped<int, int>("IsPrime", 2) == 1));
+		ASSERT((thirdInstance.ExecuteTyped<int, int>("IsPrime", 5) == 1));
+	}
+
 	vm.WriteByteCodeToFile("parserTest.bnb");
 
 	BNVM otherVm;

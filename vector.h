@@ -23,10 +23,10 @@ struct Vector{
 	}
 	
 	void Assign(const Vector& other){
-		if (other.count > 0) {
-			data = (T*)malloc(other.count*sizeof(T));
+		if (other.capacity > 0) {
+			data = (T*)malloc(other.capacity*sizeof(T));
 			count = other.count;
-			capacity = other.count;
+			capacity = other.capacity;
 			for (int i = 0; i < other.count; i++) {
 				new(&data[i]) T(other.data[i]);
 			}
