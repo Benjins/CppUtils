@@ -1,11 +1,5 @@
 @echo off
 
-g++ -Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -DREF_TEST_MAIN assert.cpp ref.cpp -o ref_test
-if %ERRORLEVEL% NEQ 0 goto somethingbad
-
-ref_test.exe
-if %ERRORLEVEL% NEQ 0 goto somethingbad
-
 g++ -Wall -Wextra -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
