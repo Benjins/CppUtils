@@ -450,7 +450,9 @@ UnicodeBlockInfo* GetUnicodeBlocks() {
 
 #if defined(UNICODE_TEST_MAIN)
 
-#include "filesys.h"
+#include "strings.cpp"
+#include "filesys.cpp"
+#include "assert.cpp"
 
 int main(int argc, char** argv){
 	

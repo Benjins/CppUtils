@@ -1,7 +1,10 @@
 #include "stringmap.h"
-#include "assert.h"
 
 #if defined(STRINGMAP_TEST_MAIN)
+
+#include "assert.cpp"
+#include "hash.cpp"
+#include "strings.cpp"
 
 int resourceAlloc = 0;
 

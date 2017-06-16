@@ -5,6 +5,8 @@
 
 #if defined(VECTOR_TEST_MAIN)
 
+#include "assert.cpp"
+
 int AtoiTest(const char* str) {
 	int total = 0;
 	while (str && *str) {

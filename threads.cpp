@@ -90,6 +90,8 @@ int CompareAndSwap32(volatile int* i, int oldVal, int newVal){
 
 #if defined(THREADS_TEST_MAIN)
 
+#include "assert.cpp"
+
 int val1 = 0;
 int val2 = 0;
 

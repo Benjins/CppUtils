@@ -323,6 +323,8 @@ bool ShutdownSocketSystem(){
 
 #if defined(SOCKET_TEST_MAIN)
 
+#include "assert.cpp"
+
 int main(int argc, char** argv){
 	
 	if(!StartUpSocketSystem()){

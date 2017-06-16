@@ -35,6 +35,7 @@ Hash ComputeHash(const char* str){
 
 #if defined(HASH_TEST_MAIN)
 
+#include "assert.cpp"
 
 int main(int argc, char** argv){
 	BNS_UNUSED(argc);

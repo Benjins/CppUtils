@@ -1543,6 +1543,14 @@ bool BNVParser::TypeCheck() {
 
 #if defined(BNVPARSER_TEST_MAIN)
 
+#include "lexer.cpp"
+#include "strings.cpp"
+#include "assert.cpp"
+#include "hash.cpp"
+#include "vector.cpp"
+#include "memstream.cpp"
+#include "bnvm.cpp"
+
 struct Vector3VM {
 	float x;
 	float y;

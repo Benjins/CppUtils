@@ -155,6 +155,9 @@ const char** CommandLineParser::FlagArgValues(const char* flagName){
 
 #if defined(COMMANDLINE_TEST_MAIN)
 
+#include "strings.cpp"
+#include "assert.cpp"
+
 int main(int argc, char** argv){
 
 	BNS_UNUSED(argc);

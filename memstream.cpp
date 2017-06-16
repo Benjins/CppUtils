@@ -64,6 +64,11 @@ void MemStream::ReadInFromFile(const char* fileName){
 
 #if defined(MEMSTREAM_TEST_MAIN)
 
+#include "strings.cpp"
+#include "assert.cpp"
+#include "stringmap.cpp"
+#include "hash.cpp"
+
 struct TestStr{
 	char name[5];
 	int x;

@@ -5,8 +5,9 @@
 
 #include "disc_union.h"
 
-#include "vector.h"
-#include "strings.h"
+#include "vector.cpp"
+#include "strings.cpp"
+#include "assert.cpp"
 
 struct MyClass{
 	char name[16];

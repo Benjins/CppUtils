@@ -1,11 +1,11 @@
 
-#include "stringmap.h"
-#include "vector.h"
-#include "assert.h"
-
-
 #if defined(COMBINEDTESTS_TEST_MAIN)
 
+#include "vector.cpp"
+#include "stringmap.cpp"
+#include "strings.cpp"
+#include "hash.cpp"
+#include "assert.cpp"
 
 int main(int argc, char** argv){
 	

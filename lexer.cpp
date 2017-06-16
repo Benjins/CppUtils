@@ -282,6 +282,10 @@ Vector<SubString> LexString(String string) {
 
 #if defined(LEXER_TEST_MAIN)
 
+#include "strings.cpp"
+#include "assert.cpp"
+#include "vector.cpp"
+
 int main(int argc, char** argv) {
 
 	BNS_UNUSED(argc);

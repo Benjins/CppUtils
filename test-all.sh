@@ -8,65 +8,65 @@ fi
 VAGRIND_FLAGS="--quiet --leak-check=full --error-exitcode=12"
 CXX_TEST_FLAGS="-Wall -Wextra -g -O0 -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT"
 
-eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test"
-yes b | head -n 20 | ./assert_test
+eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test.out"
+yes b | head -n 20 | ./assert_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DHASH_TEST_MAIN assert.cpp hash.cpp -o hash_test"
-./hash_test
+eval "$CXX $CXX_TEST_FLAGS -DHASH_TEST_MAIN hash.cpp -o hash_test.out"
+./hash_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DMACROS_TEST_MAIN macros_test.cpp assert.cpp strings.cpp -o macros_test"
-./macros_test
+eval "$CXX $CXX_TEST_FLAGS -DMACROS_TEST_MAIN macros_test.cpp -o macros_test.out"
+./macros_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DDISC_UNION_TEST_MAIN assert.cpp vector.cpp strings.cpp disc_union.cpp -o disc_union_test"
-valgrind $VAGRIND_FLAGS ./disc_union_test
+eval "$CXX $CXX_TEST_FLAGS -DDISC_UNION_TEST_MAIN disc_union.cpp -o disc_union_test.out"
+valgrind $VAGRIND_FLAGS ./disc_union_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DVECTOR_TEST_MAIN assert.cpp vector.cpp -o vector_test"
-valgrind $VAGRIND_FLAGS ./vector_test
+eval "$CXX $CXX_TEST_FLAGS -DVECTOR_TEST_MAIN vector.cpp -o vector_test.out"
+valgrind $VAGRIND_FLAGS ./vector_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DFILESYS_TEST_MAIN assert.cpp filesys.cpp -o filesys_test"
-valgrind $VAGRIND_FLAGS ./filesys_test
+eval "$CXX $CXX_TEST_FLAGS -DFILESYS_TEST_MAIN filesys.cpp -o filesys_test.out"
+valgrind $VAGRIND_FLAGS ./filesys_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DTHREADS_TEST_MAIN assert.cpp threads.cpp -lpthread -o threads_test"
-./threads_test
+eval "$CXX $CXX_TEST_FLAGS -DTHREADS_TEST_MAIN threads.cpp -lpthread -o threads_test.out"
+./threads_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DIDBASE_TEST_MAIN assert.cpp idbase.cpp -o idbase_test"
-valgrind $VAGRIND_FLAGS ./idbase_test
+eval "$CXX $CXX_TEST_FLAGS -DIDBASE_TEST_MAIN idbase.cpp -o idbase_test.out"
+valgrind $VAGRIND_FLAGS ./idbase_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DSTRINGS_TEST_MAIN assert.cpp strings.cpp -o strings_test"
-valgrind $VAGRIND_FLAGS ./strings_test
+eval "$CXX $CXX_TEST_FLAGS -DSTRINGS_TEST_MAIN strings.cpp -o strings_test.out"
+valgrind $VAGRIND_FLAGS ./strings_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DBNSEXPR_TEST_MAIN assert.cpp strings.cpp vector.cpp sexpr.cpp -o sexpr_test"
-valgrind $VAGRIND_FLAGS ./sexpr_test
+eval "$CXX $CXX_TEST_FLAGS -DBNSEXPR_TEST_MAIN sexpr.cpp -o sexpr_test.out"
+valgrind $VAGRIND_FLAGS ./sexpr_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DSTRINGMAP_TEST_MAIN assert.cpp strings.cpp hash.cpp stringmap.cpp -o stringmap_test"
-valgrind $VAGRIND_FLAGS ./stringmap_test
+eval "$CXX $CXX_TEST_FLAGS -DSTRINGMAP_TEST_MAIN stringmap.cpp -o stringmap_test.out"
+valgrind $VAGRIND_FLAGS ./stringmap_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DMEMSTREAM_TEST_MAIN assert.cpp strings.cpp memstream.cpp stringmap.cpp hash.cpp -o memstream_test"
-valgrind $VAGRIND_FLAGS ./memstream_test
+eval "$CXX $CXX_TEST_FLAGS -DMEMSTREAM_TEST_MAINmemstream.cpp -o memstream_test.out"
+valgrind $VAGRIND_FLAGS ./memstream_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DXML_TEST_MAIN strings.cpp assert.cpp hash.cpp xml.cpp -o xml_test"
-valgrind $VAGRIND_FLAGS ./xml_test
+eval "$CXX $CXX_TEST_FLAGS -DXML_TEST_MAIN xml.cpp -o xml_test.out"
+valgrind $VAGRIND_FLAGS ./xml_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DLEXER_TEST_MAIN lexer.cpp strings.cpp assert.cpp vector.cpp -o lex_test"
-valgrind $VAGRIND_FLAGS ./lex_test
+eval "$CXX $CXX_TEST_FLAGS -DLEXER_TEST_MAIN lexer.cpp -o lex_test.out"
+valgrind $VAGRIND_FLAGS ./lex_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DBNVPARSER_TEST_MAIN lexer.cpp strings.cpp memstream.cpp assert.cpp hash.cpp vector.cpp bnvm.cpp bnvparser.cpp -o bnvparser_test"
-valgrind $VAGRIND_FLAGS ./bnvparser_test
+eval "$CXX $CXX_TEST_FLAGS -DBNVPARSER_TEST_MAIN bnvparser.cpp -o bnvparser_test.out"
+valgrind $VAGRIND_FLAGS ./bnvparser_test.out
 
-./bnvparser_test > bnvParserOut.txt
+./bnvparser_test.out > bnvParserOut.txt
 diff bnvParserOut.txt bnvParserExpectedOut.txt
 
-eval "$CXX $CXX_TEST_FLAGS -DBNVM_TEST_MAIN lexer.cpp strings.cpp assert.cpp hash.cpp memstream.cpp stringmap.cpp bnvm.cpp vector.cpp bnvparser.cpp -o bnvm_test"
-valgrind $VAGRIND_FLAGS ./bnvm_test
+eval "$CXX $CXX_TEST_FLAGS -DBNVM_TEST_MAIN bnvm.cpp -o bnvm_test.out"
+valgrind $VAGRIND_FLAGS ./bnvm_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DCOMMANDLINE_TEST_MAIN commandline.cpp strings.cpp assert.cpp -o commandline_test.out"
+eval "$CXX $CXX_TEST_FLAGS -DCOMMANDLINE_TEST_MAIN commandline.cpp -o commandline_test.out"
 valgrind $VAGRIND_FLAGS ./commandline_test.out
 
-eval "$CXX $CXX_TEST_FLAGS -DUNICODE_TEST_MAIN unicode.cpp strings.cpp filesys.cpp assert.cpp -o unicode_test.out"
+eval "$CXX $CXX_TEST_FLAGS -DUNICODE_TEST_MAIN unicode.cpp -o unicode_test.out"
 valgrind $VAGRIND_FLAGS ./unicode_test.out
 diff unicode_test.txt unicode__out.txt
 
-eval "$CXX $CXX_TEST_FLAGS -DSOCKET_TEST_MAIN socket.cpp assert.cpp -o socket_test.out"
+eval "$CXX $CXX_TEST_FLAGS -DSOCKET_TEST_MAIN socket.cpp -o socket_test.out"
 
 cd Coroutines
 chmod +x ./coroutine-test.sh

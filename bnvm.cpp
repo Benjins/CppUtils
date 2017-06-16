@@ -410,6 +410,15 @@ void BNVM::RegisterExternFunc(const char* name, ExternFunc* func){
 
 #if defined(BNVM_TEST_MAIN)
 
+#include "lexer.cpp"
+#include "strings.cpp"
+#include "assert.cpp"
+#include "hash.cpp"
+#include "stringmap.cpp"
+#include "memstream.cpp"
+#include "vector.cpp"
+#include "bnvparser.cpp"
+
 int main(int argc, char** argv){
 	BNS_UNUSED(argc);
 	BNS_UNUSED(argv);

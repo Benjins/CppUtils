@@ -1,11 +1,9 @@
 #include "macros.h"
 
-
-
 #if defined(MACROS_TEST_MAIN)
 
-#include "assert.h"
-#include "strings.h"
+#include "assert.cpp"
+#include "strings.cpp"
 
 struct testStruct {
 	int x;

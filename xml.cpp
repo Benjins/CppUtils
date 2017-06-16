@@ -337,6 +337,10 @@ XMLError SaveXMLDocToFile(XMLDoc* doc, const char* fileName) {
 
 #if defined(XML_TEST_MAIN)
 
+#include "strings.cpp"
+#include "assert.cpp"
+#include "hash.cpp"
+
 int main(int argc, char** argv) {
 	BNS_UNUSED(argc);
 	BNS_UNUSED(argv);

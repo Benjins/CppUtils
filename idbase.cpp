@@ -1,10 +1,9 @@
 #include "idbase.h"
 #include "macros.h"
 
-
-
-
 #if defined(IDBASE_TEST_MAIN)
+
+#include "assert.cpp"
 
 static int allocCount = 0;
 
