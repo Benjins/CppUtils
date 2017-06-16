@@ -98,6 +98,7 @@ struct Vector{
 	}
 
 	const T& Back() const {
+		ASSERT(count > 0);
 		return data[count - 1];
 	}
 	

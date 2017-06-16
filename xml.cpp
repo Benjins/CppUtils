@@ -265,10 +265,10 @@ String XMLElement::GetExistingAttrValue(const char* attrName) {
 	return val;
 }
 
-XMLElement* XMLElement::GetChildWithAttr(const char* name, const char* attrName, const char* attrValue, unsigned int index /*= 0*/) {
+XMLElement* XMLElement::GetChildWithAttr(const char* elemName, const char* attrName, const char* attrValue, unsigned int index /*= 0*/) {
 	for (int i = 0; i < childrenIds.count; i++) {
 		XMLElement* child = doc->elements.GetById(childrenIds.Get(i));
-		if (child->name == name) {
+		if (child->name == elemName) {
 			String attrib;
 			bool foundAttr = child->attributes.LookUp(attrName, &attrib);
 			if (foundAttr && attrib == attrValue) {
