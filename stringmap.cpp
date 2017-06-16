@@ -132,6 +132,64 @@ int main(int argc, char** argv){
 	ASSERT(resourceAlloc == 0);
 
 	{
+		Resource res1;
+		res1.vals = 1;
+		
+		Resource res2;
+		res2.vals = 2;
+		
+		Resource res3;
+		res3.vals = 3;
+
+		Resource res4;
+		res4.vals = 4;
+
+		StringMap<Resource> resMap;
+
+		resMap.Insert("Res1", res1);
+
+		void* oldVals = resMap.values;
+
+		resMap.Insert("Res1", res1);
+		resMap.Insert("Res1", res2);
+		resMap.Insert("Res1", res3);
+		resMap.Insert("Res1", res4);
+
+		ASSERT(resMap.count == 1);
+		//We shouldn't have re-allocated
+		ASSERT(resMap.values == oldVals);
+
+		resMap.Insert("Res2", res2);
+		resMap.Insert("Res3", res3);
+		resMap.Insert("Res4", res4);
+
+		ASSERT(resMap.count == 4);
+		
+		CheckIsValidStringMap(resMap);
+
+		StringMap<Resource> resMap2 = resMap;
+
+		CheckIsValidStringMap(resMap2);
+
+		StringMap<Resource> resMap3;
+		resMap3 = resMap2;
+
+		CheckIsValidStringMap(resMap3);
+
+		StringMap<Resource> resMap4;
+		StringMap<Resource> resMap5;
+		resMap4 = resMap5;
+		resMap2 = resMap4;
+		ASSERT(resMap2.count == 0);
+
+		resMap5.Insert("ff", res1);
+		resMap3 = resMap5;
+		ASSERT(resMap3.count == 1);
+	}
+
+	ASSERT(resourceAlloc == 0);
+
+	{
 		const char* str1 = "5\"\"\"";
 		const char* str2 = "a0p2";
 		

@@ -1739,6 +1739,7 @@ int main(int argc, char** argv) {
 	{
 		BNVMInstance thirdInstance = otherInstance;
 		vm.InitNewInst(&thirdInstance);
+
 		thirdInstance.ExecuteTyped<int>("SetGlobalInteger", 88);
 		ASSERT((vm.GetGlobalVariableValue<int>("globalInteger") == -56));
 		ASSERT((otherInstance.GetGlobalVariableValue<int>("globalInteger") == 99));

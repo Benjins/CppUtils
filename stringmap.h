@@ -44,6 +44,7 @@ struct StringMap{
 	}
 
 	StringMap& operator=(const StringMap& orig) {
+		Clear();
 		Assign(orig);
 		return *this;
 	}
@@ -90,9 +91,9 @@ struct StringMap{
 	void Destroy(){
 		Clear();
 		
-		free(hashes);
-		free(names);
-		free(values);
+		if (hashes != nullptr) { free(hashes); }
+		if (names  != nullptr) { free(names);  }
+		if (values != nullptr) { free(values); }
 	}
 	
 	void Clear(){
@@ -100,6 +101,8 @@ struct StringMap{
 			names[i].~String();
 			values[i].~T();
 		}
+
+		count = 0;
 	}
 	
 	void Insert(const String& name, const T& value){
