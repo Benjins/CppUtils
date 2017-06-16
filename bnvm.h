@@ -141,6 +141,7 @@ struct BNVMInstance {
 		pc = 0;
 		debugState = DS_Continue;
 		currentFileLine = -1;
+		globalVarSize = 0;
 	}
 
 	BNVMReturnReason Execute(const char* funcName);
