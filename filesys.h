@@ -24,6 +24,10 @@ struct File{
 		childCount = NOT_A_DIRECTORY;
 	}
 
+	~File(){
+		Unload();
+	}
+
 	void Load(const char* name);
 
 	void Unload();

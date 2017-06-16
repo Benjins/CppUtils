@@ -164,11 +164,10 @@ File* File::Find(const char* path){
 }
 
 void File::Unload() {
-	for (int i = 0; i < childCount; i++) {
-		children[i].Unload();
+	if (children != nullptr){
+		delete[] children;
+		children = nullptr;
 	}
-
-	delete[] children;
 }
 
 void File::FindFilesWithExt(const char* ext, Vector<File*>* outFiles) {
@@ -244,6 +243,32 @@ char* ReadTextFile(const char* fileName, int* outLength) {
 int main(int argc, char** argv){
 	BNS_UNUSED(argc);
 	BNS_UNUSED(argv);
+
+	{
+		File f;
+		f.Load("dir1");
+	}
+
+	{
+		File f;
+		f.Load("dir1");
+		f.Unload();
+	}
+
+	{
+		File f;
+		f.Load("dir1");
+		f.Unload();
+		f.Load("dir1");
+	}
+
+	{
+		File f;
+		f.Load("dir1");
+		f.Unload();
+		f.Load("dir1");
+		f.Unload();
+	}
 
 	File f;
 	f.Load("dir1");

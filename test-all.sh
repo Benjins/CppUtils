@@ -6,7 +6,7 @@ if [ -z "$CXX" ]; then
 fi
 
 VAGRIND_FLAGS="--quiet --leak-check=full --error-exitcode=12"
-CXX_TEST_FLAGS="-Wall -Wextra -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT"
+CXX_TEST_FLAGS="-Wall -Wextra -g -O0 -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT"
 
 eval "$CXX $CXX_TEST_FLAGS -DREF_TEST_MAIN assert.cpp ref.cpp -o ref_test"
 ./ref_test
