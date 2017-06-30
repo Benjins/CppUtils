@@ -163,8 +163,8 @@ struct Vector{
 	}
 	
 	void InsertArray(int index, const T* elem, int arrCount) {
-		while (count + arrCount >= capacity) {
-			EnsureCapacity(capacity == 0 ? 2 : capacity * 2);
+		if (count + arrCount >= capacity) {
+			EnsureCapacity(count + arrCount);
 		}
 
 		memmove(&data[index + arrCount], &data[index], (count - index)*sizeof(T));

@@ -306,6 +306,72 @@ int main(int argc, char** argv){
 	ASSERT(fakeAllocCount == 0);
 
 	{
+		Vector<Resource> rVec;
+	}
+
+	ASSERT(fakeAllocCount == 0);
+
+	{
+		Vector<int> iVec;
+		iVec.PushBack(4);
+		iVec.PushBack(5);
+		iVec.PushBack(6);
+		iVec.EnsureCapacity(10);
+
+		ASSERT(iVec.count == 3);
+		ASSERT(iVec.data[0] == 4);
+		ASSERT(iVec.data[1] == 5);
+		ASSERT(iVec.data[2] == 6);
+
+		void* oldData = iVec.data;
+
+		iVec.InsertArray(0, nullptr, 0);
+		iVec.InsertArray(1, nullptr, 0);
+		iVec.InsertArray(2, nullptr, 0);
+
+		ASSERT(iVec.data == oldData);
+
+		ASSERT(iVec.count == 3);
+		ASSERT(iVec.data[0] == 4);
+		ASSERT(iVec.data[1] == 5);
+		ASSERT(iVec.data[2] == 6);
+
+		int arr[2] = { 1, 2 };
+		iVec.InsertArray(0, arr, 2);
+
+		ASSERT(iVec.count == 5);
+		ASSERT(iVec.data[0] == 1);
+		ASSERT(iVec.data[1] == 2);
+		ASSERT(iVec.data[2] == 4);
+		ASSERT(iVec.data[3] == 5);
+		ASSERT(iVec.data[4] == 6);
+
+		ASSERT(iVec.data == oldData);
+
+		Vector<int> iVec2 = iVec;
+		iVec2.InsertArray(1, arr, 2);
+
+		ASSERT(iVec2.count == 7);
+		ASSERT(iVec2.data[0] == 1);
+		ASSERT(iVec2.data[1] == 1);
+		ASSERT(iVec2.data[2] == 2);
+		ASSERT(iVec2.data[3] == 2);
+		ASSERT(iVec2.data[4] == 4);
+		ASSERT(iVec2.data[5] == 5);
+		ASSERT(iVec2.data[6] == 6);
+	}
+
+	{
+		Vector<int> iVec = {2, 3, 4};
+		Vector<int> iVec2;
+		iVec2.InsertVector(0, iVec);
+		ASSERT(iVec2.count == 3);
+		ASSERT(iVec2.data[0] == 2);
+		ASSERT(iVec2.data[1] == 3);
+		ASSERT(iVec2.data[2] == 4);
+	}
+
+	{
 		Vector<int> iVec;
 		iVec.PushBack(0);
 		iVec.PushBack(2);
