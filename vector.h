@@ -266,4 +266,16 @@ struct Vector{
 #define BNS_VEC_FOREACH_NAME(vec, varName) for (auto varName = &(vec).data[0]; varName != &(vec).data[(vec).count]; varName++)
 #define BNS_VEC_FOREACH(vec) BNS_VEC_FOREACH_NAME(vec, ptr)
 
+#define BNS_FOR_NAME(var, count) for (int var = 0; var < (count); var++)
+#define BNS_FOR_I(count) BNS_FOR_NAME(i, count)
+#define BNS_FOR_J(count) BNS_FOR_NAME(j, count)
+
+#define BNS_ARRAY_FOR_NAME(var, arr) BNS_FOR_NAME(var, BNS_ARRAY_COUNT(arr))
+#define BNS_ARRAY_FOR_I(arr) BNS_ARRAY_FOR_NAME(i, arr)
+#define BNS_ARRAY_FOR_J(arr) BNS_ARRAY_FOR_NAME(j, arr)
+
+#define BNS_VEC_FOR_NAME(var, vec) BNS_FOR_NAME(var, (vec).count)
+#define BNS_VEC_FOR_I(vec) BNS_VEC_FOR_NAME(i, vec)
+#define BNS_VEC_FOR_J(vec) BNS_VEC_FOR_NAME(j, vec)
+
 #endif

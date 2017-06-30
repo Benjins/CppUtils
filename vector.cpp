@@ -698,6 +698,116 @@ int main(int argc, char** argv){
 		ASSERT(d.capacity == 10);
 	}
 
+	{
+		int ctr = 0;
+		BNS_FOR_I(10) {
+			ASSERT(i == ctr);
+			ctr++;
+		}
+	}
+
+	{
+		int ctr = 0;
+		BNS_FOR_J(10) {
+			ASSERT(j == ctr);
+			ctr++;
+		}
+	}
+
+	{
+		int ctr = 0;
+		BNS_FOR_NAME(fff, 10) {
+			ASSERT(fff == ctr);
+			ctr++;
+		}
+	}
+
+	{
+		int arr[] = { 2, 3, 4, 5, 6 };
+		int ctr = 0;
+		BNS_ARRAY_FOR_I(arr) {
+			ASSERT(arr[i] == i + 2);
+			ctr++;
+		}
+
+		ASSERT(ctr == 5);
+	}
+
+	{
+		int arr[] = { 2, 3, 4, 5, 6 };
+		int ctr = 0;
+		BNS_ARRAY_FOR_J(arr) {
+			ASSERT(arr[j] == j + 2);
+			ctr++;
+		}
+
+		ASSERT(ctr == 5);
+	}
+
+	{
+		int arr[] = { 2, 3, 4, 5, 6 };
+		int ctr = 0;
+		BNS_ARRAY_FOR_NAME(fgh, arr) {
+			ASSERT(arr[fgh] == fgh + 2);
+			ctr++;
+		}
+
+		ASSERT(ctr == 5);
+	}
+
+	{
+		Vector<int> vec = { 2, 3, 4, 5, 6 };
+		int ctr = 0;
+		BNS_VEC_FOR_I(vec) {
+			ASSERT(vec.data[i] == i + 2);
+			ctr++;
+		}
+
+		ASSERT(ctr == 5);
+	}
+
+	{
+		Vector<int> vec = { 2, 3, 4, 5, 6 };
+		int ctr = 0;
+		BNS_VEC_FOR_J(vec) {
+			ASSERT(vec.data[j] == j + 2);
+			ctr++;
+		}
+
+		ASSERT(ctr == 5);
+	}
+
+	{
+		Vector<int> vec = { 2, 3, 4, 5, 6 };
+		int ctr = 0;
+		BNS_VEC_FOR_NAME(fgh, vec) {
+			ASSERT(vec.data[fgh] == fgh + 2);
+			ctr++;
+		}
+
+		ASSERT(ctr == 5);
+	}
+
+	{
+		BNS_FOR_I(0) {
+			ASSERT(false);
+		}
+
+		BNS_FOR_J(0) {
+			ASSERT(false);
+		}
+
+		Vector<int> iVec;
+
+		BNS_VEC_FOR_I(iVec) {
+			ASSERT(false);
+		}
+
+		BNS_VEC_FOR_J(iVec) {
+			ASSERT(false);
+		}
+	}
+
 	return 0;
 }
 
