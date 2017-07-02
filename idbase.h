@@ -123,7 +123,7 @@ struct IDTracker{
 			SetSize(maxCount > 0 ? maxCount * 2 : 2);
 		}
 
-		T* ptr;
+		T* ptr = nullptr;
 		if (id >= currentMaxId) {
 			ptr = new(&vals[currentCount]) T();
 			vals[currentCount].id = id;
@@ -142,6 +142,8 @@ struct IDTracker{
 				}
 			}
 		}
+
+		ASSERT(ptr != nullptr);
 
 		return ptr;
 	}
