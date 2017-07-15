@@ -74,11 +74,21 @@ static_assert(BNSCompileMaxSize<3, 6>::value == 6, "Check BNSCompileMax");
 #define DISC_UNION_GLUE_TOKS_(a, b) a ## b
 #define DISC_UNION_GLUE_TOKS(a, b) DISC_UNION_GLUE_TOKS_(a, b)
 
+#if defined(_MSC_VER)
+#define DISC_ALIGN_STRUCT_PRE(x) __declspec( align( x ) )
+#define DISC_ALIGN_STRUCT_POST(x)
+#else
+// TODO: Works on GCC/Clang, but other compilers?
+#define DISC_ALIGN_STRUCT_PRE(x)
+#define DISC_ALIGN_STRUCT_POST(x) __attribute__ ((aligned ( x )))
+#endif
+
 #define DEFINE_DISCRIMINATED_UNION(name, macro) \
 const char* DISC_UNION_GLUE_TOKS(name, _typeNames)[] = {\
 	"None",\
 	macro(DISC_TYPE_STRINGIFY)\
 };\
+DISC_ALIGN_STRUCT_PRE( macro(DISC_UNION_ALIGNMAX_OP) 0 macro(DISC_UNION_ALIGNMAX_ED) ) \
 struct name { \
 	enum UnionEnum{ \
 		UE_None,\
@@ -131,10 +141,8 @@ struct name { \
 		TearDown();\
 	}\
 	UnionEnum type;\
-} __attribute__ ((aligned (\
-	macro(DISC_UNION_ALIGNMAX_OP)\
-	0\
-	macro(DISC_UNION_ALIGNMAX_ED)\
-)));
+} \
+DISC_ALIGN_STRUCT_POST( macro(DISC_UNION_ALIGNMAX_OP) 0 macro(DISC_UNION_ALIGNMAX_ED) ) \
+;
 
 #endif
