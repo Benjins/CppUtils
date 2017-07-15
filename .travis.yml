@@ -20,7 +20,7 @@ before_install:
   - chmod +x *.sh
 
 install:
- - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+ - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
 
 before_script: 
   - cd ${TRAVIS_BUILD_DIR}
