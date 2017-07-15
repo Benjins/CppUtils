@@ -47,6 +47,30 @@ bool Is ## str () const {     \
 #define DISC_CPY_CONSTRUCTOR(str) \
 case UE_ ## str : { new (str ## _data) str ( *(str*) orig. str ## _data ); } break;
 
+template<int a, int b>
+struct BNSCompileMax{
+	enum {
+		value = a > b ? a : b
+	};
+};
+
+template<size_t a, size_t b>
+struct BNSCompileMaxSize{
+	enum{
+		value = a > b ? a : b
+	};
+};
+
+static_assert(BNSCompileMax<3, 6>::value == 6, "Check BNSCompileMax");
+static_assert(BNSCompileMaxSize<3, 6>::value == 6, "Check BNSCompileMax");
+
+// TODO: This is in C++11, although there are fallbacks if need be
+#define BNS_ALIGNOF(t) alignof(t)
+
+#define DISC_UNION_ALIGNMAX_OP(type) BNSCompileMax<BNS_ALIGNOF(type),
+
+#define DISC_UNION_ALIGNMAX_ED(type) >::value
+
 #define DISC_UNION_GLUE_TOKS_(a, b) a ## b
 #define DISC_UNION_GLUE_TOKS(a, b) DISC_UNION_GLUE_TOKS_(a, b)
 
@@ -107,6 +131,10 @@ struct name { \
 		TearDown();\
 	}\
 	UnionEnum type;\
-};
+} __attribute__ ((aligned (\
+	macro(DISC_UNION_ALIGNMAX_OP)\
+	0\
+	macro(DISC_UNION_ALIGNMAX_ED)\
+)));
 
 #endif

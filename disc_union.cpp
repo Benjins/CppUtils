@@ -41,6 +41,37 @@ void DoSomething(const MyUnion& mu) {
 	ASSERT(mu.IsString());
 }
 
+struct IntBox{
+	int val;
+};
+
+struct CharBox{
+	char val;
+};
+
+#define DISC_LIST(mac) \
+	mac(IntBox)        \
+	mac(CharBox)       \
+
+DEFINE_DISCRIMINATED_UNION(BasicUnion1, DISC_LIST)
+
+#undef DISC_LIST
+
+static_assert(BNS_ALIGNOF(BasicUnion1) == 4, "Alignment of DISC_UNION (assumes int is 32-bit aligned");
+
+
+#define DISC_LIST(mac) \
+	mac(String)        \
+	mac(IntBox)           \
+	mac(SubString)
+
+DEFINE_DISCRIMINATED_UNION(BasicUnion2, DISC_LIST)
+
+#undef DISC_LIST
+
+static_assert(BNS_ALIGNOF(BasicUnion2) == sizeof(int*), "Alignment of DISC_UNION (assumes pointers are word-aligned");
+
+
 int main(int argc, char** argv){
 	
 	MyClass mc;
