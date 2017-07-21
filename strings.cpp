@@ -453,9 +453,36 @@ bool SubString::operator!=(const char* other) const{
 	return !StrEqualN(start, other, length) || other[length] != '\0';
 }
 
+void SplitStringIntoParts(const String& str, const char* sep, Vector<SubString>* parts, bool removeEmpties /*= false*/) {
+	int sepLen = StrLen(sep);
+	// TODO: We could overload this to mean explode, but for now let's just avoid it.
+	ASSERT(sepLen > 0);
+	int strLen = str.GetLength();
+
+	if (strLen == 0) {
+		return;
+	}
+
+	const char* cursor = str.string;
+	while (true) {
+		int len = StrFind(cursor, sep);
+		if (len == -1) {
+			parts->PushBack(str.GetSubString(cursor - str.string, strLen - (cursor - str.string)));
+			break;
+		}
+		else {
+			if (len > 0 || !removeEmpties) {
+				parts->PushBack(str.GetSubString(cursor - str.string, len));
+			}
+			cursor = cursor + len + sepLen;
+		}
+	}
+}
+
 #if defined(STRINGS_TEST_MAIN)
 
 #include "assert.cpp"
+#include "vector.cpp"
 
 int main(int argc, char** argv){
 	
@@ -922,6 +949,142 @@ int main(int argc, char** argv){
 		ASSERT(StrEqual(str, newStr));
 
 		free(newStr);
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("abcdef", "HH", &parts);
+		ASSERT(parts.count == 1);
+		ASSERT(parts.data[0] == "abcdef");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("", "HH", &parts, true);
+		ASSERT(parts.count == 0);
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("ab cd ef", "HH", &parts);
+		ASSERT(parts.count == 1);
+		ASSERT(parts.data[0] == "ab cd ef");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("abHHcd ef", "HH", &parts);
+		ASSERT(parts.count == 2);
+		ASSERT(parts.data[0] == "ab");
+		ASSERT(parts.data[1] == "cd ef");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a ef 234 65", " ", &parts);
+		ASSERT(parts.count == 4);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "ef");
+		ASSERT(parts.data[2] == "234");
+		ASSERT(parts.data[3] == "65");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a ef 234  65", " ", &parts);
+		ASSERT(parts.count == 5);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "ef");
+		ASSERT(parts.data[2] == "234");
+		ASSERT(parts.data[3] == "");
+		ASSERT(parts.data[4] == "65");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a ef 234  65", " ", &parts, true);
+		ASSERT(parts.count == 4);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "ef");
+		ASSERT(parts.data[2] == "234");
+		ASSERT(parts.data[3] == "65");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a    ef    234       65", " ", &parts, true);
+		ASSERT(parts.count == 4);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "ef");
+		ASSERT(parts.data[2] == "234");
+		ASSERT(parts.data[3] == "65");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a||||ef|||234|65", "||", &parts, true);
+		ASSERT(parts.count == 3);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "ef");
+		ASSERT(parts.data[2] == "|234|65");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a||||ef|||234|65", "||", &parts);
+		ASSERT(parts.count == 4);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "");
+		ASSERT(parts.data[2] == "ef");
+		ASSERT(parts.data[3] == "|234|65");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("", "||", &parts);
+		ASSERT(parts.count == 0);
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("", "||", &parts, true);
+		ASSERT(parts.count == 0);
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a b c d e f", " ", &parts, true);
+		ASSERT(parts.count == 6);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "b");
+		ASSERT(parts.data[2] == "c");
+		ASSERT(parts.data[3] == "d");
+		ASSERT(parts.data[4] == "e");
+		ASSERT(parts.data[5] == "f");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a b c d e f", " ", &parts);
+		ASSERT(parts.count == 6);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "b");
+		ASSERT(parts.data[2] == "c");
+		ASSERT(parts.data[3] == "d");
+		ASSERT(parts.data[4] == "e");
+		ASSERT(parts.data[5] == "f");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a    b c      d e f", " ", &parts, true);
+		ASSERT(parts.count == 6);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "b");
+		ASSERT(parts.data[2] == "c");
+		ASSERT(parts.data[3] == "d");
+		ASSERT(parts.data[4] == "e");
+		ASSERT(parts.data[5] == "f");
 	}
 
 	return 0;

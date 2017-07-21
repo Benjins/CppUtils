@@ -6,6 +6,7 @@
 #include <stdarg.h>
 
 #include "assert.h"
+#include "vector.h"
 
 struct SubString;
 
@@ -207,6 +208,8 @@ struct SubString{
 	
 	void Release();
 };
+
+void SplitStringIntoParts(const String& str, const char* sep, Vector<SubString>* parts, bool removeEmpties = false);
 
 #define BNS_LEN_START(substr) (substr) .length, (substr) .start
 #define BNS_START_LEN(substr) (substr) .start, (substr) .length
