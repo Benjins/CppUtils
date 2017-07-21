@@ -369,7 +369,7 @@ bool String::operator==(const char* other) const{
 		return true;
 	}
 	int length = GetLength();
-	return StrEqualN(string, other, length);
+	return StrEqualN(string, other, length) && StrLen(other) == length;
 }
 
 bool String::operator!=(const char* other) const{
@@ -377,7 +377,7 @@ bool String::operator!=(const char* other) const{
 		return false;
 	}
 	int length = GetLength();
-	return !StrEqualN(string, other, length);
+	return !StrEqualN(string, other, length) || StrLen(other) != length;
 }
 
 String String::Insert(const char* str, int index) const {
@@ -696,6 +696,26 @@ int main(int argc, char** argv){
 		ASSERT(str3 != str4);
 	}
 	
+	{
+		String str = "c";
+		ASSERT(str != "clea");
+	}
+
+	{
+		String str = "cle";
+		ASSERT(str != "clea");
+	}
+
+	{
+		String str = "c";
+		ASSERT((str == "clea") == false);
+	}
+
+	{
+		String str = "cle";
+		ASSERT((str == "clea") == false);
+	}
+
 	{
 		char str1B[] = "ABCDEFGHIJ";
 		String str1 = str1B;
