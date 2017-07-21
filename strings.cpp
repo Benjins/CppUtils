@@ -467,7 +467,9 @@ void SplitStringIntoParts(const String& str, const char* sep, Vector<SubString>*
 	while (true) {
 		int len = StrFind(cursor, sep);
 		if (len == -1) {
-			parts->PushBack(str.GetSubString(cursor - str.string, strLen - (cursor - str.string)));
+			if (!removeEmpties || *cursor) {
+				parts->PushBack(str.GetSubString(cursor - str.string, strLen - (cursor - str.string)));
+			}
 			break;
 		}
 		else {
@@ -1087,6 +1089,34 @@ int main(int argc, char** argv){
 		ASSERT(parts.data[5] == "f");
 	}
 
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a   ", " ", &parts, true);
+		ASSERT(parts.count == 1);
+		ASSERT(parts.data[0] == "a");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a  b ", " ", &parts, true);
+		ASSERT(parts.count == 2);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "b");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a    b c      d e f    ", " ", &parts, true);
+		ASSERT(parts.count == 6);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "b");
+		ASSERT(parts.data[2] == "c");
+		ASSERT(parts.data[3] == "d");
+		ASSERT(parts.data[4] == "e");
+		ASSERT(parts.data[5] == "f");
+	}
+
+	
 	return 0;
 }
 
