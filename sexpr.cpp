@@ -21,8 +21,8 @@ Vector<SubString> BNSexprLexTokens(const String& toParse) {
 	SexprLexerState state = LS_WhiteSpace;
 	Vector<SubString> tokens;
 #define EMIT_TOKEN() do { \
-	int start = tokStart - toParse.string; \
-	int end = cursor - toParse.string; \
+	int start = (int)(tokStart - toParse.string); \
+	int end = (int)(cursor - toParse.string); \
 	if (start != end) { \
 		tokens.PushBack(toParse.GetSubString(start, end - start)); \
 	} \

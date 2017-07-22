@@ -121,7 +121,7 @@ Vector<SubString> LexString(String string) {
 
 			for (int i = 0; i < BNS_ARRAY_COUNT(operators); i++) {
 				int strLen = StrLen(operators[i]);
-				int tokLen = fileCursor - currToken.start + 1;
+				int tokLen = (int)(fileCursor - currToken.start + 1);
 				if (tokLen <= strLen && memcmp(currToken.start, operators[i], tokLen) == 0) {
 					found = true;
 					break;

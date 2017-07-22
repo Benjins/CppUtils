@@ -210,9 +210,9 @@ Vector<BNVToken> BNVParser::ReadTokenizeProcessFile(String fileName) {
 				if (fileNameToken.start[0] == '"') {
 					StringStackBuffer<512> fullFileName("%s", fileName.string);
 					int lastSlash = 0;
-					for (int i = 0; i < fullFileName.length; i++) {
-						if (fullFileName.buffer[i] == '/') {
-							lastSlash = i;
+					for (int j = 0; j < fullFileName.length; j++) {
+						if (fullFileName.buffer[j] == '/') {
+							lastSlash = j;
 						}
 					}
 

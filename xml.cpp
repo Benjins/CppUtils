@@ -90,8 +90,8 @@ XMLError ParseXMLString(String& xmlString, XMLDoc* outDoc) {
 
 				char* sp = tokens.Get(i).start;
 				char* ep = tokens.Get(j - 1).start + tokens.Get(j - 1).length;
-				int idx = sp - xmlString.string;
-				int len = ep - sp;
+				int idx = (int)(sp - xmlString.string);
+				int len = (int)(ep - sp);
 
 				IDHandle<XMLElement> topId = elemIdStack.data[elemIdStack.count - 1];
 				outDoc->elements.GetById(topId)->plainText = xmlString.GetSubString(idx, len);

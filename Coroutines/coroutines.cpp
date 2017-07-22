@@ -461,7 +461,7 @@ void GenerateCoroutineWrapperCode(
 
 		int typeTokRemap = typeTokStart - startingIndex - offset;
 
-		for (int i = 0; i < typeTokLen; i++) {
+		for (int j = 0; j < typeTokLen; j++) {
 			functionTokens.Remove(typeTokRemap);
 			offset++;
 		}

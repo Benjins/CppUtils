@@ -96,8 +96,8 @@ bool CommandLineParser::IsFlagPresent(const char* flagName){
 }
 
 const char* CommandLineParser::FlagValue(const char* flagName){
-	int flagIndex = GetFlagIndex(options, optionCount, flagName);
-	if (flagIndex < 0){
+	int flagOptionIndex = GetFlagIndex(options, optionCount, flagName);
+	if (flagOptionIndex < 0){
 		return nullptr;
 	}
 

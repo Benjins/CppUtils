@@ -36,7 +36,7 @@ void* FixedPool::Allocate(){
 }
 
 void FixedPool::Deallocate(void* ptr){
-	int index = ((char*)ptr - (char*)mem) / allocSize;
+	int index = (int)(((char*)ptr - (char*)mem) / allocSize);
 
 	//Pointers should never be unaligned
 	ASSERT((char*)mem + (index * allocSize) == ptr);

@@ -71,11 +71,12 @@ bool Socket::Create(SocketProtocol _protocol, SocketBlockingType _blockingType){
 	protocol = _protocol;
 	blockingType = _blockingType;
 	
+	// TODO: socket int type??
 	if (protocol == SP_UDP){
-		handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+		handle = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	}
 	else if (protocol == SP_TCP){
-		handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		handle = (int)socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	}
 	else{
 		//uuuuhhhh...
@@ -274,7 +275,7 @@ bool Socket::Listen(int backlog){
 bool Socket::AcceptConnection(Socket* outSocket){
 	sockaddr_in from = {};
 	socklen_t fromLen = sizeof(from);
-	int rv = accept(handle, (sockaddr*)&from, &fromLen);
+	int rv = (int)accept(handle, (sockaddr*)&from, &fromLen);
 	
 	if (rv < 0){
 		return false;

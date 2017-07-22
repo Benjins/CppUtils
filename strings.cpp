@@ -468,13 +468,13 @@ void SplitStringIntoParts(const String& str, const char* sep, Vector<SubString>*
 		int len = StrFind(cursor, sep);
 		if (len == -1) {
 			if (!removeEmpties || *cursor) {
-				parts->PushBack(str.GetSubString(cursor - str.string, strLen - (cursor - str.string)));
+				parts->PushBack(str.GetSubString((int)(cursor - str.string), strLen - (int)(cursor - str.string)));
 			}
 			break;
 		}
 		else {
 			if (len > 0 || !removeEmpties) {
-				parts->PushBack(str.GetSubString(cursor - str.string, len));
+				parts->PushBack(str.GetSubString((int)(cursor - str.string), len));
 			}
 			cursor = cursor + len + sepLen;
 		}
