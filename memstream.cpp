@@ -47,13 +47,15 @@ void MemStream::ReadInFromFile(const char* fileName){
 	fseek(fIn, 0, SEEK_SET);
 	
 	if (fileSize > 0){
-		base = malloc(fileSize);
+		capacity = fileSize;
+		base = malloc(capacity);
 		int bytesRead = (int)fread(base, 1, fileSize, fIn);
 		ASSERT(bytesRead == fileSize);
 		writeHead = VOID_PTR_ADD(base, fileSize);
 		readHead = base;
 	}
 	else{
+		// TODO: This shouldn't be a reset?
 		base = nullptr;
 		readHead = nullptr;
 		writeHead = nullptr;
