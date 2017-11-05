@@ -83,6 +83,12 @@ struct MemStream{
 		writeHead = VOID_PTR_ADD(writeHead, sizeof(T));
 	}
 	
+	void ResetWhenClear() {
+		ASSERT(readHead == writeHead);
+		readHead = base;
+		writeHead = base;
+	}
+	
 	template<typename T>
 	void WriteArray(const T* vals, int count){
 		int newCapacity = capacity;
