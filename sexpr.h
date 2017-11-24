@@ -25,6 +25,11 @@ struct BNSexprNumber {
 		long long int iValue;
 		double fValue;
 	};
+	
+	BNSexprNumber() {
+		isFloat = false;
+		iValue = 0;
+	}
 
 	BNSexprNumber(int _iValue) {
 		iValue = _iValue;
