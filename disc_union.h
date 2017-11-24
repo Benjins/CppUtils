@@ -47,6 +47,9 @@ bool Is ## str () const {     \
 #define DISC_CPY_CONSTRUCTOR(str) \
 case UE_ ## str : { new (str ## _data) str ( *(str*) orig. str ## _data ); } break;
 
+#define DISC_TYPE_ENUM_CTOR(str) \
+case UE_ ## str : { type = UE_ ## str ; new (str ## _data) str(); } break;
+
 template<int a, int b>
 struct BNSCompileMax{
 	enum {
@@ -101,6 +104,13 @@ struct name { \
 		macro(DISC_FIELDS) \
 	}; \
 	name () {type = UE_None;}\
+	explicit name (UnionEnum _type) { \
+		switch(_type) { \
+			case UE_None: { type = _type; } break; \
+			macro(DISC_TYPE_ENUM_CTOR) \
+			case UE_CountPlus1: {  } break; \
+		} \
+	} \
 	template<typename T> \
 	name(const T& param) { type = UE_None; Assign(param);  }\
 	void operator= ( const name & orig ){ \
@@ -108,7 +118,7 @@ struct name { \
 			switch(type){ \
 				case UE_None: { } break; \
 				macro(DISC_ASSIGN_FROM_ORIG) \
-				case UE_CountPlus1: { } break; \
+				case UE_CountPlus1: { /*Error?*/ } break; \
 			}\
 		} \
 		else { \
