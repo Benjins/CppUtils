@@ -41,12 +41,12 @@ const str & As ## str () const{     \
 
 #define DISC_MAYBE_AS_METHOD(str) \
 str * MaybeAs ## str (){     \
-	return (str *) str ## _data;  \
+	return (type == UE_ ## str) ? ((str *) str ## _data) : nullptr;  \
 }
 
 #define DISC_CONST_MAYBE_AS_METHOD(str) \
 const str * MaybeAs ## str () const{     \
-	return (const str *) str ## _data;  \
+	return (type == UE_ ## str) ? ((const str *) str ## _data) : nullptr;  \
 }
 
 #define DISC_IS_METHOD(str) \
