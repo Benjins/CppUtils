@@ -39,6 +39,16 @@ const str & As ## str () const{     \
 	return *(const str *) str ## _data;  \
 }
 
+#define DISC_MAYBE_AS_METHOD(str) \
+str * MaybeAs ## str (){     \
+	return (str *) str ## _data;  \
+}
+
+#define DISC_CONST_MAYBE_AS_METHOD(str) \
+const str * MaybeAs ## str () const{     \
+	return (const str *) str ## _data;  \
+}
+
 #define DISC_IS_METHOD(str) \
 bool Is ## str () const {     \
 	return type == UE_ ## str; \
@@ -138,6 +148,8 @@ struct name { \
 	macro(DISC_ASSGN_OP) \
 	macro(DISC_AS_METHOD) \
 	macro(DISC_CONST_AS_METHOD) \
+	macro(DISC_MAYBE_AS_METHOD) \
+	macro(DISC_CONST_MAYBE_AS_METHOD) \
 	macro(DISC_IS_METHOD) \
 	void TearDown(){\
 		switch (type){\
