@@ -96,7 +96,7 @@ if %ERRORLEVEL% NEQ 0 goto somethingbad
 bnvparser_test.exe > bnvParserOut.txt
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
-diff bnvParserOut.txt bnvParserExpectedOut.txt
+diff --strip-trailing-cr bnvParserOut.txt bnvParserExpectedOut.txt
 if %ERRORLEVEL% NEQ 0 goto somethingbad
 
 cl /Od /Zi /DBNS_DEBUG /DEXIT_ON_ASSERT /DBNVM_TEST_MAIN bnvm.cpp /Febnvm_test

@@ -62,6 +62,14 @@ int main(int argc, char** argv) {
 	static_assert(BNS_ABS(3)  == 3, "check BNS_ABS macro");
 	static_assert(BNS_ABS(-3) == 3, "check BNS_ABS macro");
 	static_assert(BNS_ABS(0)  == 0, "check BNS_ABS macro");
+	
+	static_assert(BNS_SQR(0)  == 0,  "check BNS_SQR macro");
+	static_assert(BNS_SQR(1)  == 1,  "check BNS_SQR macro");
+	static_assert(BNS_SQR(-1) == 1,  "check BNS_SQR macro");
+	static_assert(BNS_SQR(2)  == 4,  "check BNS_SQR macro");
+	static_assert(BNS_SQR(-2) == 4,  "check BNS_SQR macro");
+	static_assert(BNS_SQR(-6) == 36, "check BNS_SQR macro");
+	static_assert(BNS_SQR(6)  == 36, "check BNS_SQR macro");
 
 	{
 		ASSERT(StrEqual(BNS_STRINGIFY(the), "the"));
