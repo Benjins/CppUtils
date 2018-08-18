@@ -3,11 +3,15 @@
 
 #pragma once
 
+// TODO: This is in C++11, although there are fallbacks if need be
+#define BNS_ALIGNOF(t) alignof(t)
+#define BNS_ALIGNAS(t) alignas(t)
+
 #define DISC_ENUM(str) UE_ ## str,
 
 #define DISC_TYPE_STRINGIFY(str) #str ,
 
-#define DISC_FIELDS(str) char str##_data[sizeof(str)];
+#define DISC_FIELDS(str) BNS_ALIGNAS(BNS_ALIGNOF(str)) char str##_data[sizeof(str)];
 
 #define DISC_TEAR_DOWN(str) case UE_ ## str : { ((str*)(str ## _data))->~ str (); } break;
 
@@ -60,48 +64,14 @@ case UE_ ## str : { new (str ## _data) str ( *(str*) orig. str ## _data ); } bre
 #define DISC_TYPE_ENUM_CTOR(str) \
 case UE_ ## str : { type = UE_ ## str ; new (str ## _data) str(); } break;
 
-template<int a, int b>
-struct BNSCompileMax{
-	enum {
-		value = a > b ? a : b
-	};
-};
-
-template<size_t a, size_t b>
-struct BNSCompileMaxSize{
-	enum{
-		value = a > b ? a : b
-	};
-};
-
-static_assert(BNSCompileMax<3, 6>::value == 6, "Check BNSCompileMax");
-static_assert(BNSCompileMaxSize<3, 6>::value == 6, "Check BNSCompileMax");
-
-// TODO: This is in C++11, although there are fallbacks if need be
-#define BNS_ALIGNOF(t) alignof(t)
-
-#define DISC_UNION_ALIGNMAX_OP(type) BNSCompileMax<BNS_ALIGNOF(type),
-
-#define DISC_UNION_ALIGNMAX_ED(type) >::value
-
 #define DISC_UNION_GLUE_TOKS_(a, b) a ## b
 #define DISC_UNION_GLUE_TOKS(a, b) DISC_UNION_GLUE_TOKS_(a, b)
-
-#if defined(_MSC_VER)
-#define DISC_ALIGN_STRUCT_PRE(x) __declspec( align( x ) )
-#define DISC_ALIGN_STRUCT_POST(x)
-#else
-// TODO: Works on GCC/Clang, but other compilers?
-#define DISC_ALIGN_STRUCT_PRE(x)
-#define DISC_ALIGN_STRUCT_POST(x) __attribute__ ((aligned ( x )))
-#endif
 
 #define DEFINE_DISCRIMINATED_UNION(name, macro) \
 const char* DISC_UNION_GLUE_TOKS(name, _typeNames)[] = {\
 	"None",\
 	macro(DISC_TYPE_STRINGIFY)\
 };\
-DISC_ALIGN_STRUCT_PRE( macro(DISC_UNION_ALIGNMAX_OP) 0 macro(DISC_UNION_ALIGNMAX_ED) ) \
 struct name { \
 	enum UnionEnum{ \
 		UE_None,\
@@ -164,7 +134,6 @@ struct name { \
 	}\
 	UnionEnum type;\
 } \
-DISC_ALIGN_STRUCT_POST( macro(DISC_UNION_ALIGNMAX_OP) 0 macro(DISC_UNION_ALIGNMAX_ED) ) \
 ;
 
 #endif

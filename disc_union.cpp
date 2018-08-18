@@ -155,6 +155,18 @@ int main(int argc, char** argv){
 	}
 
 	ASSERT(str1.GetRef() == 2);
+	
+	{
+		MyUnion un2 = str1;
+		ASSERT(str1.GetRef() == 3);
+		if (auto* str = un2.MaybeAsString()) {
+			ASSERT(str->string == str1.string);
+		} else {
+			ASSERT(false);
+		}
+	}
+	
+	ASSERT(str1.GetRef() == 2);
 
 	return 0;
 }
