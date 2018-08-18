@@ -51,6 +51,23 @@ struct Vector{
 		return *this;
 	}
 	
+	void Resize(int size) {
+		ASSERT(size >= 0);
+		EnsureCapacity(size);
+		if (count < size) {
+			while (count < size) {
+				new(&data[count]) T();
+				count++;
+			}
+		}
+		else if (count > size) {
+			while (count > size) {
+				count--;
+				data[count].~T();
+			}
+		}
+	}
+
 	void EnsureCapacity(int newCapacity){
 		if(newCapacity > capacity){
 			T* newData = (T*)malloc(newCapacity*sizeof(T));
@@ -190,7 +207,7 @@ struct Vector{
 		capacity = 0;
 	}
 	
-	Vector(int initialCapacity){
+	explicit Vector(int initialCapacity){
 		count = 0;
 		capacity = 0;
 		data = nullptr;

@@ -540,6 +540,72 @@ int main(int argc, char** argv){
 	ASSERT(fakeAllocCount == 0);
 	
 	{
+		Vector<Resource> v1;
+		
+		v1.Resize(2);
+
+		ASSERT(v1.count == 2);
+		ASSERT(fakeAllocCount == 2);
+		
+		Vector<Resource> v2 = v1;
+		ASSERT(v2.count == 2);
+		ASSERT(fakeAllocCount == 4);
+	}
+
+	ASSERT(fakeAllocCount == 0);
+	
+	{
+		Vector<Resource> v1;
+		
+		v1.Resize(2);
+		ASSERT(fakeAllocCount == 2);
+		v1.Resize(55);
+		ASSERT(fakeAllocCount == 55);
+		v1.Resize(6);
+		ASSERT(fakeAllocCount == 6);
+		v1.Resize(68);
+		ASSERT(fakeAllocCount == 68);
+		void* ptr1 = v1.data;
+		v1.Resize(1);
+		ASSERT(fakeAllocCount == 1);
+		v1.Resize(0);
+		ASSERT(fakeAllocCount == 0);
+		v1.Resize(68);
+		ASSERT(fakeAllocCount == 68);
+		void* ptr2 = v1.data;
+		ASSERT(ptr1 == ptr2);
+	}
+
+	ASSERT(fakeAllocCount == 0);
+	
+	{
+		Vector<Resource> v1;
+		
+		v1.Resize(2);
+		ASSERT(fakeAllocCount == 2);
+		v1.Destroy();
+		ASSERT(fakeAllocCount == 0);
+		v1.Resize(8);
+		ASSERT(fakeAllocCount == 8);
+	}
+	
+	ASSERT(fakeAllocCount == 0);
+	
+	{
+		Vector<int> iVec1 = {1, 2, 3};
+		ASSERT(iVec1.count == 3);
+		iVec1.Resize(2);
+		ASSERT(iVec1.count == 2);
+		ASSERT(iVec1.data[0] == 1);
+		ASSERT(iVec1.data[1] == 2);
+		iVec1.Resize(44);
+		ASSERT(iVec1.count == 44);
+		iVec1.Resize(1);
+		ASSERT(iVec1.count == 1);
+		ASSERT(iVec1.data[0] == 1);
+	}
+	
+	{
 		Vector<int> iVec1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 		Vector<int> iVec2;
 		BNS_VEC_MAP(iVec1, iVec2, (item - 1) * 7 + 3);
