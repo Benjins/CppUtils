@@ -1,3 +1,5 @@
+## If you want to test the CI w/o chaning anything meaningful,
+## Increment this counter: 1
 
 touch ci_build_results.txt
 
