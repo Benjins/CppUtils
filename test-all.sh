@@ -6,7 +6,7 @@ if [ -z "$CXX" ]; then
 fi
 
 VAGRIND_FLAGS="--quiet --leak-check=full --error-exitcode=12"
-CXX_TEST_FLAGS="-Wall -Wextra -g -O0 -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT"
+CXX_TEST_FLAGS="-Wall -Wextra -g -O0 -std=c++11 -DBNS_DEBUG -DEXIT_ON_ASSERT -pthread"
 
 eval "$CXX -Wall -Wextra -std=c++11 -DBNS_DEBUG -DASSERT_TEST_MAIN assert.cpp -o assert_test.out"
 yes b | head -n 20 | ./assert_test.out
