@@ -15,6 +15,13 @@ void FixedPool::Setup(int _allocSize, int count){
 	allocTracker.Clear();
 }
 
+void FixedPool::Destroy() {
+	capacity = 0;
+	allocSize = 0;
+	free(mem);
+	allocTracker.Clear();
+}
+
 void* FixedPool::Allocate(){
 	for (int i = 0; i < allocTracker.bytesAlloc/4; i++){
 		if (((unsigned int)allocTracker.values[i]) != 0xFFFFFFFF){
@@ -67,6 +74,8 @@ CREATE_TEST_CASE("Fixed pool...is this used?"){
 	for (int i = 0; i < 70; i++) {
 		ASSERT(!pool.allocTracker.GetBit(i));
 	}
+	
+	pool.Destroy();
 
 	return 0;
 }
