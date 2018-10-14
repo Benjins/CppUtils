@@ -36,17 +36,22 @@ Hash ComputeHash(const char* str){
 #if defined(HASH_TEST_MAIN)
 
 CREATE_TEST_CASE("Hash collisions check") {	
-	int* counts = new int[48238123];
+	const int outputCount = 48238123;
+
+	int* counts = new int[outputCount];
+	for (int i = 0; i < outputCount; i++) {
+		counts[i] = 0;
+	}
 	
 	for(unsigned int i = 0; i < 5000000; i++){
 		Hash intHash = ComputeHash(&i, sizeof(i));
 		
-		int idx = intHash % 48238123;
+		int idx = intHash % outputCount;
 		
 		counts[idx]++;
 	}
 	
-	for(unsigned int i = 0; i < 48238123; i++){
+	for(unsigned int i = 0; i < outputCount; i++){
 		ASSERT_MSG(counts[i] < 3, "Hash count for %d is %d, not within tolerance.", i, counts[i]);
 	}
 	

@@ -27,7 +27,7 @@ void RegisterTest(const char* name, const char* file, int line, TestRunFunc* tes
 int RunAllTests(bool outputResults) {
 	FILE* testResults = NULL;
 	if (outputResults) {
-		testResults = fopen("test_results.txt", "wb");
+		testResults = fopen("ci_test_results.txt", "wb");
 		
 		for (int i = 0; i < _test_info_to_run_count; i++) {
 			auto* ptr = &_test_info_to_run[i];
