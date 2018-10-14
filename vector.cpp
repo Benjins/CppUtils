@@ -5,8 +5,6 @@
 
 #if defined(VECTOR_TEST_MAIN)
 
-#include "assert.cpp"
-
 int AtoiTest(const char* str) {
 	int total = 0;
 	while (str && *str) {
@@ -83,10 +81,7 @@ Vector<Resource> func1(){
 	return vals;
 }
 
-int main(int argc, char** argv){
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
-
+CREATE_TEST_CASE("Vector (ala std::vector)") {
 	Vector<int> iVec(20);
 	
 	Vector<int> iVec2;

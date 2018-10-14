@@ -337,14 +337,7 @@ XMLError SaveXMLDocToFile(XMLDoc* doc, const char* fileName) {
 
 #if defined(XML_TEST_MAIN)
 
-#include "strings.cpp"
-#include "assert.cpp"
-#include "hash.cpp"
-
-int main(int argc, char** argv) {
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
-
+CREATE_TEST_CASE("XML basic") {
 	String xmlStr1 = "<tag attr='valval'></tag>";
 	String xmlStr2 = "<  tag attr =   'val22'>\"This is me talkign sgnkjsngkj '''\"</tag>";
 	String xmlStr3 = "<tag attr1='VWG' attr2='False'><flur syn='Bah'/></tag>";

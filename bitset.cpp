@@ -79,3 +79,7 @@ bool GetBitInBitSet(const int* vals, int bit){
 
 	return (vals[index] & (1 << bitNum)) != 0;
 }
+
+
+// TODO: Testing
+

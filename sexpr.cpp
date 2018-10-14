@@ -398,11 +398,7 @@ void PrintSexpr(BNSexpr* sexpr, FILE* outFile /*= stdout*/) {
 
 #if defined(BNSEXPR_TEST_MAIN)
 
-#include "assert.cpp"
-#include "strings.cpp"
-#include "vector.cpp"
-
-int main(int argc, char** argv) {
+CREATE_TEST_CASE("Sexpr") {
 
 	// Test Sexpr lexing
 	{

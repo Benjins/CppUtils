@@ -2,27 +2,23 @@
 
 #if defined(STRINGMAP_TEST_MAIN)
 
-#include "assert.cpp"
-#include "hash.cpp"
-#include "strings.cpp"
+int smSMResourceAlloc = 0;
 
-int resourceAlloc = 0;
-
-struct Resource {
+struct SMResource {
 	int vals;
 
-	Resource() {
+	SMResource() {
 		vals = 0;
-		resourceAlloc++;
+		smSMResourceAlloc++;
 	}
 
-	Resource(const Resource& other) {
+	SMResource(const SMResource& other) {
 		vals = other.vals;
-		resourceAlloc++;
+		smSMResourceAlloc++;
 	}
 
-	~Resource() {
-		resourceAlloc--;
+	~SMResource() {
+		smSMResourceAlloc--;
 	}
 };
 
@@ -37,10 +33,8 @@ void CheckIsValidStringMap(const StringMap<T>& map){
 	}
 }
 
-int main(int argc, char** argv){
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
-	
+CREATE_TEST_CASE("String map basic") {
+
 	{
 		StringMap<int> phoneNumbers;
 		phoneNumbers.Insert("Benji", 666);
@@ -90,22 +84,22 @@ int main(int argc, char** argv){
 		CheckIsValidStringMap(phoneNumbers);
 	}
 
-	ASSERT(resourceAlloc == 0);
+	ASSERT(smSMResourceAlloc == 0);
 
 	{
-		Resource res1;
+		SMResource res1;
 		res1.vals = 1;
 		
-		Resource res2;
+		SMResource res2;
 		res2.vals = 2;
 		
-		Resource res3;
+		SMResource res3;
 		res3.vals = 3;
 
-		Resource res4;
+		SMResource res4;
 		res4.vals = 4;
 
-		StringMap<Resource> resMap;
+		StringMap<SMResource> resMap;
 
 		resMap.Insert("Res1", res1);
 
@@ -129,22 +123,22 @@ int main(int argc, char** argv){
 		CheckIsValidStringMap(resMap);
 	}
 
-	ASSERT(resourceAlloc == 0);
+	ASSERT(smSMResourceAlloc == 0);
 
 	{
-		Resource res1;
+		SMResource res1;
 		res1.vals = 1;
 		
-		Resource res2;
+		SMResource res2;
 		res2.vals = 2;
 		
-		Resource res3;
+		SMResource res3;
 		res3.vals = 3;
 
-		Resource res4;
+		SMResource res4;
 		res4.vals = 4;
 
-		StringMap<Resource> resMap;
+		StringMap<SMResource> resMap;
 
 		resMap.Insert("Res1", res1);
 
@@ -167,17 +161,17 @@ int main(int argc, char** argv){
 		
 		CheckIsValidStringMap(resMap);
 
-		StringMap<Resource> resMap2 = resMap;
+		StringMap<SMResource> resMap2 = resMap;
 
 		CheckIsValidStringMap(resMap2);
 
-		StringMap<Resource> resMap3;
+		StringMap<SMResource> resMap3;
 		resMap3 = resMap2;
 
 		CheckIsValidStringMap(resMap3);
 
-		StringMap<Resource> resMap4;
-		StringMap<Resource> resMap5;
+		StringMap<SMResource> resMap4;
+		StringMap<SMResource> resMap5;
 		resMap4 = resMap5;
 		resMap2 = resMap4;
 		ASSERT(resMap2.count == 0);
@@ -187,7 +181,7 @@ int main(int argc, char** argv){
 		ASSERT(resMap3.count == 1);
 	}
 
-	ASSERT(resourceAlloc == 0);
+	ASSERT(smSMResourceAlloc == 0);
 
 	{
 		const char* str1 = "5\"\"\"";

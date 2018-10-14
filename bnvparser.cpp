@@ -1543,14 +1543,6 @@ bool BNVParser::TypeCheck() {
 
 #if defined(BNVPARSER_TEST_MAIN)
 
-#include "lexer.cpp"
-#include "strings.cpp"
-#include "assert.cpp"
-#include "hash.cpp"
-#include "vector.cpp"
-#include "memstream.cpp"
-#include "bnvm.cpp"
-
 struct Vector3VM {
 	float x;
 	float y;
@@ -1617,10 +1609,11 @@ void ShowFileContentsAtLine(char* file, int lineNum) {
 	}
 }
 
-int main(int argc, char** argv) {
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
-
+// TODO: We previously were running this in a shell script, and could redirect the printed output to a file,
+// then diff it as another test.
+// Now that we run tests in a single process, we'll need to steup BNVM to be able to redirect stdin/stdout to files
+// in c++, and do the diff in c++ as well.
+CREATE_TEST_CASE("BNVParser full system") {
 	BNVParser parser;
 
 	parser.ParseFile("parserTest.bnv");

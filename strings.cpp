@@ -483,14 +483,7 @@ void SplitStringIntoParts(const String& str, const char* sep, Vector<SubString>*
 
 #if defined(STRINGS_TEST_MAIN)
 
-#include "assert.cpp"
-#include "vector.cpp"
-
-int main(int argc, char** argv){
-	
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
-	
+CREATE_TEST_CASE("Strings basic") {
 	ASSERT(StrLen("") == 0);
 	ASSERT(StrLen("abc") == 3);
 	ASSERT(StrLen("abc  GGG") == 8);

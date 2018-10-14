@@ -5,9 +5,8 @@
 
 #include "disc_union.h"
 
-#include "vector.cpp"
-#include "strings.cpp"
-#include "assert.cpp"
+#include "vector.h"
+#include "strings.h"
 
 struct MyClass{
 	char name[16];
@@ -72,7 +71,7 @@ DEFINE_DISCRIMINATED_UNION(BasicUnion2, DISC_LIST)
 static_assert(BNS_ALIGNOF(BasicUnion2) == sizeof(int*), "Alignment of DISC_UNION (assumes pointers are word-aligned");
 
 
-int main(int argc, char** argv){
+CREATE_TEST_CASE("Disc union basic usage"){
 	
 	MyClass mc;
 	mc.it.PushBack(1);

@@ -324,9 +324,7 @@ bool ShutdownSocketSystem(){
 
 #if defined(SOCKET_TEST_MAIN)
 
-#include "assert.cpp"
-
-int main(int argc, char** argv){
+CREATE_TEST_CASE("socket...does this work?") {
 	
 	if(!StartUpSocketSystem()){
 		printf("Failed to init socket system, exiting.\n");

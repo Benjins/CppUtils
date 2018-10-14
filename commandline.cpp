@@ -155,13 +155,7 @@ const char** CommandLineParser::FlagArgValues(const char* flagName){
 
 #if defined(COMMANDLINE_TEST_MAIN)
 
-#include "strings.cpp"
-#include "assert.cpp"
-
-int main(int argc, char** argv){
-
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
+CREATE_TEST_CASE("Command line parsing basic test"){
 
 	{
 		CommandLineParser parser;

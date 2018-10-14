@@ -9,6 +9,7 @@ typedef enum {
 	LS_STRING,
 	LS_CHARACTER,
 	LS_INTEGER,
+
 	LS_FLOAT,
 	LS_OCTAL,
 	LS_HEX,
@@ -282,14 +283,7 @@ Vector<SubString> LexString(String string) {
 
 #if defined(LEXER_TEST_MAIN)
 
-#include "strings.cpp"
-#include "assert.cpp"
-#include "vector.cpp"
-
-int main(int argc, char** argv) {
-
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
+CREATE_TEST_CASE("Lexer basic") {
 
 	{
 		ASSERT(FindChar("abbbbc", 'c') == 5);

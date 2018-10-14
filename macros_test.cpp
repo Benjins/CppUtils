@@ -2,15 +2,12 @@
 
 #if defined(MACROS_TEST_MAIN)
 
-#include "assert.cpp"
-#include "strings.cpp"
-
 struct testStruct {
 	int x;
 	int y;
 };
 
-int main(int argc, char** argv) {
+CREATE_TEST_CASE("Macros test basic") {
 
 	{
 		int counter = 0;

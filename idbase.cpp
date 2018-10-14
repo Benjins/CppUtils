@@ -3,8 +3,6 @@
 
 #if defined(IDBASE_TEST_MAIN)
 
-#include "assert.cpp"
-
 static int allocCount = 0;
 
 struct TestEntity : IDBase{
@@ -24,11 +22,7 @@ struct TestEntity : IDBase{
 	}
 };
 
-
-int main(int argc, char** argv){
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
-	
+CREATE_TEST_CASE("IDbase + IDTracker basic") {
 	ASSERT(allocCount == 0);
 	
 	{

@@ -35,12 +35,7 @@ Hash ComputeHash(const char* str){
 
 #if defined(HASH_TEST_MAIN)
 
-#include "assert.cpp"
-
-int main(int argc, char** argv){
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
-	
+CREATE_TEST_CASE("Hash collisions check") {	
 	int* counts = new int[48238123];
 	
 	for(unsigned int i = 0; i < 5000000; i++){

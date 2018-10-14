@@ -49,7 +49,7 @@ void FixedPool::Deallocate(void* ptr){
 
 #include "macros.h"
 
-int main(){
+CREATE_TEST_CASE("Fixed pool...is this used?"){
 	FixedPool pool;
 	pool.Setup((int)sizeof(int), 70);
 

@@ -47,7 +47,9 @@ void assertFrom(const char* cond, const char* function, const char* file, int li
 }
 
 
-#if ASSERT_TEST_MAIN
+// We skip this on MSVC, since it has no signal handlers...
+// we should probably get a better system in place
+#if defined(ASSERT_TEST_MAIN) && !defined(_MSC_VER)
 
 int assertCount = 0;
 

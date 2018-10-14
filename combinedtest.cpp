@@ -1,13 +1,7 @@
 
 #if defined(COMBINEDTESTS_TEST_MAIN)
 
-#include "vector.cpp"
-#include "stringmap.cpp"
-#include "strings.cpp"
-#include "hash.cpp"
-#include "assert.cpp"
-
-int main(int argc, char** argv){
+CREATE_TEST_CASE("Combined tests basic") {
 	
 	{
 		Vector<StringMap<int>> mapVec;

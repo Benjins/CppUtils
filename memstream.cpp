@@ -66,11 +66,6 @@ void MemStream::ReadInFromFile(const char* fileName){
 
 #if defined(MEMSTREAM_TEST_MAIN)
 
-#include "strings.cpp"
-#include "assert.cpp"
-#include "stringmap.cpp"
-#include "hash.cpp"
-
 struct TestStr{
 	char name[5];
 	int x;
@@ -86,9 +81,7 @@ TestStr GetStruct(){
 	return c;
 }
 
-int main(int argc, char** argv){
-	BNS_UNUSED(argc);
-	BNS_UNUSED(argv);
+CREATE_TEST_CASE("MemStream") {
 
 	{
 		MemStream str;

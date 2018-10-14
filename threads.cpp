@@ -90,8 +90,6 @@ int CompareAndSwap32(volatile int* i, int oldVal, int newVal){
 
 #if defined(THREADS_TEST_MAIN)
 
-#include "assert.cpp"
-
 int val1 = 0;
 int val2 = 0;
 
@@ -121,7 +119,7 @@ THREAD_RET_TYPE ThreadCounterFunc(void* arg){
 	return 0;
 }
 
-int main(){
+CREATE_TEST_CASE("Threads + atomics basic") {
 	
 	ASSERT(val1 == 0);
 	ASSERT(val2 == 0);
