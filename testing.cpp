@@ -57,6 +57,8 @@ int RunAllTests(bool outputResults) {
 	if (outputResults) {
 		fclose(testResults);
 	}
+
+	printf("All %d tests passed!\n", _test_info_to_run_count);
 	
 	return 0;
 }
