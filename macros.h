@@ -33,5 +33,7 @@ inline constexpr int bns_abs(int x) { return (x < 0) ? -x : x; }
 #define BNS_DEG2RAD (BNS_PI / 180.0f)
 #define BNS_RAD2DEG (180.0f / BNS_PI)
 
+#define BNS_SWAP_VAL(a, b) do { auto _bns_tmp = a; a = b; b = _bns_tmp; } while(0)
+
 #endif
 
