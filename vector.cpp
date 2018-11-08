@@ -869,6 +869,58 @@ CREATE_TEST_CASE("Vector (ala std::vector)") {
 		}
 	}
 
+	{
+		Vector<int> vec;
+		vec.PushBack(5);
+		vec.PushBack(1);
+		vec.PushBack(2);
+		vec.PushBack(6);
+
+		ASSERT(vec.count == 4);
+
+		BNS_VEC_DUMB_SORT(vec, l < r);
+
+		ASSERT(vec.count == 4);
+		ASSERT(vec.data[0] == 1);
+		ASSERT(vec.data[1] == 2);
+		ASSERT(vec.data[2] == 5);
+		ASSERT(vec.data[3] == 6);
+	}
+
+	{
+		const int seed = 10;
+		srand(seed);
+
+		const int iterCount = 1000;
+
+		for (int iter = 0; iter < iterCount; iter++) {
+
+			Vector<int> vec;
+			int len = rand() % 50;
+			BNS_FOR_I(len) {
+				vec.PushBack(rand() % 50);
+			}
+
+			ASSERT(vec.count == len);
+
+			BNS_VEC_DUMB_SORT(vec, l < r);
+
+			ASSERT(vec.count == len);
+
+			BNS_FOR_I(vec.count - 1) {
+				ASSERT(vec.data[i] <= vec.data[i + 1]);
+			}
+
+			BNS_VEC_DUMB_SORT(vec, l > r);
+
+			ASSERT(vec.count == len);
+
+			BNS_FOR_I(vec.count - 1) {
+				ASSERT(vec.data[i] >= vec.data[i + 1]);
+			}
+		}
+	}
+
 	return 0;
 }
 

@@ -295,4 +295,21 @@ struct Vector{
 #define BNS_VEC_FOR_I(vec) BNS_VEC_FOR_NAME(i, vec)
 #define BNS_VEC_FOR_J(vec) BNS_VEC_FOR_NAME(j, vec)
 
+#define BNS_VEC_DUMB_SORT(vec, pred) do {                   \
+	BNS_FOR_I((vec).count) {                                \
+		for (int j = i; j > 0; j--) {                       \
+			auto l = (vec).data[j - 1];						\
+			auto r = (vec).data[j ];						\
+			if (!(pred)) {									\
+				auto tmp = (vec).data[j];					\
+				(vec).data[j] = (vec).data[j - 1];			\
+				(vec).data[j - 1] = tmp;					\
+			}												\
+			else {											\
+				break;										\
+			}												\
+		}													\
+	}                                                       \
+} while(0)
+
 #endif
