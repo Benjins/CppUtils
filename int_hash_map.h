@@ -44,7 +44,7 @@ struct PositiveIntHashMap {
 		maxKVPairCount = nextSize;
 	}
 
-	PositiveIntHashMap() {
+	~PositiveIntHashMap() {
 		delete[] keys;
 		delete[] vals;
 	}
