@@ -10,6 +10,7 @@
 #define FIXEDPOOL_TEST_MAIN
 #define HASH_TEST_MAIN
 #define IDBASE_TEST_MAIN
+#define INT_HASH_MAP_TEST_MAIN
 #define LEXER_TEST_MAIN
 #define MACROS_TEST_MAIN
 #define MEMSTREAM_TEST_MAIN
@@ -34,6 +35,7 @@
 #include "fixedpool.cpp"
 #include "hash.cpp"
 #include "idbase.cpp"
+#include "int_hash_map.cpp"
 #include "lexer.cpp"
 #include "macros_test.cpp"
 #include "memstream.cpp"
