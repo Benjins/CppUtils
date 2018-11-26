@@ -36,12 +36,17 @@ struct PositiveIntHashMap {
 			}
 		}
 
-		free(keys);
-		free(vals);
+		delete[] keys;
+		delete[] vals;
 
 		keys = newKeys;
 		vals = newVals;
 		maxKVPairCount = nextSize;
+	}
+
+	PositiveIntHashMap() {
+		delete[] keys;
+		delete[] vals;
 	}
 
 	void ReHashToNextSize() {
