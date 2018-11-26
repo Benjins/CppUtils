@@ -15,7 +15,7 @@
 }
 #define ASSERT_MSG(cond, str, ...) if(!(cond)){\
 	char assertMsg[4096];\
-	snprintf(assertMsg, 4096, str, __VA_ARGS__);\
+	snprintf(assertMsg, 4096, str, ## __VA_ARGS__);\
 	assertFrom(#cond, __FUNCTION__, __FILE__, __LINE__, assertMsg);\
 }
 #define ASSERT_WARN(str, ...) {\
