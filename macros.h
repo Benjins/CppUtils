@@ -23,6 +23,17 @@ inline constexpr int bns_abs(int x) { return (x < 0) ? -x : x; }
 
 #define BNS_ABS(x) bns_abs(x)
 #define BNS_SQR(x) ((x)*(x))
+#define BNS_CUBE(x) ((x)*(x)*(x))
+
+static_assert(BNS_SQR(0) == 0, "Check square");
+static_assert(BNS_SQR(1) == 1, "Check square");
+static_assert(BNS_SQR(-1) == 1, "Check square");
+static_assert(BNS_SQR(2) == 4, "Check square");
+
+static_assert(BNS_CUBE(0) == 0, "Check cube");
+static_assert(BNS_CUBE(1) == 1, "Check cube");
+static_assert(BNS_CUBE(-1) == -1, "Check cube");
+static_assert(BNS_CUBE(2) == 8, "Check cube");
 
 #define BNS_ROUND(x) ((int)((x) + ((x) < 0 ? -0.5f : 0.5f)))
 
