@@ -60,6 +60,7 @@ static_assert(BNS_ROUND(-1.6f) == -2, "Check round");
 							if ( BNS_GLUE_TOKS(_only_once_, __LINE__) && !( BNS_GLUE_TOKS(_only_once_, __LINE__) = 0))
 
 #define BNS_PI 3.1415926535897932384f
+#define BNS_TAU (2 * BNS_PI)
 #define BNS_DEG2RAD (BNS_PI / 180.0f)
 #define BNS_RAD2DEG (180.0f / BNS_PI)
 
