@@ -423,18 +423,37 @@ String ReadStringFromFile(const char* fileName) {
 	String str;
 
 	FILE* fIn = fopen(fileName, "rb");
-	fseek(fIn, 0, SEEK_END);
-	int fileLength = ftell(fIn);
-	fseek(fIn, 0, SEEK_SET);
+	if (fIn != NULL) {
+		fseek(fIn, 0, SEEK_END);
+		int fileLength = ftell(fIn);
+		fseek(fIn, 0, SEEK_SET);
 
-	str.SetSize(fileLength);
-	int bytesRead = (int)fread(str.string, 1, fileLength, fIn);
-	ASSERT(bytesRead == fileLength);
-	str.string[fileLength] = '\0';
+		str.SetSize(fileLength);
+		int bytesRead = (int)fread(str.string, 1, fileLength, fIn);
+		ASSERT(bytesRead == fileLength);
+		str.string[fileLength] = '\0';
 
-	fclose(fIn);
+		fclose(fIn);
+	}
+	else {
+		// TODO: Warn
+	}
 
 	return str;
+}
+
+void WriteStringToFile(const String& str, const char* fileName) {
+	FILE* fOut = fopen(fileName, "wb");
+	if (fOut != NULL) {
+		if (str != "") {
+			fwrite(str.string, 1, str.GetLength(), fOut);
+		}
+
+		fclose(fOut);
+	}
+	else {
+		// TODO: Warn
+	}
 }
 
 bool SubString::operator==(const String& other) const{
@@ -1127,6 +1146,23 @@ CREATE_TEST_CASE("Strings basic") {
 		ASSERT(parts.data[3] == "d");
 		ASSERT(parts.data[4] == "e");
 		ASSERT(parts.data[5] == "f");
+	}
+
+	{
+		Vector<SubString> parts;
+		SplitStringIntoParts("a    b c", " ", &parts, true);
+		ASSERT(parts.count == 3);
+		ASSERT(parts.data[0] == "a");
+		ASSERT(parts.data[1] == "b");
+		ASSERT(parts.data[2] == "c");
+
+		ASSERT(parts.data[0].AsString() == "a");
+		ASSERT(parts.data[1].AsString() == "b");
+		ASSERT(parts.data[2].AsString() == "c");
+
+		ASSERT(parts.data[0].AsString().GetLength() == 1);
+		ASSERT(parts.data[1].AsString().GetLength() == 1);
+		ASSERT(parts.data[2].AsString().GetLength() == 1);
 	}
 
 	

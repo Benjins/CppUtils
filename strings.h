@@ -160,6 +160,7 @@ struct String{
 };
 
 String ReadStringFromFile(const char* fileName);
+void WriteStringToFile(const String& str, const char* fileName);
 
 struct SubString{
 	int* ref;
@@ -204,6 +205,15 @@ struct SubString{
 		return *ref;
 	}
 	
+	String AsString() {
+		String str;
+		if (length > 0) {
+			str.SetSize(length);
+			snprintf(str.string, length + 1, "%.*s", length, start);
+		}
+		return str;
+	}
+
 	void Retain();
 	
 	void Release();
