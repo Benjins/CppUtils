@@ -308,28 +308,41 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 				BNSexpr* sepxrChild = &sexprChildren.data[sexprIdx];
 				BNSexpr* matchChild = &matchChildren.data[matchIdx];
 				// Perform local match
+				int oldIndex = *index;
 				if (MatchSexpr(sepxrChild, matchChild, args, index)) {
 					// Check if we can match again on ..., or skip over ? if needed
 					if (matchIdx < matchChildren.count - 1) {
 						if (auto* nextMatchChild = matchChildren.data[matchIdx + 1].MaybeAsBNSexprIdentifier()) {
 							if (nextMatchChild->identifier == "@{...}") {
-								BNSexprParenList allMatches;
-								
-								// Add the first match we got
-								ASSERT(*index > 0);
-								allMatches.children.PushBack(*args.Get((*index) - 1));
+								int newIndex = *index;
+								int argUsageCount = newIndex - oldIndex;
 
-								// XXX: Will not work w/ nesting, or more complicated @{...} situations
-								BNSexpr temp;
-								Vector<BNSexpr*> tempPtr = { &temp };
-								
+								// Add the first match we got
+								Vector<BNSexprParenList> allMatches;
+								allMatches.Resize(argUsageCount);
+								BNS_FOR_I(argUsageCount) {
+									allMatches.data[i].children.PushBack(*args.Get(oldIndex + i));
+								}
+
+								// Wonky, but we use a vector of pointers, so the first vector is just to store the objects we'll need...
+								Vector<BNSexpr> temp;
+								temp.Resize(argUsageCount);
+
+								Vector<BNSexpr*> tempPtr;
+								BNS_VEC_FOREACH(temp) {
+									tempPtr.PushBack(ptr);
+								}
+
 								sexprIdx++;
 								while (sexprIdx < sexprChildren.count) {
 									BNSexpr* nextSepxrChild = &sexprChildren.data[sexprIdx];
 									// Instead of going into the normal argument list, we redirect them
 									int tempIdx = 0;
 									if (MatchSexpr(nextSepxrChild, matchChild, tempPtr, &tempIdx)) {
-										allMatches.children.PushBack(temp);
+										ASSERT(tempIdx == argUsageCount);
+										BNS_FOR_I(argUsageCount) {
+											allMatches.data[i].children.PushBack(temp.data[i]);
+										}
 									}
 									else {
 										break;
@@ -337,10 +350,16 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 									sexprIdx++;
 								}
 
-								*args.Get((*index) - 1) = allMatches;
+								// Write back the list of children for each arguments
+								BNS_FOR_I(argUsageCount) {
+									*args.Get(oldIndex + i) = allMatches.data[i];
+								}
+
 								matchIdx++;
 								// Counteract the final increment that comes later
 								sexprIdx--;
+
+								*index = newIndex;
 							}
 							else if (nextMatchChild->identifier == "@{?}") {
 								// Skip over the ?
@@ -1298,6 +1317,105 @@ CREATE_TEST_CASE("Sexpr") {
 		CHECK_SEXPR_IS_INT(ids.AsBNSexprParenList().children.data[0], 4);
 		CHECK_SEXPR_IS_INT(ids.AsBNSexprParenList().children.data[1], 5);
 		CHECK_SEXPR_IS_INT(ids.AsBNSexprParenList().children.data[2], 8);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "((+ 1 2) (+ 5 1) (+ 8 3))");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr nums1, nums2;
+		bool succ = MatchSexpr(&sexprs.data[0], "((+ @{num} @{num}) @{...})", { &nums1, &nums2 });
+		ASSERT(succ);
+
+		ASSERT(nums1.IsBNSexprParenList());
+		ASSERT(nums1.AsBNSexprParenList().children.count == 3);
+		CHECK_SEXPR_IS_INT(nums1.AsBNSexprParenList().children.data[0], 1);
+		CHECK_SEXPR_IS_INT(nums1.AsBNSexprParenList().children.data[1], 5);
+		CHECK_SEXPR_IS_INT(nums1.AsBNSexprParenList().children.data[2], 8);
+
+		ASSERT(nums2.IsBNSexprParenList());
+		ASSERT(nums2.AsBNSexprParenList().children.count == 3);
+		CHECK_SEXPR_IS_INT(nums2.AsBNSexprParenList().children.data[0], 2);
+		CHECK_SEXPR_IS_INT(nums2.AsBNSexprParenList().children.data[1], 1);
+		CHECK_SEXPR_IS_INT(nums2.AsBNSexprParenList().children.data[2], 3);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(() () ())");
+		ASSERT(res == BNSexpr_Success);
+
+		bool succ = MatchSexpr(&sexprs.data[0], "(() @{...})", { });
+		ASSERT(succ);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "((id fr) (id fr) (id fr))");
+		ASSERT(res == BNSexpr_Success);
+
+		bool succ = MatchSexpr(&sexprs.data[0], "((id fr) @{...})", {});
+		ASSERT(succ);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "((+ (* 2 3) (* 4 5 6)) (+ (* 7 8) (* 1 3 2)))");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr nums;
+		bool succ = MatchSexpr(&sexprs.data[0], "((+ (* @{num} @{...}) @{...}) @{...})", { &nums });
+		ASSERT(succ);
+
+		// Basically, it should return (((2 3) (4 5 6)) ((7 8) (1 3 2)))
+		// Think of it this way: Each @{...} does not add any additional outputs in the argument list,
+		// But instead converts one of the arguments from an atom to a paren list of that atom
+
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 2);
+		ASSERT(nums.AsBNSexprParenList().children.data[0].IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.count == 2);
+		ASSERT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[0].IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.count == 2);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[0], 2);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[1], 3);
+		ASSERT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.count == 3);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[0], 4);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[1], 5);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[2], 6);
+		ASSERT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.count == 2);
+		ASSERT(nums.AsBNSexprParenList().children.data[1].IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.count == 2);
+		ASSERT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[0].IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.count == 2);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[0], 7);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[1], 8);
+		ASSERT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.count == 3);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[0], 1);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[1], 3);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[2], 2);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "((+ (* 2 3) (* 4 5 6)))");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr nums;
+		bool succ = MatchSexpr(&sexprs.data[0], "((+ (* @{num} @{...}) @{...}) @{?})", { &nums });
+		ASSERT(succ);
+
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 2);
+		ASSERT(nums.AsBNSexprParenList().children.data[0].IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.count == 2);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[0], 2);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.data[1], 3);
+		ASSERT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.count == 3);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[0], 4);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[1], 5);
+		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[2], 6);
 	}
 
 	return 0;
