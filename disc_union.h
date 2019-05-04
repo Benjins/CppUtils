@@ -121,6 +121,7 @@ struct name { \
 	macro(DISC_MAYBE_AS_METHOD) \
 	macro(DISC_CONST_MAYBE_AS_METHOD) \
 	macro(DISC_IS_METHOD) \
+	bool IsNone() const { return type == UE_None; } \
 	void TearDown(){\
 		switch (type){\
 			case UE_None: { } break;\
