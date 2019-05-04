@@ -148,7 +148,7 @@ bool StrEqual(const char* s1, const char* s2){
 }
 
 bool StrEqualN(const char* s1, const char* s2, unsigned int len){
-	if(s1 == s2){
+	if(s1 == s2 || len == 0){
 		return true;
 	}
 	
@@ -469,7 +469,7 @@ bool SubString::operator==(const char* other) const{
 }
 
 bool SubString::operator!=(const char* other) const{
-	return !StrEqualN(start, other, length) || other[length] != '\0';
+	return !(*this == other);
 }
 
 void SplitStringIntoParts(const String& str, const char* sep, Vector<SubString>* parts, bool removeEmpties /*= false*/) {
@@ -1165,7 +1165,40 @@ CREATE_TEST_CASE("Strings basic") {
 		ASSERT(parts.data[2].AsString().GetLength() == 1);
 	}
 
-	
+	{
+		String x = "";
+		ASSERT(x == "");
+		ASSERT(!(x != ""));
+		ASSERT(x != "a");
+		ASSERT(!(x == "a"));
+	}
+
+	{
+		String x = "a";
+		ASSERT(x != "");
+		ASSERT(!(x == ""));
+		ASSERT(x == "a");
+		ASSERT(!(x != "a"));
+	}
+
+	{
+		SubString x;
+		ASSERT(x == "");
+		ASSERT(!(x != ""));
+		ASSERT(x != "a");
+		ASSERT(!(x == "a"));
+	}
+
+	{
+		String xs = "a";
+		SubString x = xs.GetSubString(0, 1);
+		ASSERT(x != "");
+		ASSERT(!(x == ""));
+		ASSERT(x == "a");
+		ASSERT(!(x != "a"));
+	}
+
+
 	return 0;
 }
 
