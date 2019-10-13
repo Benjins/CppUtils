@@ -248,6 +248,30 @@ bool MatchSexpr(BNSexpr* sexpr, const char* format, const Vector<BNSexpr*>& args
 	return isMatch;
 }
 
+int CountMatchCapturesInSexpr(BNSexpr* sexpr) {
+	if (auto* paren = sexpr->MaybeAsBNSexprParenList()) {
+		int count = 0;
+		BNS_VEC_FOREACH(paren->children) {
+			count += CountMatchCapturesInSexpr(ptr);
+		}
+		return count;
+	}
+	else if (auto* ident = sexpr->MaybeAsBNSexprIdentifier()) {
+		SubString specialMatchClause;
+		if (IdentifierIsSpecialMatchClause(ident->identifier, &specialMatchClause)) {
+			// TODO: Really anything other than @{...} or @{?}
+			if (specialMatchClause == "id" || specialMatchClause == "num" || specialMatchClause == "str" || specialMatchClause == "") {
+				return 1;
+			}
+		}
+
+		return 0;
+	}
+	else {
+		return 0;
+	}
+}
+
 bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& args, int* index) {
 	if (matchSexpr->IsBNSexprString()) {
 		return sexpr->IsBNSexprString() && sexpr->AsBNSexprString().value == matchSexpr->AsBNSexprString().value;
@@ -378,17 +402,26 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 					if (matchIdx < matchChildren.count - 1) {
 						if (auto* nextMatchChild = matchChildren.data[matchIdx + 1].MaybeAsBNSexprIdentifier()) {
 							if (nextMatchChild->identifier == "@{...}") {
-								// Match is an empty list
-								*args.Get(*index) = BNSexprParenList();
-								(*index)++;
+								// Potentially also compute any more args that were in the failed match sexpr...
+								// They will all be empty lists, but we still need to parse them out, since hte match failed
+								int captureCount = CountMatchCapturesInSexpr(matchChild);
+								BNS_FOR_I(captureCount) {
+									*args.Get(*index) = BNSexprParenList();
+									(*index)++;
+								}
 
 								matchIdx += 2;
-								sexprIdx++;
+								//sexprIdx++;
 							}
 							else if (nextMatchChild->identifier == "@{?}") {
 								// Match is nothing (since we didn't succeed)
-								*args.Get(*index) = BNSexpr();
-								(*index)++;
+								// Potentially also compute any more args that were in the failed match sexpr...
+								// They will all be empty lists, but we still need to parse them out, since hte match failed
+								int captureCount = CountMatchCapturesInSexpr(matchChild);
+								BNS_FOR_I(captureCount) {
+									*args.Get(*index) = BNSexpr();
+									(*index)++;
+								}
 
 								matchIdx += 2;
 							}
@@ -433,6 +466,44 @@ bool MatchSexpr(BNSexpr* sexpr, BNSexpr* matchSexpr, const Vector<BNSexpr*>& arg
 			return matchIdx == matchChildren.count && sexprIdx == sexprChildren.count;
 		}
 		else {
+			// TODO: go through match sexpr and increment arg index as needed, plus setting args
+			// BUT ONLY IF we are ending in a list expression....
+			// TODO: HACK: FIXME: PLZ
+			// Okay, but actually: we need to continue to parse match as above...but with the understanding that the sexpr is not a list...
+
+			// TODO: Maybe match it w/ itself...and then throw away the results?
+
+			// NO WE ACTUALLY ARER FUCKED
+			// WE NEED TO KNOW IF THE NEXT SINLING OF MATCH SEXPR IS A @{...}
+			// IE IN THE CALL STACK ABOVE
+
+			// but only if it's a list...
+			if(0){
+			//if (matchSexpr->AsBNSexprParenList().children.count > 1 && matchSexpr->AsBNSexprParenList().children.Back().IsBNSexprIdentifier() && matchSexpr->AsBNSexprParenList().children.Back().AsBNSexprIdentifier().identifier == "@{...}") {
+				int currIndex = *index;
+				MatchSexpr(matchSexpr, matchSexpr, args, index);
+				int endIndex = *index;
+
+				for (int i = currIndex; i < endIndex; i++) {
+					*args.Get(i) = BNSexprParenList();
+				}
+			}
+
+			if(0) {
+			//if (matchSexpr->AsBNSexprParenList().children.count > 1 && matchSexpr->AsBNSexprParenList().children.Back().IsBNSexprIdentifier() && matchSexpr->AsBNSexprParenList().children.Back().AsBNSexprIdentifier().identifier == "@{...}") {
+				BNS_VEC_FOREACH(matchSexpr->AsBNSexprParenList().children) {
+					if (auto* matchSyntax = ptr->MaybeAsBNSexprIdentifier()) {
+						if (matchSyntax->identifier == "@{num}" || matchSyntax->identifier == "@{id}" || matchSyntax->identifier == "@{str}") {
+							*args.Get(*index) = BNSexprParenList();
+							(*index)++;
+						}
+					}
+				}
+
+				return true;
+			}
+
+
 			return false;
 		}
 	}
@@ -1416,6 +1487,168 @@ CREATE_TEST_CASE("Sexpr") {
 		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[0], 4);
 		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[1], 5);
 		CHECK_SEXPR_IS_INT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.data[2], 6);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(+ +)");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr nums;
+		bool succ = MatchSexpr(&sexprs.data[0], "(+ @{num} @{...} +)", { &nums });
+		ASSERT(succ);
+
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 0);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(+ (1 2 3) (4 5 6) +)");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr nums;
+		bool succ = MatchSexpr(&sexprs.data[0], "(+ (@{num} @{...}) @{...} +)", { &nums });
+		ASSERT(succ);
+
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 2);
+		ASSERT(nums.AsBNSexprParenList().children.data[0].IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.data[0].AsBNSexprParenList().children.count == 3);
+		ASSERT(nums.AsBNSexprParenList().children.data[1].IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.data[1].AsBNSexprParenList().children.count == 3);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(+ +)");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr nums;
+		bool succ = MatchSexpr(&sexprs.data[0], "(+ (@{num} @{...}) @{...} +)", { &nums });
+		ASSERT(succ);
+
+		ASSERT(nums.IsBNSexprParenList());
+		ASSERT(nums.AsBNSexprParenList().children.count == 0);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(+ +)");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr funcs, args;
+		bool succ = MatchSexpr(&sexprs.data[0], "(+ (@{id} @{} @{...}) @{...} +)", { &funcs, &args });
+		ASSERT(succ);
+
+		ASSERT(funcs.IsBNSexprParenList());
+		ASSERT(funcs.AsBNSexprParenList().children.count == 0);
+
+		ASSERT(args.IsBNSexprParenList());
+		ASSERT(args.AsBNSexprParenList().children.count == 0);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "((ff 1 2) => (set-flag irritation))");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr arg0, arg1, arg2, arg3;
+		bool succ = MatchSexpr(&sexprs.data[0], "((@{id} @{} @{...}) @{...} => (@{id} @{} @{...}) @{...})", { &arg0, &arg1, &arg2, &arg3 });
+		ASSERT(succ);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(\"Who are *you*?\" (ff 34 5) => (set-flag irritation) name_choice)");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr optionText, optionNextID, preArgFuncs, preArgArgs, postArgFuncs, postArgArgs;
+		bool succ = MatchSexpr(&sexprs.data[0], "(@{str} (@{id} @{} @{...}) @{...} => (@{id} @{} @{...}) @{...} @{id})", { &optionText, &preArgFuncs, &preArgArgs, &postArgFuncs, &postArgArgs, &optionNextID });
+		ASSERT(succ);
+	}
+
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(\"Who are *you*?\" => (set-flag irritation) name_choice)");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr optionText, optionNextID, preArgFuncs, preArgArgs, postArgFuncs, postArgArgs;
+		bool succ = MatchSexpr(&sexprs.data[0], "(@{str} (@{id} @{} @{...}) @{...} => (@{id} @{} @{...}) @{...} @{id})", { &optionText, &preArgFuncs, &preArgArgs, &postArgFuncs, &postArgArgs, &optionNextID });
+		ASSERT(succ);
+
+		ASSERT(preArgFuncs.IsBNSexprParenList());
+		ASSERT(preArgFuncs.AsBNSexprParenList().children.count == 0);
+
+		ASSERT(preArgArgs.IsBNSexprParenList());
+		ASSERT(preArgArgs.AsBNSexprParenList().children.count == 0);
+
+		ASSERT(postArgFuncs.IsBNSexprParenList());
+		ASSERT(postArgFuncs.AsBNSexprParenList().children.count == 1);
+
+		ASSERT(postArgArgs.IsBNSexprParenList());
+		ASSERT(postArgArgs.AsBNSexprParenList().children.count == 1);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(\"Who are *you*?\" => (set-flag irritation) name_choice)");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr optionText, optionNextID, preArgFuncs, preArgArgs, postArgFuncs, postArgArgs;
+		bool succ = MatchSexpr(&sexprs.data[0], "(@{str} (@{id} @{} @{...}) @{?} => (@{id} @{} @{...}) @{...} @{id})", { &optionText, &preArgFuncs, &preArgArgs, &postArgFuncs, &postArgArgs, &optionNextID });
+		ASSERT(succ);
+
+		ASSERT(preArgFuncs.IsNone());
+		ASSERT(preArgArgs.IsNone());
+
+		ASSERT(postArgFuncs.IsBNSexprParenList());
+		ASSERT(postArgFuncs.AsBNSexprParenList().children.count == 1);
+
+		ASSERT(postArgArgs.IsBNSexprParenList());
+		ASSERT(postArgArgs.AsBNSexprParenList().children.count == 1);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(\"Who are *you*?\" => (set-flag irritation) name_choice)");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr optionText, optionNextID, preArgFuncs, preArgArgs, postArgFuncs, postArgArgs;
+		bool succ = MatchSexpr(&sexprs.data[0], "(@{str} (@{id} @{} @{?}) @{?} => (@{id} @{} @{...}) @{...} @{id})", { &optionText, &preArgFuncs, &preArgArgs, &postArgFuncs, &postArgArgs, &optionNextID });
+		ASSERT(succ);
+
+		ASSERT(preArgFuncs.IsNone());
+		ASSERT(preArgArgs.IsNone());
+
+		ASSERT(postArgFuncs.IsBNSexprParenList());
+		ASSERT(postArgFuncs.AsBNSexprParenList().children.count == 1);
+
+		ASSERT(postArgArgs.IsBNSexprParenList());
+		ASSERT(postArgArgs.AsBNSexprParenList().children.count == 1);
+	}
+
+	{
+		Vector<BNSexpr> sexprs;
+		BNSexprParseResult res = ParseSexprs(&sexprs, "(\"Who are *you*?\" => (set-flag irritation) name_choice)");
+		ASSERT(res == BNSexpr_Success);
+
+		BNSexpr optionText, optionNextID, preArgFuncs, preArgArgs, postArgFuncs, postArgArgs;
+		bool succ = MatchSexpr(&sexprs.data[0], "(@{str} (@{id} @{} @{?}) @{...} => (@{id} @{} @{...}) @{...} @{id})", { &optionText, &preArgFuncs, &preArgArgs, &postArgFuncs, &postArgArgs, &optionNextID });
+		ASSERT(succ);
+
+		ASSERT(preArgFuncs.IsBNSexprParenList());
+		ASSERT(preArgFuncs.AsBNSexprParenList().children.count == 0);
+
+		ASSERT(preArgArgs.IsBNSexprParenList());
+		ASSERT(preArgArgs.AsBNSexprParenList().children.count == 0);
+
+		ASSERT(postArgFuncs.IsBNSexprParenList());
+		ASSERT(postArgFuncs.AsBNSexprParenList().children.count == 1);
+
+		ASSERT(postArgArgs.IsBNSexprParenList());
+		ASSERT(postArgArgs.AsBNSexprParenList().children.count == 1);
 	}
 
 	return 0;
